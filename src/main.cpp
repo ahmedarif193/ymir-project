@@ -11,7 +11,9 @@ int main()
     LxcQueue queue;
 
     auto cb = [](void* data) {
-        std::cout << "Callback called with data: " << (const char*)data << std::endl;
+        if(data!= nullptr)
+            std::cout << "Callback called with data: " << (const char*)data << std::endl;
+        std::cout << "Callback called with data: "<< std::endl;
     };
 
     // Create and add tasks to the queue

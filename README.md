@@ -1,10 +1,6 @@
-Lightweight Daemon to Manage LXC Containers in OpenWRT with TR157 Specifications
+Lightweight Daemon to Manage LXC Containers in OpenWRT 
 
-This project is a lightweight daemon written in C++ that is designed to manage LXC containers in OpenWRT with TR157 specifications. The daemon uses pipes as IPC to communicate between the daemon and the LXC containers.
-
-Contributing:
-
-If you want to contribute to this project, you can fork the repository and submit a pull request with your changes. Please make sure that your changes follow the coding style of the project and that you have thoroughly tested your changes before submitting a pull request.
+LXCD is a project that provides a lightweight daemon written in C++ to efficiently manage Linux Containers (LXC) on embedded devices. It is fully compliant with the TR157 specifications, ensuring that it operates optimally in such systems. Similar to LXD, LXCD utilizes a REST API to interact with containers, enabling users to easily create, start, stop, and manage container resources. The REST API provides a user-friendly interface, which can be accessed by any client that supports HTTP, allowing remote management and monitoring of containers. LXCD is an ideal choice for developers and system administrators who seek a lightweight and powerful tool for managing LXC containers in embedded devices.
 
 License:
 
