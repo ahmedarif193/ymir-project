@@ -14,12 +14,12 @@ void LxcContainer::run() {
         start();
     } else if (m_action == Method::DISABLE) {
         stop();
-
     } else if (m_action == Method::RECONFIGURE) {
         reconfigure();
         stop();
         start();
     } else if (m_action == Method::RESET) {
+        stop();
         destroy();
         create();
         start();
