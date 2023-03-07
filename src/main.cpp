@@ -7,18 +7,9 @@
 
 int main ()
 {
-  struct MHD_Daemon *daemon;
+    RestApiListener listener(8080);
+    listener.start();
 
-  daemon = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, PORT, nullptr, nullptr,
-                             &answer_to_connection, nullptr,
-                             MHD_OPTION_NOTIFY_COMPLETED, request_completed,
-                             nullptr, MHD_OPTION_END);
-  if (nullptr == daemon)
-    return 1;
-
-  (void) getchar ();
-
-  MHD_stop_daemon (daemon);
-
-  return 0;
+    listener.stop();
+    return 0;
 }
