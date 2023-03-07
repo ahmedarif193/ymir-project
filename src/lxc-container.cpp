@@ -10,7 +10,7 @@ LxcContainer::~LxcContainer() {}
 
 void LxcContainer::run() {
     if (m_action == Method::ENABLE) {
-        create();
+        create("busybox");
         start();
     } else if (m_action == Method::DISABLE) {
         stop();
@@ -21,7 +21,7 @@ void LxcContainer::run() {
     } else if (m_action == Method::RESET) {
         stop();
         destroy();
-        create();
+        create("busybox");
         start();
     } else if (m_action == Method::DESTROY) {
         destroy();
@@ -34,7 +34,7 @@ void LxcContainer::run() {
     }
 }
 
-void LxcContainer::create() {
+void LxcContainer::create(std::string type) {
     container = lxc_container_new(m_name.c_str(), nullptr);
     if (!container) {
         throw std::runtime_error("Failed to setup lxc_container struct");
@@ -72,10 +72,10 @@ void LxcContainer::create() {
 //     throw std::runtime_error("Failed to create squashfs file");
 // }
 
-// // Create the container
-// if (!container->createl(container, "busybox", nullptr, nullptr, LXC_CREATE_QUIET, nullptr)) {
-//     throw std::runtime_error("Failed to create container");
-// }
+ // Create the container
+ if (!container->createl(container, "busybox", nullptr, nullptr, LXC_CREATE_QUIET, nullptr)) {
+     throw std::runtime_error("Failed to create container");
+ }
 
 // // Set up the overlay and squashfs as the container's storage
 // if (!container->set_config_item(container, "lxc.rootfs.path", overlay_upper.c_str())) {
