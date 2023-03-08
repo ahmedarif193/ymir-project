@@ -2,6 +2,8 @@
 #define HTTPHANDLER_H
 #include <iostream>
 #include <string>
+#include <regex>
+
 #include <functional>
 #include <unordered_map>
 #include <microhttpd.h>
@@ -11,6 +13,12 @@
 //syscalls
 #include <unistd.h>
 #include <sys/utsname.h>
+
+
+typedef std::function<int(MHD_Connection*
+                          , const std::unordered_map<std::string, std::string>
+                          , std::string )> handler_t;
+
 class RestApiListener {
     enum TYPE{
         GET=0,
@@ -22,7 +30,7 @@ class RestApiListener {
 public:
     RestApiListener(int port);
 
-    void register_handler(const std::string &path, const std::string &http_method, std::function<int(struct MHD_Connection*, const std::string&)> handler);
+    void register_handler(const std::string &path, const std::string &http_method, handler_t handler);
 
     void start();
 
@@ -35,8 +43,7 @@ private:
     bool is_running_;
     struct MHD_Daemon *daemon_;
 
-    std::unordered_map<std::string, std::unordered_map<std::string, std::function<int(struct MHD_Connection*, const std::string&)>>> handlers_;
+    std::unordered_map<std::string, std::unordered_map<std::string, handler_t>> handlers_;
 };
-
 
 #endif // HTTPHANDLER_H

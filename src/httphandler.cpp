@@ -2,7 +2,7 @@
 
 RestApiListener::RestApiListener(int port) : port_(port), is_running_(false) {}
 
-void RestApiListener::register_handler(const std::string &path, const std::string &http_method, std::function<int (MHD_Connection *, const std::string &)> handler) {
+void RestApiListener::register_handler(const std::string &path, const std::string &http_method, handler_t handler) {
     handlers_[path][http_method] = handler;
 }
 
@@ -49,6 +49,7 @@ int RestApiListener::dispatch_handler(void *cls, MHD_Connection *connection, con
         return MHD_NO;
     }
 
-    std::function<int(struct MHD_Connection*, const std::string&)> handler = method_handlers_it->second;
-    return handler(connection, request_body);
+    handler_t handler = method_handlers_it->second;
+    const std::unordered_map<std::string, std::string> temp;
+    return handler(connection, temp, request_body);
 }

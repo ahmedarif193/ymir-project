@@ -31,7 +31,9 @@ std::string exec(const char* cmd) {
     return result;
 }
 
-int supported_API_versions(struct MHD_Connection *connection, const std::string &request_body) {
+int supported_API_versions(struct MHD_Connection *connection
+                           , const std::unordered_map<std::string, std::string>& params
+                           , const std::string &request_body) {
     // Return a response with the message "Hello, world!"
     Json::Value root;
     root["metadata"].append("/1.0");
@@ -45,14 +47,18 @@ int supported_API_versions(struct MHD_Connection *connection, const std::string 
 }
 
 
-int handle_echo(struct MHD_Connection *connection, const std::string &request_body) {
+int handle_echo(struct MHD_Connection *connection
+                , const std::unordered_map<std::string, std::string>& params
+                , const std::string &request_body) {
     SEND_RESPONSE(connection, request_body);
     //    struct MHD_Response *mhd_response = MHD_create_response_from_buffer(request_body.size(), (void*) request_body.c_str(), MHD_RESPMEM_MUST_COPY);
     //    int ret = MHD_queue_response(connection, MHD_HTTP_OK, mhd_response);
     //    MHD_destroy_response(mhd_response);
     //    return ret;
 }
-int get_Server_environment(struct MHD_Connection *connection, const std::string &request_body){
+int get_Server_environment(struct MHD_Connection *connection
+                           , const std::unordered_map<std::string, std::string>& params
+                           , const std::string &request_body){
     // Create a Json::Value object
     Json::Value root;
 
@@ -106,7 +112,9 @@ int get_Server_environment(struct MHD_Connection *connection, const std::string 
     SEND_RESPONSE(connection, root.toStyledString());
 }
 
-int instance_create(struct MHD_Connection *connection, const std::string &request_body){
+int instance_create(struct MHD_Connection *connection
+                    , const std::unordered_map<std::string, std::string>& params
+                    , const std::string &request_body){
     Json::Value root;
 
     // Set the metadata field
@@ -114,7 +122,9 @@ int instance_create(struct MHD_Connection *connection, const std::string &reques
     root["metadata"]["api_extensions"].append("patch");
     SEND_RESPONSE(connection, root.toStyledString());
 }
-int instance_ls(struct MHD_Connection *connection, const std::string &request_body){
+int instance_ls(struct MHD_Connection *connection
+                , const std::unordered_map<std::string, std::string>& params
+                , const std::string &request_body){
     Json::Value root;
 
     // Set the metadata field
@@ -123,7 +133,9 @@ int instance_ls(struct MHD_Connection *connection, const std::string &request_bo
     SEND_RESPONSE(connection, root.toStyledString());
 }
 
-int instance_rm(struct MHD_Connection *connection, const std::string &request_body){
+int instance_rm(struct MHD_Connection *connection
+                , const std::unordered_map<std::string, std::string>& params
+                , const std::string &request_body){
     Json::Value root;
 
     // Set the metadata field
@@ -131,7 +143,9 @@ int instance_rm(struct MHD_Connection *connection, const std::string &request_bo
     root["metadata"]["api_extensions"].append("patch");
     SEND_RESPONSE(connection, root.toStyledString());
 }
-int instance_update(struct MHD_Connection *connection, const std::string &request_body){
+int instance_update(struct MHD_Connection *connection
+                    , const std::unordered_map<std::string, std::string>& params
+                    , const std::string &request_body){
     Json::Value root;
 
     // Set the metadata field
