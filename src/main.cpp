@@ -50,6 +50,9 @@ int supported_API_versions(struct MHD_Connection *connection
 int handle_echo(struct MHD_Connection *connection
                 , const std::unordered_map<std::string, std::string>& params
                 , const std::string &request_body) {
+    for (const auto& kv : params) {
+        std::cout << kv.first << " = " << kv.second << std::endl;
+    }
     SEND_RESPONSE(connection, request_body);
     //    struct MHD_Response *mhd_response = MHD_create_response_from_buffer(request_body.size(), (void*) request_body.c_str(), MHD_RESPMEM_MUST_COPY);
     //    int ret = MHD_queue_response(connection, MHD_HTTP_OK, mhd_response);
@@ -169,7 +172,7 @@ int main() {
     rest_api.register_handler("/1.0/instances", "DELETE", instance_rm);
     rest_api.register_handler("/1.0/instances", "UPDATE", instance_update);
 
-    rest_api.register_handler("/echo", "POST", handle_echo);
+    rest_api.register_handler("/echo/{value1}", "GET", handle_echo);
 
     // Start the listener
     rest_api.start();
