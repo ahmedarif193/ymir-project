@@ -1,0 +1,11 @@
+#https://www.objgen.com/json/local/design
+
+curl -X POST http://localhost:8080/2.0/ExecEnv \
+   -H "Content-Type: multipart/form-data" \
+   -d '{ "name": "Container-1", "type": "busybox", "enable": true }'
+
+name = Container-1  
+type = busybox
+enable b = true
+
+

@@ -6,12 +6,12 @@
 
 class LxcContainer : public Task {
 public:
-    LxcContainer(const char* name, const Method action);
+    LxcContainer(const std::string name, const char* m_template = "busybox", const Method action = Method::IDLE);
     ~LxcContainer();
 
-    void run() override;
+    int run() override;
 
-    void create(std::string);
+    void create();
 
     void start();
 
@@ -21,10 +21,27 @@ public:
 
     void destroy();
 
-    Method m_action;
-    std::string m_name;
+
+    void setName(const std::string &newName);
+    void setTemplate(const std::string &newTemplate);
+    void setStorage_space(const std::string &newStorage_space);
+    void setMemory(const std::string &newMemory);
+    void setCpuset(const std::string &newCpuset);
+    void setCpupercent(const std::string &newCpupercent);
+    void setContainer(lxc_container *newContainer);
+
+    void setAction(Method newAction);
 
 private:
+
+    Method m_action;
+    std::string m_name;
+    std::string m_template;
+    std::string storage_space;
+    std::string memory;
+    std::string cpuset;
+    std::string cpupercent;
+
     struct lxc_container *container = nullptr;
 };
 

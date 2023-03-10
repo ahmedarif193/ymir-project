@@ -1,16 +1,16 @@
 #include "lxc-container.h"
 #include <sys/stat.h>
-LxcContainer::LxcContainer(const char *name, const Method action) {
+LxcContainer::LxcContainer(const std::string name, const char* m_template, const Method action) {
     this->m_action = action;
     this->m_name = name;
-
+    this->m_template = m_template;
 }
 
 LxcContainer::~LxcContainer() {}
 
-void LxcContainer::run() {
+int LxcContainer::run() {
     if (m_action == Method::ENABLE) {
-        create("busybox");
+        create();
         start();
     } else if (m_action == Method::DISABLE) {
         stop();
@@ -21,7 +21,7 @@ void LxcContainer::run() {
     } else if (m_action == Method::RESET) {
         stop();
         destroy();
-        create("busybox");
+        create();
         start();
     } else if (m_action == Method::DESTROY) {
         destroy();
@@ -34,7 +34,7 @@ void LxcContainer::run() {
     }
 }
 
-void LxcContainer::create(std::string type) {
+void LxcContainer::create() {
     container = lxc_container_new(m_name.c_str(), nullptr);
     if (!container) {
         throw std::runtime_error("Failed to setup lxc_container struct");
@@ -135,4 +135,44 @@ void LxcContainer::destroy() {
     if (!container->destroy(container)) {
         throw std::runtime_error("Failed to destroy the container.");
     }
+}
+
+void LxcContainer::setName(const std::string &newName)
+{
+    m_name = newName;
+}
+
+void LxcContainer::setTemplate(const std::string &newTemplate)
+{
+    m_template = newTemplate;
+}
+
+void LxcContainer::setStorage_space(const std::string &newStorage_space)
+{
+    storage_space = newStorage_space;
+}
+
+void LxcContainer::setMemory(const std::string &newMemory)
+{
+    memory = newMemory;
+}
+
+void LxcContainer::setCpuset(const std::string &newCpuset)
+{
+    cpuset = newCpuset;
+}
+
+void LxcContainer::setCpupercent(const std::string &newCpupercent)
+{
+    cpupercent = newCpupercent;
+}
+
+void LxcContainer::setContainer(lxc_container *newContainer)
+{
+    container = newContainer;
+}
+
+void LxcContainer::setAction(Method newAction)
+{
+    m_action = newAction;
 }

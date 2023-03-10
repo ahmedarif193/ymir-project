@@ -25,14 +25,32 @@ void RestApiListener::stop() {
 }
 
 int RestApiListener::dispatch_handler(void *cls, MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **con_cls) {
-    auto *rest_api_listener = reinterpret_cast<RestApiListener*>(cls);
-    std::unordered_map<std::string, std::string> params;
-    std::string request_body;
-    if (*upload_data_size > 0) {
-        request_body = std::string(upload_data, *upload_data_size);
-        *upload_data_size = 0;
+    std::string mmethod = method;
+    std::string murl = url;
+    std::string mversion = version;
+
+    static int count= 0;
+
+    static int dummy;
+    static char* buffer = new char[500];
+    int ret;
+    std::cout <<dummy<< count++<<"dispatch_handler" <<*upload_data_size<<murl<<mmethod<<mversion << std::endl;
+
+    if (&dummy != *con_cls) {
+        *con_cls = &dummy;
+        return MHD_YES;
     }
 
+    if (*upload_data_size != 0) {
+        strncpy(buffer, upload_data, *upload_data_size);
+        *upload_data_size = 0;
+        return MHD_YES;
+    }
+
+    std::cout <<buffer << std::endl;
+    auto *rest_api_listener = reinterpret_cast<RestApiListener*>(cls);
+    std::unordered_map<std::string, std::string> params;
+    std::string request_body = buffer;
     std::string http_method = method ? method : "";
     std::string path = url ? url : "";
 

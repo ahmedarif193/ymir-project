@@ -4,6 +4,8 @@
 
 
 #include "httphandler.h"
+#include "lxc-container.h"
+#include "lxcqueue.h"
 
 #define SEND_RESPONSE(connection, response_body) \
     do { \
@@ -50,14 +52,15 @@ int supported_API_versions(struct MHD_Connection *connection
 int handle_echo(struct MHD_Connection *connection
                 , const std::unordered_map<std::string, std::string>& params
                 , const std::string &request_body) {
-    for (const auto& kv : params) {
-        std::cout << kv.first << " = " << kv.second << std::endl;
-    }
-    SEND_RESPONSE(connection, request_body);
+    //    for (const auto& kv : params) {
+    //        std::cout << kv.first << " = " << kv.second << std::endl;
+    //    }
     //    struct MHD_Response *mhd_response = MHD_create_response_from_buffer(request_body.size(), (void*) request_body.c_str(), MHD_RESPMEM_MUST_COPY);
     //    int ret = MHD_queue_response(connection, MHD_HTTP_OK, mhd_response);
     //    MHD_destroy_response(mhd_response);
     //    return ret;
+    std::cout << params.at("value1") << std::endl;
+    SEND_RESPONSE(connection, request_body);
 }
 int get_Server_environment(struct MHD_Connection *connection
                            , const std::unordered_map<std::string, std::string>& params
@@ -107,7 +110,7 @@ int get_Server_environment(struct MHD_Connection *connection
     root["metadata"]["environment"]["project"] = "default";
     root["metadata"]["environment"]["server"] = "lxcd";
     root["metadata"]["environment"]["server_clustered"] = false;
-//    root["metadata"]["environment"]["server_event_mode"] = "full-mesh";
+    //    root["metadata"]["environment"]["server_event_mode"] = "full-mesh";
     root["metadata"]["environment"]["server_name"] = sys_info.nodename;
     root["metadata"]["environment"]["server_pid"] = getpid();
     root["metadata"]["environment"]["server_version"] = "1.0";
@@ -115,17 +118,41 @@ int get_Server_environment(struct MHD_Connection *connection
     SEND_RESPONSE(connection, root.toStyledString());
 }
 
-int instance_create(struct MHD_Connection *connection
+int execenv_create(struct MHD_Connection *connection
                     , const std::unordered_map<std::string, std::string>& params
                     , const std::string &request_body){
-    Json::Value root;
+    std::cout << "execenv_create" << std::endl;
+    Json::Value rootrequest;
+    Json::Value rootreply;
+    rootreply["metadata"].append("/1.0");
+    rootreply["type"] = "sync";
 
-    // Set the metadata field
-    root["metadata"]["api_extensions"].append("etag");
-    root["metadata"]["api_extensions"].append("patch");
-    SEND_RESPONSE(connection, root.toStyledString());
+    Json::CharReaderBuilder builder;
+    Json::CharReader* reader = builder.newCharReader();
+    std::string errors;
+    bool parsingSuccessful = reader->parse(request_body.c_str(), request_body.c_str() + request_body.size(), &rootrequest, &errors);
+    delete reader;
+
+    if (!parsingSuccessful) {
+      std::cerr << "Failed to parse JSON: " << errors << std::endl;
+      rootreply["status"] = "Failed to parse JSON: " + errors;
+      rootreply["status_code"] = 500;
+      SEND_RESPONSE(connection, rootreply.toStyledString());
+    }
+    std::string name = rootrequest["name"].asString();
+    std::string type = rootrequest["type"].asString();
+    std::cout << "Name: " << name << std::endl;
+    std::cout << "type: " << type << std::endl;
+
+    LxcContainer container(name);
+    container.setAction(Method::ENABLE);
+    container.setTemplate(type);
+    container.run();
+    rootreply["status"] = "Success";
+    rootreply["status_code"] = 200;
+    SEND_RESPONSE(connection, rootreply.toStyledString());
 }
-int instance_ls(struct MHD_Connection *connection
+int execenv_ls(struct MHD_Connection *connection
                 , const std::unordered_map<std::string, std::string>& params
                 , const std::string &request_body){
     Json::Value root;
@@ -136,7 +163,7 @@ int instance_ls(struct MHD_Connection *connection
     SEND_RESPONSE(connection, root.toStyledString());
 }
 
-int instance_rm(struct MHD_Connection *connection
+int execenv_rm(struct MHD_Connection *connection
                 , const std::unordered_map<std::string, std::string>& params
                 , const std::string &request_body){
     Json::Value root;
@@ -146,7 +173,7 @@ int instance_rm(struct MHD_Connection *connection
     root["metadata"]["api_extensions"].append("patch");
     SEND_RESPONSE(connection, root.toStyledString());
 }
-int instance_update(struct MHD_Connection *connection
+int execenv_update(struct MHD_Connection *connection
                     , const std::unordered_map<std::string, std::string>& params
                     , const std::string &request_body){
     Json::Value root;
@@ -165,12 +192,12 @@ int main() {
     // handle those rpcs in this link https://linuxcontainers.org/lxd/docs/latest/api/#/server/api_get
     // Register handlers for some example endpoints
     rest_api.register_handler("/", "GET", supported_API_versions);
-    rest_api.register_handler("/1.0/", "GET", get_Server_environment);
+    rest_api.register_handler("/2.0/", "GET", get_Server_environment);
 
-    rest_api.register_handler("/1.0/instances", "POST", instance_create);
-    rest_api.register_handler("/1.0/instances", "GET", instance_ls);
-    rest_api.register_handler("/1.0/instances", "DELETE", instance_rm);
-    rest_api.register_handler("/1.0/instances", "UPDATE", instance_update);
+    rest_api.register_handler("/2.0/execenv", "POST", execenv_create);
+    rest_api.register_handler("/2.0/execenv", "GET", execenv_ls);
+    rest_api.register_handler("/2.0/execenv", "DELETE", execenv_rm);
+    rest_api.register_handler("/2.0/execenv", "UPDATE", execenv_update);
 
     rest_api.register_handler("/echo/{value1}", "GET", handle_echo);
 

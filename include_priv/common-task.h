@@ -2,7 +2,7 @@
 #define COMMONTASK_H
 
 typedef void (*callback_t)(void*);
-enum class Method { ENABLE, DISABLE, RECONFIGURE, RESET, DESTROY };
+enum class Method { CREATE, ENABLE = 1, DISABLE = 0, RECONFIGURE, RESET, DESTROY, IDLE };
 
 class Task {
 public:
@@ -12,7 +12,7 @@ public:
 
     virtual ~Task();
 
-    virtual void run() = 0;
+    virtual int run() = 0;
 
     void invokeCallback();
     void setCallback(callback_t cb,void* data = nullptr);

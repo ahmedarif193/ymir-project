@@ -1,8 +1,6 @@
 #ifndef LXCQUEUE_H
 #define LXCQUEUE_H
 
-
-
 #include <iostream>
 #include <queue>
 #include <thread>

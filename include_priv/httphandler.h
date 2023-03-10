@@ -35,16 +35,16 @@ public:
     void start();
 
     void stop();
+    std::unordered_map<std::string, std::unordered_map<std::string, handler_t>> handlers_;
 
 private:
-    static int dispatch_handler(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **con_cls);
+    static int dispatch_handler(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr);
     bool is_match_match_regex(std::string path, std::string request, std::unordered_map<std::string, std::string> &params);
 
     int port_;
     bool is_running_;
     struct MHD_Daemon *daemon_;
 
-    std::unordered_map<std::string, std::unordered_map<std::string, handler_t>> handlers_;
 };
 
 #endif // HTTPHANDLER_H
