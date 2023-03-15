@@ -45,6 +45,8 @@ private:
     bool is_running_;
     struct MHD_Daemon *daemon_;
 
+    bool are_paths_equal(std::string path1, std::string path2);
+
 };
 
 #endif // HTTPHANDLER_H

@@ -47,7 +47,7 @@ int RestApiListener::dispatch_handler(void *cls, MHD_Connection *connection, con
         return MHD_YES;
     }
 
-    std::cout <<buffer << std::endl;
+    std::cout <<"-------------------------------"<<buffer << std::endl;
     auto *rest_api_listener = reinterpret_cast<RestApiListener*>(cls);
     std::unordered_map<std::string, std::string> params;
     std::string request_body = buffer;
@@ -55,21 +55,22 @@ int RestApiListener::dispatch_handler(void *cls, MHD_Connection *connection, con
     std::string path = url ? url : "";
 
     // Find the handler function for the path and HTTP method
-//    auto path_handlers_it = rest_api_listener->handlers_.find(path);
-//    if (path_handlers_it == rest_api_listener->handlers_.end()) {
-//        // static Path not found
-//    }
+    //    auto path_handlers_it = rest_api_listener->handlers_.find(path);
+    //    if (path_handlers_it == rest_api_listener->handlers_.end()) {
+    //        // static Path not found
+    //    }
     bool found = false;
     auto path_handlers_it = rest_api_listener->handlers_.begin();
     for(; path_handlers_it != rest_api_listener->handlers_.end(); ++path_handlers_it)
     {
         std::string k =  path_handlers_it->first;
+
         if(rest_api_listener->is_match_match_regex(k,path, params)){
 
             // Print parameter values for debugs
-//            for (const auto& kv : params) {
-//                std::cout << kv.first << " = " << kv.second << std::endl;
-//            }
+            //            for (const auto& kv : params) {
+            //                std::cout << kv.first << " = " << kv.second << std::endl;
+            //            }
             found = true;
             break;
         }
@@ -78,6 +79,7 @@ int RestApiListener::dispatch_handler(void *cls, MHD_Connection *connection, con
     }
     if(!found)
         return MHD_NO;
+
     auto method_handlers_it = path_handlers_it->second.find(http_method);
     if (method_handlers_it == path_handlers_it->second.end()) {
         // Method not supported for this path
@@ -89,9 +91,10 @@ int RestApiListener::dispatch_handler(void *cls, MHD_Connection *connection, con
 }
 
 bool RestApiListener::is_match_match_regex(std::string path, std::string request, std::unordered_map<std::string, std::string> &params){
+    if(are_paths_equal(path,request))
+        return true;
     const std::regex param_regex("\\{([^}]+)\\}");
 
-    // Extract parameter names from path
     std::vector<std::string> param_names;
     std::sregex_iterator param_begin(path.begin(), path.end(), param_regex);
     std::sregex_iterator param_end;
@@ -109,6 +112,7 @@ bool RestApiListener::is_match_match_regex(std::string path, std::string request
 
     // Match request against path regular expression
     std::regex regex(path_regex);
+
     if (std::regex_match(request, match, regex)) {
         // Extract parameter values into map
         for (size_t i = 1; i < match.size(); ++i) {
@@ -116,6 +120,17 @@ bool RestApiListener::is_match_match_regex(std::string path, std::string request
         }
         return true;
     }
-//    std::cout << "Request does not match path" << std::endl;
+    //    std::cout << "Request does not match path" << std::endl;
     return false;
+}
+
+bool RestApiListener::are_paths_equal(std::string path1, std::string path2) {
+    // Replace double forward slashes with a single forward slash
+    std::regex regex("//+");
+    std::string path1Normalized = std::regex_replace(path1, regex, "/");
+    std::string path2Normalized = std::regex_replace(path2, regex, "/");
+    std::cout <<"are_paths_equal "<<path2Normalized<< "  --  "<<path1Normalized << "  --  "<< (path1Normalized == path2Normalized)<< std::endl;
+
+    // Compare the normalized paths
+    return path1Normalized == path2Normalized;
 }
