@@ -1,0 +1,21 @@
+sudo lxc-create --name lxctest --template busybox -B overlayfs
+sudo gedit  /var/lib/lxc/lxctest/config
+sudo lxc-create --name lxctest --template busybox
+sudo dd if=/dev/zero of=/var/lib/lxc/lxctest/overlay.img bs=1M count=20
+sudo mkfs.ext4  /var/lib/lxc/lxctest/overlay.img
+sudo mount -o loop /var/lib/lxc/lxctest/overlay.img /var/lib/lxc/lxctest/overlay/delta
+sudo lxc-{stop,destroy} lxctest
+sudo mount -t overlay -o lowerdir=/tmp/base,upperdir=/tmp/overlay,workdir=/tmp/overlay/workdir none /tmp/merged
+sudo mount -t overlay -o lowerdir=/tmp/base,upperdir=/tmp/overlay,workdir=/tmp/overlay/workdir none /tmp/merged size=100M
+
+
+
+mkdir -p /tmp/lower1 /tmp/lower2 /tmp/lower3 /tmp/upper /tmp/work /tmp/merged
+sudo  mount -t overlay overlay -o lowerdir=/tmp/lower1:/tmp/lower2:/tmp/lower3,upperdir=/tmp/upper,workdir=/tmp/work /tmp/merged
+sudo umount /tmp/merged
+mkdir -p /tmp/overlay/workdir /tmp/overlay /tmp/base /tmp/merged
+
+mount -t tmpfs -o size=100% tmpfs /tmp/upper1
+
+sudo dd if=/dev/zero of=/tmp/overlay.img bs=1M count=20
+sudo mkfs.ext4  /tmp/overlay.img
