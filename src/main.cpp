@@ -157,9 +157,28 @@ int execenv_ls(struct MHD_Connection *connection
                 , const std::string &request_body){
     Json::Value root;
 
-    // Set the metadata field
-    root["metadata"]["api_extensions"].append("etag");
-    root["metadata"]["api_extensions"].append("patch");
+    int rc;
+    char **names;
+    struct lxc_container **cret;
+
+    rc = list_all_containers(NULL, &names, &cret);
+    if (rc == -1){
+        SEND_RESPONSE(connection, root.toStyledString());
+    }
+
+    for (int i = 0; i < rc; i++) {
+        struct lxc_container *c = cret[i];
+        Json::Value container;
+        container["name"]=names[i];
+        container["pidfile"]=c->pidfile;
+        container["state"]=c->state(c);
+        container["initpid"]=(int)c->init_pid(c);
+        //blobmsg_add_string(&buf, names[i], c->state(c));
+        root["containers"].append(container);
+        free(names[i]);
+        lxc_container_put(c);
+    }
+    root["numberOfContainers"]=rc;
     SEND_RESPONSE(connection, root.toStyledString());
 }
 

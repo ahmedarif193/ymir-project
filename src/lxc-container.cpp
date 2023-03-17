@@ -32,6 +32,7 @@ int LxcContainer::run() {
     if (m_callback != nullptr) {
         m_callback(m_data);
     }
+    return 0;
 }
 
 void LxcContainer::create() {
