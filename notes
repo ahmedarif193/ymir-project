@@ -11,11 +11,21 @@ sudo mount -t overlay -o lowerdir=/tmp/base,upperdir=/tmp/overlay,workdir=/tmp/o
 
 
 mkdir -p /tmp/lower1 /tmp/lower2 /tmp/lower3 /tmp/upper /tmp/work /tmp/merged
-sudo  mount -t overlay overlay -o lowerdir=/tmp/lower1:/tmp/lower2:/tmp/lower3,upperdir=/tmp/upper,workdir=/tmp/work /tmp/merged
+
+sudo mkdir -p /var/lib/lxc/lxctest/overlay/delta
+sudo mkdir -p  /var/lib/lxc/lxctest/overlay/merged
+sudo  mount -t overlay overlay -o lowerdir=/var/lib/lxc/lxctest/rootfs/:/tmp/lower2:/tmp/lower3,upperdir=/var/lib/lxc/lxctest/overlay/delta,size=1G /var/lib/lxc/lxctest/overlay/merged
+lxc.rootfs.path = dir:/var/lib/lxc/lxctest/overlay/merged
+
 sudo umount /tmp/merged
 mkdir -p /tmp/overlay/workdir /tmp/overlay /tmp/base /tmp/merged
 
 mount -t tmpfs -o size=100% tmpfs /tmp/upper1
 
-sudo dd if=/dev/zero of=/tmp/overlay.img bs=1M count=20
-sudo mkfs.ext4  /tmp/overlay.img
+sudo dd if=/dev/zero of=/srv/lxc/lxctest/overlay.img bs=1M count=20
+sudo mkfs.ext4  /srv/lxc/lxctest/overlay.img
+
+mount -t tmpfs -o size=10% tmpfs   /srv/lxc/lxctest/overlay/delta
+sudo mount -t ext4 -o loop /srv/lxc/lxctest/overlay.img  /srv/lxc/lxctest/overlay/
+
+/srv/lxc/lxctest/overlay/
