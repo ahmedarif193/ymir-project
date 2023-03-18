@@ -38,7 +38,7 @@ void LxcQueue::run() {
         lock.unlock();
 
         int retCode = task->run();
-        task->invokeCallback();
+        task->invokeCallback(retCode);
 
         delete task;
     }

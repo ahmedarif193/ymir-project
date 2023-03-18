@@ -1,48 +1,67 @@
 #include "lxc-container.h"
 #include <sys/stat.h>
 LxcContainer::LxcContainer(const std::string name, const char* m_template, const Method action) {
+
     this->m_action = action;
     this->m_name = name;
     this->m_template = m_template;
+    this->storage_space = "20";
+    this->memory = "20";
+    this->cpuset = "0-1";
+    this->cpupercent = "50";
+    std::cout<<"---------LxcContainer::LxcContainer: "<<m_name<<std::endl;
+
+    container = lxc_container_new(m_name.c_str(), NULL);
+    if (!container) {
+        std::cerr<<"Failed to setup lxc_container struct"<<std::endl;
+        return;
+    }
+    std::cout<<"---------Create the container 2: "<<container->name<<std::endl;
+
 }
 
-LxcContainer::~LxcContainer() {}
+LxcContainer::~LxcContainer() {
+    lxc_container_put(container);
+
+}
 
 int LxcContainer::run() {
+    int ret = 0;
     if (m_action == Method::ENABLE) {
-        create();
-        start();
+        ret|= create();
+        ret|= start();
     } else if (m_action == Method::DISABLE) {
-        stop();
+        ret|= stop();
     } else if (m_action == Method::RECONFIGURE) {
-        reconfigure();
-        stop();
-        start();
+        ret|= reconfigure();
+        ret|= stop();
+        ret|= start();
     } else if (m_action == Method::RESET) {
-        stop();
-        destroy();
-        create();
-        start();
+        ret|= stop();
+        //TODO : just clear delta overlayfs if used
+        ret|= destroy();
+        ret|= create();
+        ret|= start();
     } else if (m_action == Method::DESTROY) {
-        destroy();
+        ret|= stop();
+        ret|= destroy();
     } else {
-        throw std::runtime_error("Invalid action");
+        ;
     }
-
-    if (m_callback != nullptr) {
-        m_callback(m_data);
-    }
-    return 0;
+    return ret;
 }
 
-void LxcContainer::create() {
-    container = lxc_container_new(m_name.c_str(), nullptr);
+constexpr char* lxc_default_folder = "/var/lib/lxc/";
+
+int LxcContainer::create() {
     if (!container) {
-        throw std::runtime_error("Failed to setup lxc_container struct");
+        std::cerr<<"Failed to setup lxc_container struct"<<std::endl;
+        return -1;
     }
 
     if (container->is_defined(container)) {
-        throw std::runtime_error("Container already exists");
+        std::cerr<<"Container already exists"<<std::endl;
+        return -1;
     }
 
     // // Set up the overlay storage
@@ -74,10 +93,56 @@ void LxcContainer::create() {
     // }
 
     // Create the container
+    std::cout<<"---------Create the container : "<<container->name;
     if (!container->createl(container, "busybox", nullptr, nullptr, LXC_CREATE_QUIET, nullptr)) {
         std::cout<<"---------createl : "<<container->configfile;
+        return -1;
+
     }
-    std::cout<<"---------configpath : "<<container->configfile;
+
+    if(0){
+        int retcode = 0;
+        std::string container_path = lxc_default_folder + this->m_name ;
+        std::string container_overlay_dir = container_path +"/overlay";
+        std::string container_delta_dir = container_overlay_dir +"/delta";
+        std::string command = "dd if=/dev/zero of=" + container_path + "/overlay.img bs=1M count=" + this->storage_space;
+        this->exec(command,retcode);
+        if(retcode){
+            std::cerr<<"error dd"<<std::endl;
+            return -1;
+
+        }
+        command = "mkfs.ext4 " + container_path + "/overlay.img";
+        this->exec(command,retcode);
+        if(retcode){
+            std::cerr<<"error mkfs.ext4"<<std::endl;
+            return -1;
+
+        }
+
+        command = "mkdir -p " + container_overlay_dir;
+        this->exec(command,retcode);
+        if(retcode){
+            std::cerr<<"Failed to create delta overlay directory"<<std::endl;
+            return -1;
+        }
+
+        command = "mount -t ext4 -o loop " + container_path + "/overlay.img " + container_overlay_dir;
+        this->exec(command,retcode);
+        if(retcode){
+            std::cerr<<"error mount"<<std::endl;
+            return -1;
+        }
+
+        command = "mkdir -p " + container_delta_dir;
+        this->exec(command,retcode);
+        if(retcode){
+            std::cerr<<"Failed to create delta overlay directory"<<std::endl;
+            return -1;
+        }
+
+    }
+
     // // Set up the overlay and squashfs as the container's storage
     // if (!container->set_config_item(container, "lxc.rootfs.path", overlay_upper.c_str())) {
     //     throw std::runtime_error("Failed to set container rootfs path");
@@ -97,45 +162,59 @@ void LxcContainer::create() {
     // if (!container->set_config_item(container, "lxc.rootfs.options", ("loop=" + squashfs_file).c_str())) {
     //     throw std::runtime_error("Failed to set container rootfs options");
     // }
-
+    return 0;
 }
 
-void LxcContainer::start() {
-    container = lxc_container_new(m_name.c_str(), nullptr);
+int LxcContainer::start() {
     if (!container) {
-        throw std::runtime_error("Failed to setup lxc_container struct");
+        std::cerr<<"Failed to setup lxc_container struct"<<std::endl;
+        return -1;
     }
 
     if (!container->start(container, 0, nullptr)) {
-        throw std::runtime_error("Failed to start the container");
+        std::cerr<<"Failed to start the container"<<std::endl;
+        return -1;
     }
+    return 0;
 }
 
-void LxcContainer::stop() {
-    container = lxc_container_new(m_name.c_str(), nullptr);
+int LxcContainer::stop() {
     if (!container) {
-        throw std::runtime_error("Failed to setup lxc_container struct");
+        std::cerr<<"Failed to setup lxc_container struct"<<std::endl;
+        return -1;
     }
 
     if (!container->shutdown(container, 30)) {
         if (!container->stop(container)) {
-            throw std::runtime_error("Failed to kill the container.");
+            std::cerr<<"Failed to kill the container."<<std::endl;
+            return -1;
         }
     }
+    int retcode = 0;
+    std::string containerpath = lxc_default_folder + std::string(container->name) ;
+    std::string command = "umount " + containerpath + "/overlay.img";
+    this->exec(command,retcode);
+    if(!retcode){
+        std::cerr<<"error dd"<<std::endl;
+        return -1;
+    }
+    return 0;
 }
 
-void LxcContainer::reconfigure() {
+int LxcContainer::reconfigure() {
+    return 0;
 }
 
-void LxcContainer::destroy() {
-    container = lxc_container_new(m_name.c_str(), nullptr);
+int LxcContainer::destroy() {
     if (!container) {
-        throw std::runtime_error("Failed to setup lxc_container struct");
+        std::cerr<<"Failed to setup lxc_container struct"<<std::endl;
+        return -1;
     }
-
     if (!container->destroy(container)) {
-        throw std::runtime_error("Failed to destroy the container.");
+        std::cerr<<"Failed to destroy the container."<<std::endl;
+        return -1;
     }
+    return 0;
 }
 
 void LxcContainer::setName(const std::string &newName)

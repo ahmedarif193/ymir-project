@@ -152,11 +152,13 @@ int execenv_ls(struct MHD_Connection *connection
     for (int i = 0; i < rc; i++) {
         struct lxc_container *c = cret[i];
         Json::Value container;
+        container["id"]=i;
         container["name"]=names[i];
+        container["type"]="busybox";
 
-        container["state"]=c->state(c);
+        container["status"]=c->state(c);
 
-        container["initpid"]=(int)c->init_pid(c);
+        container["pid"]=(int)c->init_pid(c);
         std::cout << "-------" <<std::endl;
 
         //container["lxc.net.0.link"]=c->get_running_config_item(c,"lxc.net.0.link");

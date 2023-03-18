@@ -4,9 +4,9 @@ Task::Task(callback_t cb, void *data) : m_callback(cb), m_data(data) {}
 
 Task::~Task() {}
 
-void Task::invokeCallback() {
-    if (m_callback) {
-        m_callback(m_data);
+void Task::invokeCallback(int retCode) {
+    if (m_callback != nullptr) {
+        m_callback(m_data, retCode);
     }
 }
 

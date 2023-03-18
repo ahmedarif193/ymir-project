@@ -14,15 +14,15 @@ public:
 
     int run() override;
 
-    void create();
+    int create();
 
-    void start();
+    int start();
 
-    void stop();
+    int stop();
 
-    void reconfigure();
+    int reconfigure();
 
-    void destroy();
+    int destroy();
 
 
     void setName(const std::string &newName);
@@ -37,6 +37,7 @@ public:
 
 private:
     std::string exec(std::string cmd, int &retcode) {
+        std::cout<<"execute the cmd : "<<cmd<<std::endl;
         std::string result = "";
         char buffer[128];
         FILE* pipe = popen(cmd.c_str(), "r");
