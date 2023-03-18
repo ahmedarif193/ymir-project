@@ -4,6 +4,9 @@
 #include <lxc/lxccontainer.h>
 #include "common-task.h"
 
+// Function to execute a shell command and return its output
+
+
 class LxcContainer : public Task {
 public:
     LxcContainer(const std::string name, const char* m_template = "busybox", const Method action = Method::IDLE);
@@ -33,7 +36,22 @@ public:
     void setAction(Method newAction);
 
 private:
-
+    std::string exec(std::string cmd, int &retcode) {
+        std::string result = "";
+        char buffer[128];
+        FILE* pipe = popen(cmd.c_str(), "r");
+        if (!pipe) throw std::runtime_error("popen() failed!");
+        try {
+            while (fgets(buffer, sizeof buffer, pipe) != NULL) {
+                result += buffer;
+            }
+        } catch (...) {
+            pclose(pipe);
+            throw;
+        }
+        retcode = WEXITSTATUS(pclose(pipe));
+        return result;
+    }
     Method m_action;
     std::string m_name;
     std::string m_template;

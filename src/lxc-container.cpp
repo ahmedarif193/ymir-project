@@ -45,58 +45,58 @@ void LxcContainer::create() {
         throw std::runtime_error("Container already exists");
     }
 
-// // Set up the overlay storage
-// std::string overlay_dir = "/tmp/overlay/dir";
-// std::string overlay_lower = "/tmp/lower/dir";
-// std::string overlay_upper = "/tmp/upper/dir";
-// std::string overlay_workdir = "/tmp/work/dir";
-// if (mkdir(overlay_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1) {
-//     throw std::runtime_error("Failed to create overlay directory");
-// }
-// if (mkdir(overlay_lower.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1) {
-//     throw std::runtime_error("Failed to create overlay lower directory");
-// }
-// if (mkdir(overlay_upper.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1) {
-//     throw std::runtime_error("Failed to create overlay upper directory");
-// }
-// if (mkdir(overlay_workdir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1) {
-//     throw std::runtime_error("Failed to create overlay work directory");
-// }
+    // // Set up the overlay storage
+    // std::string overlay_dir = "/tmp/overlay/dir";
+    // std::string overlay_lower = "/tmp/lower/dir";
+    // std::string overlay_upper = "/tmp/upper/dir";
+    // std::string overlay_workdir = "/tmp/work/dir";
+    // if (mkdir(overlay_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1) {
+    //     throw std::runtime_error("Failed to create overlay directory");
+    // }
+    // if (mkdir(overlay_lower.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1) {
+    //     throw std::runtime_error("Failed to create overlay lower directory");
+    // }
+    // if (mkdir(overlay_upper.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1) {
+    //     throw std::runtime_error("Failed to create overlay upper directory");
+    // }
+    // if (mkdir(overlay_workdir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1) {
+    //     throw std::runtime_error("Failed to create overlay work directory");
+    // }
 
-// // Set up the squashfs storage
-// std::string squashfs_file = "/tmp/squashfs/file";
-// std::string squashfs_mount = "/tmp/squashfs/mount";
-// if (mkdir(squashfs_mount.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1) {
-//     throw std::runtime_error("Failed to create squashfs mount directory");
-// }
-// if (system(("mksquashfs " + overlay_upper + " " + squashfs_file).c_str()) == -1) {
-//     throw std::runtime_error("Failed to create squashfs file");
-// }
+    // // Set up the squashfs storage
+    // std::string squashfs_file = "/tmp/squashfs/file";
+    // std::string squashfs_mount = "/tmp/squashfs/mount";
+    // if (mkdir(squashfs_mount.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == -1) {
+    //     throw std::runtime_error("Failed to create squashfs mount directory");
+    // }
+    // if (system(("mksquashfs " + overlay_upper + " " + squashfs_file).c_str()) == -1) {
+    //     throw std::runtime_error("Failed to create squashfs file");
+    // }
 
- // Create the container
- if (!container->createl(container, "busybox", nullptr, nullptr, LXC_CREATE_QUIET, nullptr)) {
-     throw std::runtime_error("Failed to create container");
- }
-
-// // Set up the overlay and squashfs as the container's storage
-// if (!container->set_config_item(container, "lxc.rootfs.path", overlay_upper.c_str())) {
-//     throw std::runtime_error("Failed to set container rootfs path");
-// }
-// if (!container->set_config_item(container, "lxc.rootfs.backend", "overlayfs")) {
-//     throw std::runtime_error("Failed to set container rootfs backend");
-// }
-// if (!container->set_config_item(container, "lxc.rootfs.options", ("lowerdir=" + overlay_lower + ",upperdir=" + overlay_upper + ",workdir=" + overlay_workdir).c_str())) {
-//     throw std::runtime_error("Failed to set container rootfs options");
-// }
-// if (!container->set_config_item(container, "lxc.rootfs.mount", squashfs_mount.c_str())) {
-//     throw std::runtime_error("Failed to set container rootfs mount");
-// }
-// if (!container->set_config_item(container, "lxc.rootfs.backend", "squashfs")) {
-//     throw std::runtime_error("Failed to set container rootfs backend");
-// }
-// if (!container->set_config_item(container, "lxc.rootfs.options", ("loop=" + squashfs_file).c_str())) {
-//     throw std::runtime_error("Failed to set container rootfs options");
-// }
+    // Create the container
+    if (!container->createl(container, "busybox", nullptr, nullptr, LXC_CREATE_QUIET, nullptr)) {
+        std::cout<<"---------createl : "<<container->configfile;
+    }
+    std::cout<<"---------configpath : "<<container->configfile;
+    // // Set up the overlay and squashfs as the container's storage
+    // if (!container->set_config_item(container, "lxc.rootfs.path", overlay_upper.c_str())) {
+    //     throw std::runtime_error("Failed to set container rootfs path");
+    // }
+    // if (!container->set_config_item(container, "lxc.rootfs.backend", "overlayfs")) {
+    //     throw std::runtime_error("Failed to set container rootfs backend");
+    // }
+    // if (!container->set_config_item(container, "lxc.rootfs.options", ("lowerdir=" + overlay_lower + ",upperdir=" + overlay_upper + ",workdir=" + overlay_workdir).c_str())) {
+    //     throw std::runtime_error("Failed to set container rootfs options");
+    // }
+    // if (!container->set_config_item(container, "lxc.rootfs.mount", squashfs_mount.c_str())) {
+    //     throw std::runtime_error("Failed to set container rootfs mount");
+    // }
+    // if (!container->set_config_item(container, "lxc.rootfs.backend", "squashfs")) {
+    //     throw std::runtime_error("Failed to set container rootfs backend");
+    // }
+    // if (!container->set_config_item(container, "lxc.rootfs.options", ("loop=" + squashfs_file).c_str())) {
+    //     throw std::runtime_error("Failed to set container rootfs options");
+    // }
 
 }
 

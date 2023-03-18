@@ -15,24 +15,6 @@
     return ret; \
     } while (0)
 
-// Function to execute a shell command and return its output
-std::string exec(const char* cmd) {
-    std::string result = "";
-    char buffer[128];
-    FILE* pipe = popen(cmd, "r");
-    if (!pipe) throw std::runtime_error("popen() failed!");
-    try {
-        while (fgets(buffer, sizeof buffer, pipe) != NULL) {
-            result += buffer;
-        }
-    } catch (...) {
-        pclose(pipe);
-        throw;
-    }
-    pclose(pipe);
-    return result;
-}
-
 int supported_API_versions(struct MHD_Connection *connection
                            , const std::unordered_map<std::string, std::string>& params
                            , const std::string &request_body) {
@@ -119,8 +101,8 @@ int get_Server_environment(struct MHD_Connection *connection
 }
 
 int execenv_create(struct MHD_Connection *connection
-                    , const std::unordered_map<std::string, std::string>& params
-                    , const std::string &request_body){
+                   , const std::unordered_map<std::string, std::string>& params
+                   , const std::string &request_body){
     std::cout << "execenv_create" << std::endl;
     Json::Value rootrequest;
     Json::Value rootreply;
@@ -134,10 +116,10 @@ int execenv_create(struct MHD_Connection *connection
     delete reader;
 
     if (!parsingSuccessful) {
-      std::cerr << "Failed to parse JSON: " << errors << std::endl;
-      rootreply["status"] = "Failed to parse JSON: " + errors;
-      rootreply["status_code"] = 500;
-      SEND_RESPONSE(connection, rootreply.toStyledString());
+        std::cerr << "Failed to parse JSON: " << errors << std::endl;
+        rootreply["status"] = "Failed to parse JSON: " + errors;
+        rootreply["status_code"] = 500;
+        SEND_RESPONSE(connection, rootreply.toStyledString());
     }
     std::string name = rootrequest["name"].asString();
     std::string type = rootrequest["type"].asString();
@@ -153,8 +135,8 @@ int execenv_create(struct MHD_Connection *connection
     SEND_RESPONSE(connection, rootreply.toStyledString());
 }
 int execenv_ls(struct MHD_Connection *connection
-                , const std::unordered_map<std::string, std::string>& params
-                , const std::string &request_body){
+               , const std::unordered_map<std::string, std::string>& params
+               , const std::string &request_body){
     Json::Value root;
 
     int rc;
@@ -165,17 +147,23 @@ int execenv_ls(struct MHD_Connection *connection
     if (rc == -1){
         SEND_RESPONSE(connection, root.toStyledString());
     }
+    std::cout << "rc  = " <<rc<< std::endl;
 
     for (int i = 0; i < rc; i++) {
         struct lxc_container *c = cret[i];
         Json::Value container;
         container["name"]=names[i];
-        container["pidfile"]=c->pidfile;
+
         container["state"]=c->state(c);
+
         container["initpid"]=(int)c->init_pid(c);
+        std::cout << "-------" <<std::endl;
+
+        //container["lxc.net.0.link"]=c->get_running_config_item(c,"lxc.net.0.link");
         //blobmsg_add_string(&buf, names[i], c->state(c));
         root["containers"].append(container);
         free(names[i]);
+        std::cout << "-------" <<std::endl;
         lxc_container_put(c);
     }
     root["numberOfContainers"]=rc;
@@ -183,8 +171,8 @@ int execenv_ls(struct MHD_Connection *connection
 }
 
 int execenv_rm(struct MHD_Connection *connection
-                , const std::unordered_map<std::string, std::string>& params
-                , const std::string &request_body){
+               , const std::unordered_map<std::string, std::string>& params
+               , const std::string &request_body){
     Json::Value root;
 
     // Set the metadata field
@@ -193,8 +181,8 @@ int execenv_rm(struct MHD_Connection *connection
     SEND_RESPONSE(connection, root.toStyledString());
 }
 int execenv_update(struct MHD_Connection *connection
-                    , const std::unordered_map<std::string, std::string>& params
-                    , const std::string &request_body){
+                   , const std::unordered_map<std::string, std::string>& params
+                   , const std::string &request_body){
     Json::Value root;
 
     // Set the metadata field
