@@ -177,9 +177,20 @@ int execenv_rm(struct MHD_Connection *connection
                , const std::string &request_body){
     Json::Value root;
 
-    // Set the metadata field
-    root["metadata"]["api_extensions"].append("etag");
-    root["metadata"]["api_extensions"].append("patch");
+    Json::Value rootrequest;
+    root["metadata"].append("/1.0");
+    root["type"] = "sync";
+
+    Json::CharReaderBuilder builder;
+    Json::CharReader* reader = builder.newCharReader();
+    std::string errors;
+    bool parsingSuccessful = reader->parse(request_body.c_str(), request_body.c_str() + request_body.size(), &rootrequest, &errors);
+    delete reader;
+
+    std::string name = rootrequest["name"].asString();
+    LxcContainer container(name);
+    container.setAction(Method::DESTROY);
+    container.run();
     SEND_RESPONSE(connection, root.toStyledString());
 }
 int execenv_update(struct MHD_Connection *connection
