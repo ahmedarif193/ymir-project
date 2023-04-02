@@ -193,7 +193,41 @@ int execenv_rm(struct MHD_Connection *connection
     container.run();
     SEND_RESPONSE(connection, root.toStyledString());
 }
+
 int execenv_update(struct MHD_Connection *connection
+                   , const std::unordered_map<std::string, std::string>& params
+                   , const std::string &request_body){
+    Json::Value root;
+
+    // Set the metadata field
+    root["metadata"]["api_extensions"].append("etag");
+    root["metadata"]["api_extensions"].append("patch");
+    SEND_RESPONSE(connection, root.toStyledString());
+}
+
+int deployementunit_create(struct MHD_Connection *connection
+                   , const std::unordered_map<std::string, std::string>& params
+                   , const std::string &request_body){
+    Json::Value root;
+
+    // Set the metadata field
+    root["metadata"]["api_extensions"].append("etag");
+    root["metadata"]["api_extensions"].append("patch");
+    SEND_RESPONSE(connection, root.toStyledString());
+}
+
+int deployementunit_delete(struct MHD_Connection *connection
+                   , const std::unordered_map<std::string, std::string>& params
+                   , const std::string &request_body){
+    Json::Value root;
+
+    // Set the metadata field
+    root["metadata"]["api_extensions"].append("etag");
+    root["metadata"]["api_extensions"].append("patch");
+    SEND_RESPONSE(connection, root.toStyledString());
+}
+
+int deployementunit_ls(struct MHD_Connection *connection
                    , const std::unordered_map<std::string, std::string>& params
                    , const std::string &request_body){
     Json::Value root;
@@ -218,6 +252,10 @@ int main() {
     rest_api.register_handler("/2.0/execenv", "GET", execenv_ls);
     rest_api.register_handler("/2.0/execenv", "DELETE", execenv_rm);
     rest_api.register_handler("/2.0/execenv", "UPDATE", execenv_update);
+
+    rest_api.register_handler("/2.0/deployementunit", "POST", deployementunit_create);
+    rest_api.register_handler("/2.0/deployementunit", "GET", deployementunit_ls);
+    rest_api.register_handler("/2.0/deployementunit", "DELETE", deployementunit_delete);
 
     rest_api.register_handler("/echo/{value1}", "GET", handle_echo);
 

@@ -21,13 +21,17 @@ instances[]
   ]
 }
 
-curl -X POST http://localhost:8080/2.0/ExecEnv \
+curl -X GET http://localhost:8080/2.0/execenv
+
+//test create and enable
+curl -X POST http://localhost:8080/2.0/execenv \
    -H "Content-Type: multipart/form-data" \
-   -d '{ "name": "Container-1", "type": "busybox", "enable": true }'
-   
-curl -X POST http://localhost:8080/2.0/ExecEnv \
+   -d '{ "name": "Container-4", "type": "busybox", "enable": true }'
+
+//test remove
+curl -X DELETE http://localhost:8080/2.0/execenv \
    -H "Content-Type: multipart/form-data" \
-   -d '{ "name": "Container-1", "type": "busybox", "enable": true }'
+   -d '{ "name": "Container-4" }'
 
 name = Container-1  
 type = busybox
