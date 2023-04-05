@@ -28,11 +28,15 @@
 class DeploymentUnit {
 public:
     DeploymentUnit(const std::string &uuid);
-    bool install(const std::string& tarballPath, const std::string &executionEnvRef);
+    bool prepare(const std::string& tarballPath, const std::string &executionEnvRef);
+    bool install();
+
     bool remove();
 
+    //TODO :  to be used
     std::string squashfsPath;
     static std::string cacheFilePath;
+    static std::string tempDir;
 
     // DeploymentUnit parameters
     std::string uuid;
@@ -40,6 +44,7 @@ public:
     std::string description;
     std::string vendor;
     std::string type;
+    std::string name;
     std::string rootfsPath;
     int version;
 

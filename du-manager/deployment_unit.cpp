@@ -2,6 +2,7 @@
 
 
 std::string DeploymentUnit::cacheFilePath = "deployment_units_cache.json";
+std::string DeploymentUnit::tempDir = "/tmp/tr157-du";
 
 
 DeploymentUnit::DeploymentUnit(const std::string &uuid)
@@ -140,12 +141,9 @@ bool remove_directory(const std::string &dir) {
     return true;
 }
 
-bool DeploymentUnit::install(const std::string& tarballPath, const std::string& executionEnvRef) {
-    // Store the installation date
+bool DeploymentUnit::prepare(const std::string& tarballPath, const std::string& executionEnvRef) {
+        // Store the installation date
     installationDate = std::time(nullptr);
-
-    // Create a temporary directory for extraction
-    std::string tempDir = "/tmp/tr157-du";
 
     // Store the installation date
     installationDate = std::time(nullptr);
@@ -212,12 +210,19 @@ bool DeploymentUnit::install(const std::string& tarballPath, const std::string& 
     this->vendor = metadata["Vendor"].asString();
     this->version = metadata["Version"].asInt();
     this->type = metadata["Type"].asString();
+    this->name = metadata["Name"].asString();
+
     this->rootfsPath = lxcPath+"/"+this->executionEnvRef+"/deploymentunits/" + uuid;
 
     std::cout << "executionEnvRef "<< this->executionEnvRef<< std::endl;
     std::cout << "description "<< this->description<< std::endl;
     std::cout << "vendor "<< this->vendor<< std::endl;
     std::cout << "type "<< this->type<< std::endl;
+    std::cout << "name "<< this->name<< std::endl;
+    return true;
+
+}
+bool DeploymentUnit::install() {
 
     // Check the installation type
 

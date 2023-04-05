@@ -5,38 +5,18 @@
 DeploymentUnitHelper::DeploymentUnitHelper() {
     loadCache();
 }
-bool set_config_and_save(const char *container_name, const char *config_key, const char *config_value) {
-    struct lxc_container *container;
 
-    // Initialize the container
-    container = lxc_container_new(container_name, NULL);
-    if (!container) {
-        fprintf(stderr, "Failed to initialize the container\n");
-        return false;
-    }
-
-    // Set the configuration item
-    if (!container->set_config_item(container, config_key, config_value)) {
-        fprintf(stderr, "Failed to set the configuration item\n");
-        lxc_container_put(container);
-        return false;
-    }
-
-    // Save the configuration to the file
-    if (!container->save_config(container, NULL)) {
-        fprintf(stderr, "Failed to save the configuration to the file\n");
-        lxc_container_put(container);
-        return false;
-    }
-
-    // Release the container object
-    lxc_container_put(container);
-
-    return true;
-}
-
-std::shared_ptr<DeploymentUnit> DeploymentUnitHelper::getDeploymentUnit(const std::string& container) {
+std::shared_ptr<DeploymentUnit> DeploymentUnitHelper::getDeploymentUnit(const std::string& uuid) {
     // TODO: Implement getDeploymentUnit method
+    for (const auto& duPair : deploymentUnits) {
+        const std::shared_ptr<DeploymentUnit>& _du = duPair.second;
+        if (_du->uuid == uuid) {
+            // The current DeploymentUnit has the target version
+            std::cerr << "Found DeploymentUnit with UUID: " << _du->uuid<<", with name :  " << _du->name<< std::endl;
+            return _du;
+        }
+    }
+    return nullptr;
 }
 
 struct lxc_container* DeploymentUnitHelper::getContainer(const std::string& c){
@@ -46,11 +26,6 @@ struct lxc_container* DeploymentUnitHelper::getContainer(const std::string& c){
         return nullptr;
     }
 
-    if (!container->is_defined(container)) {
-        std::cerr << "Error: Container is not defined" << std::endl;
-        lxc_container_put(container);
-        return nullptr;
-    }
 
     if (!container->load_config(container, nullptr)) {
         std::cerr << "Error: Unable to load container configuration" << std::endl;
@@ -68,23 +43,39 @@ bool DeploymentUnitHelper::addDeploymentUnit(const std::string& executionEnvRef,
     container = lxc_container_new(executionEnvRef.c_str(), NULL);
     if (!container) {
         fprintf(stderr, "Failed to initialize the container\n");
+        return false;
     }
 
+    if (!container->is_defined(container)) {
+        std::cerr << "Error: Container is not defined" << std::endl;
+        lxc_container_put(container);
+        return false;
+    }
 
     // Create a new DeploymentUnit instance
     std::shared_ptr<DeploymentUnit> du = std::make_shared<DeploymentUnit>(uuid);
 
-    // Install the DeploymentUnit
-    if (!du->install(tarballPath, executionEnvRef)) {
+    // prepare the DeploymentUnit
+    if (!du->prepare(tarballPath, executionEnvRef)) {
         std::cerr << "Failed to install DeploymentUnit" << std::endl;
+        lxc_container_put(container);
+        return false;
+    }
+
+    // Install the DeploymentUnit
+    if (!du->install()) {
+        std::cerr << "Failed to install DeploymentUnit" << std::endl;
+        lxc_container_put(container);
         return false;
     }
 
     // Add the DeploymentUnit to the internal context
     deploymentUnits[uuid] = du;
+
     // Save the cache
     if (!saveCache()) {
         std::cerr << "Failed to save cache" << std::endl;
+        lxc_container_put(container);
         return false;
     }
 
@@ -124,8 +115,7 @@ bool DeploymentUnitHelper::addDeploymentUnit(const std::string& executionEnvRef,
                 fprintf(stderr, "Container is already running\n");
             }
 
-
-            container->clear_config(container);
+            container->clear_config(container);           
 
             if (!container->load_config(container, NULL)) {
                 fprintf(stderr, "Failed to load config for container \n");
@@ -133,13 +123,13 @@ bool DeploymentUnitHelper::addDeploymentUnit(const std::string& executionEnvRef,
                 return false;
             }
 
+            container->clear_config_item(container, "lxc.rootfs.path");
             // Set the configuration item
             if (!container->set_config_item(container, "lxc.rootfs.path", rootfsBackend.c_str())) {
                 fprintf(stderr, "Failed to set the configuration item\n");
                 lxc_container_put(container);
                 return false;
             }
-
             // Save the configuration to the file
             if (!container->save_config(container, NULL)) {
                 fprintf(stderr, "Failed to save the configuration to the file\n");
@@ -240,6 +230,7 @@ bool DeploymentUnitHelper::loadCache() {
         du->description = duData["Description"].asString();
         du->vendor = duData["Vendor"].asString();
         du->version = duData["Version"].asInt();
+        du->name = duData["Name"].asString();
         du->type = duData["Type"].asString();
         du->rootfsPath = duData["RootfsPath"].asString();
 
@@ -268,6 +259,7 @@ bool DeploymentUnitHelper::saveCache() {
         duData["Description"] = entry.second->description;
         duData["Vendor"] = entry.second->vendor;
         duData["Version"] = entry.second->version;
+        duData["Name"] = entry.second->name;
         duData["Type"] = entry.second->type;
         duData["RootfsPath"] = entry.second->rootfsPath;
 
