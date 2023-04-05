@@ -6,6 +6,20 @@ DeploymentUnitHelper::DeploymentUnitHelper() {
     loadCache();
 }
 
+bool contains_space(const char *str) {
+    if (!str) {
+        return false;
+    }
+
+    for (const char *p = str; *p != '\0'; ++p) {
+        if (*p == ' ') {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 std::shared_ptr<DeploymentUnit> DeploymentUnitHelper::getDeploymentUnit(const std::string& uuid) {
     // TODO: Implement getDeploymentUnit method
     for (const auto& duPair : deploymentUnits) {
@@ -62,6 +76,37 @@ bool DeploymentUnitHelper::addDeploymentUnit(const std::string& executionEnvRef,
         return false;
     }
 
+    for (const auto& duPair : deploymentUnits) {
+        const std::shared_ptr<DeploymentUnit>& _du = duPair.second;
+        if (_du->name == du->name) {
+            std::cout << "Found DeploymentUnit with UUID: " << _du->uuid<<", with name :  " << _du->name<< std::endl;
+            if(_du->version>=du->version){
+                std::cerr << "Error : to upgrade the du you need to increment the version code atleast by 1, the current version is"<<du->version;
+                std::cerr <<"the installed version is"<<_du->version<<" abord." << std::endl;
+                lxc_container_put(container);
+                return false;
+            }else{
+                if(removeDeploymentUnit(_du->uuid)){
+                    std::cout <<"the old package us succesufly removed, continue the installation with the new one."<<std::endl;
+                }else{
+                    std::cerr <<"Fatal : can't uninstall the old package"<<std::endl;
+                    lxc_container_put(container);
+                    return false;
+                }
+            }
+            break;
+        }
+    }
+
+    //name must not contains spaces 
+    if(contains_space(du->name.c_str())){
+        printf("the name of the du tarball must not contains a space, abord.\n");
+        lxc_container_put(container);
+        return false;
+    }
+
+    //validate using regex
+    //name version if > .... files etc..
     // Install the DeploymentUnit
     if (!du->install()) {
         std::cerr << "Failed to install DeploymentUnit" << std::endl;
