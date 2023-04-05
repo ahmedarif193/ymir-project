@@ -4,7 +4,10 @@
 #include <vector>
 #include <memory>
 #include <map>
-#include <filesystem>
+#include <ctime>
+#include <sstream>
+
+#include <string.h>
 
 #include <json/json.h>
 #include <curl/curl.h>
@@ -15,6 +18,7 @@
 //for  syscalls
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <dirent.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/sendfile.h>

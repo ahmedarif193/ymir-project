@@ -127,9 +127,8 @@ bool DeploymentUnitHelper::addDeploymentUnit(const std::string& executionEnvRef,
 
             container->clear_config(container);
 
-            if (!container->load_config(c, NULL)) {
-                lxc_error("Failed to load config for container \"%s\"\n", "name");
-                fprintf(stderr, "Failed to load config for container \"%s\"\n");
+            if (!container->load_config(container, NULL)) {
+                fprintf(stderr, "Failed to load config for container \n");
                 lxc_container_put(container);
                 return false;
             }

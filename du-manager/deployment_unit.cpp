@@ -232,31 +232,38 @@ bool DeploymentUnit::install(const std::string& tarballPath, const std::string& 
         copy_file(tempDir + "/rootfs.squashfs", rootfsPath + ".squashfs");
     } else if (this->type == "ipk") {
 
-        // Iterate through all the IPK files in the temporary directory
-        for (const auto& entry : std::filesystem::directory_iterator(tempDir)) {
-            if (entry.path().extension() == ".ipk") {
-                // Install the IPK file to the rootfs directory
-                std::string command = "opkg install --force-depends --force-overwrite --force-postinstall --force-space -d " + rootfsPath + " " + entry.path().string();
-                int result = std::system(command.c_str());
-                if (result != 0) {
-                    std::cerr << "Failed to install IPK: " << entry.path().string() << std::endl;
-                    return false;
+        DIR* dir;
+        struct dirent* entry;
+
+        dir = opendir(tempDir.c_str());
+        if (dir == nullptr) {
+            std::cerr << "Failed to open directory: " << tempDir << std::endl;
+        } else {
+            // Store the names of installed IPK packages
+            ipkPackages.clear();
+            while ((entry = readdir(dir)) != nullptr) {
+                // Check if the file has an .ipk extension
+                std::string fileName(entry->d_name);
+                std::size_t extPos = fileName.rfind(".ipk");
+                if (extPos != std::string::npos && fileName.size() - extPos == 4) {
+                    // Install the IPK file to the rootfs directory
+                    std::string filePath = tempDir + "/" + fileName;
+                    std::string command = "opkg install --force-depends --force-overwrite --force-postinstall --force-space -d " + rootfsPath + " " + filePath;
+                    int result = std::system(command.c_str());
+                    if (result != 0) {
+                        std::cerr << "Failed to install IPK: " << filePath << std::endl;
+                        return false;
+                    }
+                    std::size_t extPos = fileName.rfind(".ipk");
+                    if (extPos != std::string::npos && fileName.size() - extPos == 4) {
+                        ipkPackages.push_back(fileName.substr(0, extPos));
+                    }
                 }
-            }
-        }
 
-        // Store the names of installed IPK packages
-        ipkPackages.clear();
-        for (const auto& entry : std::filesystem::directory_iterator(tempDir)) {
-            if (entry.path().extension() == ".ipk") {
-                ipkPackages.push_back(entry.path().stem().string());
             }
+            closedir(dir);
         }
-    } else {
-        std::cerr << "Unknown installation type: " << this->type << std::endl;
-        return false;
     }
-
     // Clean up the temporary directory
     remove_directory(tempDir);
 
