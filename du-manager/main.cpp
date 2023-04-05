@@ -11,6 +11,7 @@ void printUsage() {
 }
 
 int main(int argc, char* argv[]) {
+
     if (argc < 2) {
         printUsage();
         return 1;
@@ -37,6 +38,7 @@ int main(int argc, char* argv[]) {
                 return 1;
             }
         }
+        std::cout << "---1"<< std::endl;
 
         if (container.empty() || path.empty()) {
             std::cout << "Error: Both -e <container> and -d <path> options are required for --install." << std::endl;
@@ -51,6 +53,7 @@ int main(int argc, char* argv[]) {
             uuid_unparse(_uuid, uuidStr);
             uuid = uuidStr;
         }
+        std::cout << "---2"<< std::endl;
 
         if (!helper.addDeploymentUnit(container, path, uuid)){
             std::cout << "Error: Failed to install the DeploymentUnit." << std::endl;

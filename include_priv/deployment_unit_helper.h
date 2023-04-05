@@ -6,6 +6,8 @@ public:
     std::shared_ptr<DeploymentUnit> getDeploymentUnit(const std::string& container);
     bool addDeploymentUnit(const std::string &container, const std::string& tarballPath, const std::string &uuid);
     bool removeDeploymentUnit(const std::string& uuid);
+    struct lxc_container* getContainer(const std::string& c);
+
     void listDeploymentUnits();
 
 private:
