@@ -6,7 +6,6 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(LXC REQUIRED IMPORTED_TARGET lxc)
 pkg_check_modules(HTTP REQUIRED IMPORTED_TARGET libmicrohttpd)
 pkg_check_modules(JSON REQUIRED IMPORTED_TARGET jsoncpp)
-
 add_subdirectory(du-manager)
 
 file(GLOB SOURCES "src/*.cpp")

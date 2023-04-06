@@ -20,7 +20,7 @@ bool contains_space(const char *str) {
     return false;
 }
 
-std::shared_ptr<DeploymentUnit> DeploymentUnitHelper::getDeploymentUnit(const std::string& uuid) {
+std::shared_ptr<DeploymentUnit> DeploymentUnitHelper::getDeploymentUnit(const lxcd::string& uuid) {
     // TODO: Implement getDeploymentUnit method
     for (const auto& duPair : deploymentUnits) {
         const std::shared_ptr<DeploymentUnit>& _du = duPair.second;
@@ -33,7 +33,7 @@ std::shared_ptr<DeploymentUnit> DeploymentUnitHelper::getDeploymentUnit(const st
     return nullptr;
 }
 
-struct lxc_container* DeploymentUnitHelper::getContainer(const std::string& c){
+struct lxc_container* DeploymentUnitHelper::getContainer(const lxcd::string& c){
     struct lxc_container* container = lxc_container_new("Container-4", "/var/lib/lxc/");
     if (!container) {
         std::cerr << "Error: Unable to create container object" << std::endl;
@@ -49,10 +49,8 @@ struct lxc_container* DeploymentUnitHelper::getContainer(const std::string& c){
     return container;
 }
 
-bool DeploymentUnitHelper::addDeploymentUnit(const std::string& executionEnvRef, const std::string& tarballPath, const std::string& uuid) {
-
+bool DeploymentUnitHelper::addDeploymentUnit(const lxcd::string& executionEnvRef, const lxcd::string& tarballPath, const lxcd::string& uuid) {
     struct lxc_container *container;
-
     // Initialize the container
     container = lxc_container_new(executionEnvRef.c_str(), NULL);
     if (!container) {
@@ -80,9 +78,9 @@ bool DeploymentUnitHelper::addDeploymentUnit(const std::string& executionEnvRef,
         const std::shared_ptr<DeploymentUnit>& _du = duPair.second;
         if (_du->name == du->name) {
             std::cout << "Found DeploymentUnit with UUID: " << _du->uuid<<", with name :  " << _du->name<< std::endl;
-            if(_du->version>=du->version){
-                std::cerr << "Error : to upgrade the du you need to increment the version code atleast by 1, the current version is"<<du->version;
-                std::cerr <<"the installed version is"<<_du->version<<" abord." << std::endl;
+            if(_du->version==du->version){
+                std::cerr << "Error : to upgrade the du you need to increment the version code atleast by 1, the current version is "<<du->version;
+                std::cerr <<"the installed version is "<<_du->version<<" abord." << std::endl;
                 lxc_container_put(container);
                 return false;
             }else{
@@ -124,41 +122,22 @@ bool DeploymentUnitHelper::addDeploymentUnit(const std::string& executionEnvRef,
         return false;
     }
 
-    // Get the lxc.rootfs.mount configuration item and store it in a std::string
+    // Get the lxc.rootfs.mount configuration item and store it in a lxcd::string
     char lxcRootfsMount[MAXPARAMLEN];
     container->get_config_item(container, "lxc.rootfs.path", lxcRootfsMount, MAXPARAMLEN);
     if (strlen(lxcRootfsMount)) {
-        std::string rootfsBackend(lxcRootfsMount);
-        std::cerr << "rootfsBackend-b---- "<<rootfsBackend << std::endl;
+        lxcd::string rootfsBackend(lxcRootfsMount);
 
-        std::istringstream iss(rootfsBackend);
-        std::vector<std::string> tokens;
-        std::string token;
-
-        while (std::getline(iss, token, ':')) {
-            tokens.push_back(token);
-        }
+        lxcd::vector<lxcd::string> tokens = rootfsBackend.split(':');
+        lxcd::string token;
 
         if (!tokens.empty()) {
             tokens.insert(tokens.end() - 1, du->rootfsPath);
 
-            std::ostringstream oss;
-            for (size_t i = 0; i < tokens.size(); ++i) {
-                if (i > 0) {
-                    oss << ":";
-                }
-                oss << tokens[i];
-            }
-
-            rootfsBackend = oss.str();
+            //rootfsBackend = oss.str();
 
             rootfsBackend.insert(0,"overlay:");
-            std::cerr << "rootfsBackend-a2---- "<<rootfsBackend << std::endl;
-
-            // Check if the container is already running
-            if (container->is_running(container)) {
-                fprintf(stderr, "Container is already running\n");
-            }
+            std::cerr << "rootfsBackend : "<<rootfsBackend << std::endl;
 
             container->clear_config(container);           
 
@@ -182,6 +161,16 @@ bool DeploymentUnitHelper::addDeploymentUnit(const std::string& executionEnvRef,
                 return false;
             }
 
+            // Check if the container is already running
+            if (container->is_running(container)) {
+                fprintf(stderr, "Container is already running\n");
+                // Start the container
+                if (!container->stop(container)) {
+                    fprintf(stderr, "-----------------------------------Failed to stop the container\n");
+                    lxc_container_put(container);
+                    return false;
+                }
+            }
 
             // Start the container
             if (!container->start(container, 0, NULL)) {
@@ -200,7 +189,7 @@ bool DeploymentUnitHelper::addDeploymentUnit(const std::string& executionEnvRef,
 }
 
 
-bool DeploymentUnitHelper::removeDeploymentUnit(const std::string& uuid) {
+bool DeploymentUnitHelper::removeDeploymentUnit(const lxcd::string& uuid) {
 
     // Find the DeploymentUnit in the internal context
     auto it = deploymentUnits.find(uuid);
@@ -213,12 +202,12 @@ bool DeploymentUnitHelper::removeDeploymentUnit(const std::string& uuid) {
         container->get_config_item(container, "lxc.rootfs.mount", lxcRootfsMount, MAXPARAMLEN);
 
         if (strlen(lxcRootfsMount)) {
-            std::string rootfsBackend(lxcRootfsMount);
-            std::string duRootfsPath = it->second->rootfsPath;
+            lxcd::string rootfsBackend(lxcRootfsMount);
+            lxcd::string duRootfsPath = it->second->rootfsPath;
 
             // Find the position of the path to remove in the string
             std::size_t pathPos = rootfsBackend.find(duRootfsPath);
-            if (pathPos != std::string::npos) {
+            if (pathPos != lxcd::string::npos) {
                 // Remove the path and the preceding colon
                 if (pathPos > 0) {
                     pathPos--; // Move to the colon before the path
@@ -229,6 +218,7 @@ bool DeploymentUnitHelper::removeDeploymentUnit(const std::string& uuid) {
                 container->set_config_item(container, "lxc.rootfs.mount", rootfsBackend.c_str());
             } else {
                 std::cerr << "Failed to find the path to remove in lxc.rootfs.mount" << std::endl;
+                return false;
             }
         }
         lxc_container_put(container);
@@ -255,7 +245,6 @@ bool DeploymentUnitHelper::removeDeploymentUnit(const std::string& uuid) {
     return true;
 }
 
-
 bool DeploymentUnitHelper::loadCache() {
     // Read cache from file
 
@@ -270,18 +259,18 @@ bool DeploymentUnitHelper::loadCache() {
 
     // Load DeploymentUnits from cache
     for (const auto& duData : cache) {
-        std::shared_ptr<DeploymentUnit> du = std::make_shared<DeploymentUnit>(duData["UUID"].asString());
-        du->executionEnvRef = duData["ExecutionEnvRef"].asString();
-        du->description = duData["Description"].asString();
-        du->vendor = duData["Vendor"].asString();
+        std::shared_ptr<DeploymentUnit> du = std::make_shared<DeploymentUnit>(duData["UUID"].asString().c_str());
+        du->executionEnvRef = duData["ExecutionEnvRef"].asString().c_str();
+        du->description = duData["Description"].asString().c_str();
+        du->vendor = duData["Vendor"].asString().c_str();
         du->version = duData["Version"].asInt();
-        du->name = duData["Name"].asString();
-        du->type = duData["Type"].asString();
-        du->rootfsPath = duData["RootfsPath"].asString();
+        du->name = duData["Name"].asString().c_str();
+        du->type = duData["Type"].asString().c_str();
+        du->rootfsPath = duData["RootfsPath"].asString().c_str();
 
         // Load IPK package names
         for (const auto& ipkPackageName : duData["ipkPackages"]) {
-            du->ipkPackages.push_back(ipkPackageName.asString());
+            du->ipkPackages.push_back(ipkPackageName.asString().c_str());
         }
 
         // Load installation date
@@ -299,18 +288,18 @@ bool DeploymentUnitHelper::saveCache() {
     // Serialize DeploymentUnits to cache
     for (const auto& entry : deploymentUnits) {
         Json::Value duData;
-        duData["UUID"] = entry.second->uuid;
-        duData["ExecutionEnvRef"] = entry.second->executionEnvRef;
-        duData["Description"] = entry.second->description;
-        duData["Vendor"] = entry.second->vendor;
+        duData["UUID"] = entry.second->uuid.c_str();
+        duData["ExecutionEnvRef"] = entry.second->executionEnvRef.c_str();
+        duData["Description"] = entry.second->description.c_str();
+        duData["Vendor"] = entry.second->vendor.c_str();
         duData["Version"] = entry.second->version;
-        duData["Name"] = entry.second->name;
-        duData["Type"] = entry.second->type;
-        duData["RootfsPath"] = entry.second->rootfsPath;
+        duData["Name"] = entry.second->name.c_str();
+        duData["Type"] = entry.second->type.c_str();
+        duData["RootfsPath"] = entry.second->rootfsPath.c_str();
 
         // Serialize IPK package names
         for (const auto& ipkPackageName : entry.second->ipkPackages) {
-            duData["ipkPackages"].append(ipkPackageName);
+            duData["ipkPackages"].append(ipkPackageName.c_str());
         }
 
         // Serialize installation date
@@ -345,13 +334,13 @@ void DeploymentUnitHelper::listDeploymentUnits() {
         std::strftime(timeBuffer, sizeof(timeBuffer), "%Y-%m-%d %H:%M:%S", localTime);
 
         Json::Value duData;
-        duData["UUID"] = du->uuid;
-        duData["Container"] = du->executionEnvRef;
+        duData["UUID"] = du->uuid.c_str();
+        duData["Container"] = du->executionEnvRef.c_str();
         duData["InstalledOn"] = timeBuffer;
 
         if (!du->ipkPackages.empty()) {
             for (const auto& ipkPackageName : du->ipkPackages) {
-                duData["IPKPackages"].append(ipkPackageName);
+                duData["IPKPackages"].append(ipkPackageName.c_str());
             }
         }
 
@@ -360,7 +349,7 @@ void DeploymentUnitHelper::listDeploymentUnits() {
 
     Json::StreamWriterBuilder writer;
     writer["indentation"] = "  ";
-    std::string jsonString = Json::writeString(writer, output);
+    lxcd::string jsonString = Json::writeString(writer, output);
     std::cout << "Installed DeploymentUnits:" << std::endl;
     std::cout << jsonString << std::endl;
 }

@@ -1,32 +1,32 @@
 #include "deployment_unit.h"
 
 
-std::string DeploymentUnit::cacheFilePath = "deployment_units_cache.json";
-std::string DeploymentUnit::tempDir = "/tmp/tr157-du";
+lxcd::string DeploymentUnit::cacheFilePath = "deployment_units_cache.json";
+lxcd::string DeploymentUnit::tempDir = "/tmp/tr157-du";
 
 
-DeploymentUnit::DeploymentUnit(const std::string &uuid)
+DeploymentUnit::DeploymentUnit(const lxcd::string &uuid)
 {
     this->uuid =uuid;
 }
 
 // Helper function for libcurl
 size_t writeCallback(void* contents, size_t size, size_t nmemb, void* userp) {
-    ((std::string*)userp)->append((char*)contents, size * nmemb);
+    ((lxcd::string*)userp)->append((char*)contents, size * nmemb);
     return size * nmemb;
 }
 
-std::string getLxcPath() {
+lxcd::string getLxcPath() {
     const char* lxcPath = lxc_get_global_config_item("lxc.lxcpath");
     if (lxcPath) {
-        return std::string(lxcPath);
+        return lxcd::string(lxcPath);
     } else {
         std::cerr << "Error: Unable to get lxc.lxcpath" << std::endl;
         return "";
     }
 }
 
-bool isContainerUsingOverlayFS(const std::string& containerName) {
+bool isContainerUsingOverlayFS(const lxcd::string& containerName) {
     struct lxc_container* container = lxc_container_new(containerName.c_str(), nullptr);
     if (!container) {
         std::cerr << "Error: Unable to create container object" << std::endl;
@@ -48,8 +48,8 @@ bool isContainerUsingOverlayFS(const std::string& containerName) {
     char lxcRootfsBackend[MAXPARAMLEN];
     container->get_config_item(container, "lxc.rootfs.path", lxcRootfsBackend, MAXPARAMLEN);
     if (strlen(lxcRootfsBackend)) {
-        std::string rootfsBackend(lxcRootfsBackend);
-        if (rootfsBackend.find("overlay") != std::string::npos) {
+        lxcd::string rootfsBackend(lxcRootfsBackend);
+        if (rootfsBackend.find("overlay") != lxcd::string::npos) {
             lxc_container_put(container);
             return true;
         }
@@ -59,8 +59,8 @@ bool isContainerUsingOverlayFS(const std::string& containerName) {
     return false;
 }
 
-int create_directories(const std::string& path) {
-    std::string tmp = path;
+int create_directories(const lxcd::string& path) {
+    lxcd::string tmp = path;
     size_t len = tmp.length();
     mode_t mode = 0777;
     mode_t current_umask = umask(0); // Get current umask
@@ -86,7 +86,7 @@ int create_directories(const std::string& path) {
     return 0;
 }
 
-bool copy_file(const std::string& src, const std::string& dst) {
+bool copy_file(const lxcd::string& src, const lxcd::string& dst) {
     int src_fd = open(src.c_str(), O_RDONLY);
     if (src_fd == -1) {
         perror("Failed to open source file");
@@ -131,7 +131,7 @@ int remove_entry(const char *path, const struct stat *sb, int typeflag, struct F
     return rv;
 }
 
-bool remove_directory(const std::string &dir) {
+bool remove_directory(const lxcd::string &dir) {
     int flags = FTW_DEPTH | FTW_PHYS;
     int rv = nftw(dir.c_str(), remove_entry, 64, flags);
     if (rv) {
@@ -141,7 +141,7 @@ bool remove_directory(const std::string &dir) {
     return true;
 }
 
-bool DeploymentUnit::prepare(const std::string& tarballPath, const std::string& executionEnvRef) {
+bool DeploymentUnit::prepare(const lxcd::string& tarballPath, const lxcd::string& executionEnvRef) {
         // Store the installation date
     installationDate = std::time(nullptr);
 
@@ -149,11 +149,11 @@ bool DeploymentUnit::prepare(const std::string& tarballPath, const std::string& 
     installationDate = std::time(nullptr);
 
     // Check if the tarballPath is a URL
-    std::string downloadedFilePath;
+    lxcd::string downloadedFilePath;
     if (tarballPath.find("http://") == 0 || tarballPath.find("https://") == 0) {
         CURL* curl;
         CURLcode res;
-        std::string fileContents;
+        lxcd::string fileContents;
 
         curl_global_init(CURL_GLOBAL_DEFAULT);
         curl = curl_easy_init();
@@ -170,7 +170,7 @@ bool DeploymentUnit::prepare(const std::string& tarballPath, const std::string& 
             curl_easy_cleanup(curl);
 
             // Save the downloaded file to a temporary directory
-            std::string fileName = "downloaded_tarball.tar.gz";
+            lxcd::string fileName = "downloaded_tarball.tar.gz";
             std::ofstream outputFile(fileName);
             outputFile << fileContents;
             outputFile.close();
@@ -180,10 +180,10 @@ bool DeploymentUnit::prepare(const std::string& tarballPath, const std::string& 
     }
 
     // Use the downloaded file path if it exists, otherwise use the original tarballPath
-    std::string pathToUse = downloadedFilePath.empty() ? tarballPath : downloadedFilePath;
+    lxcd::string pathToUse = downloadedFilePath.empty() ? tarballPath : downloadedFilePath;
     create_directories(tempDir);
     // Extract the tar.gz file to the temporary directory
-    std::string command = "tar -C " + tempDir + " -xzf " + pathToUse;
+    lxcd::string command = "tar -C " + tempDir + " -xzf " + pathToUse;
     int result = std::system(command.c_str());
     if (result != 0) {
         std::cerr << "Failed to extract tarball" << std::endl;
@@ -199,18 +199,18 @@ bool DeploymentUnit::prepare(const std::string& tarballPath, const std::string& 
     Json::Value metadata;
     metadataFile >> metadata;
 
-    std::string lxcPath = getLxcPath();
+    lxcd::string lxcPath = getLxcPath();
     if (lxcPath.empty()) {
         std::cout << "fatal : LXC path no found." << std::endl;
         return false;
     }
 
     this->executionEnvRef = executionEnvRef;
-    this->description = metadata["Description"].asString();
-    this->vendor = metadata["Vendor"].asString();
+    this->description = metadata["Description"].asString().c_str();
+    this->vendor = metadata["Vendor"].asString().c_str();
     this->version = metadata["Version"].asInt();
-    this->type = metadata["Type"].asString();
-    this->name = metadata["Name"].asString();
+    this->type = metadata["Type"].asString().c_str();
+    this->name = metadata["Name"].asString().c_str();
 
     this->rootfsPath = lxcPath+"/"+this->executionEnvRef+"/deploymentunits/" + uuid;
 
@@ -248,19 +248,19 @@ bool DeploymentUnit::install() {
             ipkPackages.clear();
             while ((entry = readdir(dir)) != nullptr) {
                 // Check if the file has an .ipk extension
-                std::string fileName(entry->d_name);
+                lxcd::string fileName(entry->d_name);
                 std::size_t extPos = fileName.rfind(".ipk");
-                if (extPos != std::string::npos && fileName.size() - extPos == 4) {
+                if (extPos != lxcd::string::npos && fileName.size() - extPos == 4) {
                     // Install the IPK file to the rootfs directory
-                    std::string filePath = tempDir + "/" + fileName;
-                    std::string command = "opkg install --force-depends --force-overwrite --force-postinstall --force-space -d " + rootfsPath + " " + filePath;
+                    lxcd::string filePath = tempDir + "/" + fileName;
+                    lxcd::string command = "opkg install --force-depends --force-overwrite --force-postinstall --force-space -d " + rootfsPath + " " + filePath;
                     int result = std::system(command.c_str());
                     if (result != 0) {
                         std::cerr << "Failed to install IPK: " << filePath << std::endl;
                         return false;
                     }
                     std::size_t extPos = fileName.rfind(".ipk");
-                    if (extPos != std::string::npos && fileName.size() - extPos == 4) {
+                    if (extPos != lxcd::string::npos && fileName.size() - extPos == 4) {
                         ipkPackages.push_back(fileName.substr(0, extPos));
                     }
                 }

@@ -17,20 +17,20 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    std::string action = argv[1];
+    lxcd::string action = argv[1];
     DeploymentUnitHelper helper;
 
     if (action == "--ls") {
         helper.listDeploymentUnits();
     } else if (action == "--install") {
-        std::string container, path, uuid;
+        lxcd::string container, path, uuid;
 
         for (int i = 2; i < argc; i++) {
-            if (std::string(argv[i]) == "-e" && i + 1 < argc) {
+            if (lxcd::string(argv[i]) == "-e" && i + 1 < argc) {
                 container = argv[++i];
-            } else if (std::string(argv[i]) == "-d" && i + 1 < argc) {
+            } else if (lxcd::string(argv[i]) == "-d" && i + 1 < argc) {
                 path = argv[++i];
-            } else if (std::string(argv[i]) == "-u" && i + 1 < argc) {
+            } else if (lxcd::string(argv[i]) == "-u" && i + 1 < argc) {
                 uuid = argv[++i];
             } else {
                 std::cout << "Unknown or incomplete option: " << argv[i] << std::endl;
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
-        std::string uuidToRemove = argv[2];
+        lxcd::string uuidToRemove = argv[2];
         if (helper.removeDeploymentUnit(uuidToRemove)) {
             std::cout << "Successfully removed DeploymentUnit with UUID: " << uuidToRemove << std::endl;
         } else {

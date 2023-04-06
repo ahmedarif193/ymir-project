@@ -7,12 +7,13 @@
 #include <ctime>
 #include <sstream>
 
-#include <string.h>
 
 #include <json/json.h>
 #include <curl/curl.h>
 #include <uuid/uuid.h>
 #include <lxc/lxccontainer.h>
+
+#include <utils/string.h>
 
 
 //for  syscalls
@@ -28,29 +29,29 @@
 
 class DeploymentUnit {
 public:
-    DeploymentUnit(const std::string &uuid);
-    bool prepare(const std::string& tarballPath, const std::string &executionEnvRef);
+    DeploymentUnit(const lxcd::string &uuid);
+    bool prepare(const lxcd::string& tarballPath, const lxcd::string &executionEnvRef);
     bool install();
 
     bool remove();
 
     //TODO :  to be used
-    std::string squashfsPath;
-    static std::string cacheFilePath;
-    static std::string tempDir;
+    lxcd::string squashfsPath;
+    static lxcd::string cacheFilePath;
+    static lxcd::string tempDir;
 
     // DeploymentUnit parameters
-    std::string uuid;
-    std::string executionEnvRef;
-    std::string description;
-    std::string vendor;
-    std::string type;
-    std::string name;
-    std::string rootfsPath;
+    lxcd::string uuid;
+    lxcd::string executionEnvRef;
+    lxcd::string description;
+    lxcd::string vendor;
+    lxcd::string type;
+    lxcd::string name;
+    lxcd::string rootfsPath;
     int version;
 
     // IPK package names
-    std::vector<std::string> ipkPackages;
+    std::vector<lxcd::string> ipkPackages;
 
     //metadata
     std::time_t installationDate;
