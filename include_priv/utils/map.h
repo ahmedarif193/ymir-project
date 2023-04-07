@@ -113,7 +113,7 @@ public:
         ValueType* operator->() const{
             return _cur->_value;
         }
-
+       
         ~Iterator(){
             _cur = nullptr;
         }
@@ -333,6 +333,7 @@ public:
     ReverseIterator rend(){return ReverseIterator(_head);}
 
     std::size_t size() const{return _size;}
+    std::size_t count() const{return _size;}
     bool empty() const{return (_size == 0)? true : false;}
 
     //return mapped type for the given key

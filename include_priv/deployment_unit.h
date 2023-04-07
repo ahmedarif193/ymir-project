@@ -49,6 +49,8 @@ public:
     lxcd::string name;
     lxcd::string rootfsPath;
     int version;
+    bool mounted;
+
 
     // IPK package names
     std::vector<lxcd::string> ipkPackages;
@@ -56,3 +58,5 @@ public:
     //metadata
     std::time_t installationDate;
 };
+
+lxcd::string getLxcPath();

@@ -23,7 +23,12 @@ public:
     ~string() {
         delete[] data_;
     }
-    
+
+    char* begin() { return data_; }
+    const char* begin() const { return data_; }
+    char* end() { return data_ + size_; }
+    const char* end() const { return data_ + size_; }
+
     string& operator=(const string& other) {
         if (this != &other) {
             delete[] data_;
@@ -35,7 +40,31 @@ public:
         }
         return *this;
     }
-    
+
+    // Move assignment operator
+    string& operator=(string&& other) noexcept {
+        if (this != &other) {
+            delete[] data_;
+            data_ = other.data_;
+            size_ = other.size_;
+            other.data_ = nullptr;
+            other.size_ = 0;
+        }
+        return *this;
+    }
+
+    // Assignment operator from C-style string
+    string& operator=(const char* str) {
+        size_t len = strlen(str);
+        if (size_ < len) {
+            char* newData = new char[len + 1];
+            delete[] data_;
+            data_ = newData;
+            size_ = len;
+        }
+        strcpy(data_, str);
+        return *this;
+    }
     char& operator[](size_t index) {
         return data_[index];
     }
@@ -75,6 +104,29 @@ public:
         return result;
     }
 
+    string& operator+=(const string& other) {
+        size_t newSize = size_ + other.size_;
+        char* newData = new char[newSize + 1];
+        strcpy(newData, data_);
+        strcat(newData, other.data_);
+        delete[] data_;
+        data_ = newData;
+        size_ = newSize;
+        return *this;
+    }
+
+    string& operator+=(const char* other) {
+        size_t len = strlen(other);
+        reserve(size_ + len);
+        strcat(data_, other);
+        size_ += len;
+        return *this;
+    }
+
+    string& operator+=(const char other) {
+        const char temp[2] = { other, '\0' };
+        return (*this += temp);
+    }
     friend string operator+(const char* lhs, const string& rhs);
     
     friend string operator+(const string& rhs, const char* lhs);
@@ -90,7 +142,8 @@ public:
         }
         return tokens;
     }
-    
+
+
     // Erase a portion of this string
     string& erase(size_t pos, size_t count = npos) {
         if (pos >= size_) {
@@ -113,6 +166,14 @@ public:
             return npos;
         }
         return result - data_;
+    }
+
+    bool contains(const char* str) const {
+        return find(str) != npos;
+    }
+
+    bool contains(const string& str) const {
+        return find(str) != npos;
     }
 
     // Check if this string is empty
@@ -205,6 +266,7 @@ public:
             size_ = n;
         }
     }
+    void reserve(size_t n) { resize(n);}
 
     static const size_t npos = static_cast<size_t>(-1);
 private:
@@ -216,14 +278,81 @@ private:
         data_[size] = '\0';
     }
 };
-string operator+(const char* lhs, const string& rhs) {
+
+inline string operator+(const char* lhs, const string& rhs) {
     return string(lhs) + rhs;
 }
 
-string operator+(const string& rhs, const char* lhs) {
+inline string operator+(const string& rhs, const char* lhs) {
     return rhs + string(lhs);
 }
 
+inline double stod(const string& str) {
+    double result = 0.0;
+    double factor = 1.0;
+    bool negative = false;
+    bool decimal = false;
+
+    for (const char c : str) {
+        if (c == '-') {
+            negative = true;
+        } else if (c == '.') {
+            decimal = true;
+        } else {
+            int digit = c - '0';
+            if (digit >= 0 && digit <= 9) {
+                if (decimal) {
+                    factor /= 10.0;
+                }
+                result = result * 10.0 + digit;
+            } else {
+                break;
+            }
+        }
+    }
+
+    if (negative) {
+        result *= -1.0;
+    }
+
+    return result * factor;
+}
+
+inline int stoi(const string& str) {
+    int res = 0;
+    int sign = 1;
+    size_t i = 0;
+
+    // Check for leading sign
+    if (str[i] == '-') {
+        sign = -1;
+        ++i;
+    } else if (str[i] == '+') {
+        ++i;
+    }
+
+    // Parse digits
+    for (; i < str.size(); ++i) {
+        if (!isdigit(str[i])) {
+            break;
+        }
+        res = res * 10 + (str[i] - '0');
+    }
+
+    return sign * res;
+}
+
+inline  string to_string(int value) {
+    char buffer[20];
+    sprintf(buffer, "%d", value);
+    return string(buffer);
+}
+
+inline  string to_string(double value) {
+    char buffer[20];
+    sprintf(buffer, "%.8g", value);
+    return string(buffer);
+}
 }
 
 #endif // LXCQUEUE_H

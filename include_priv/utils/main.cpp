@@ -2,6 +2,7 @@
 #include "vector.h"
 #include "map.h"
 #include "uuid.h"
+#include "json.h"
 
 #include <cassert>
 #include <iostream>
@@ -57,6 +58,13 @@ int main() {
     }
     std::cout << std::endl;    
     for (int i = 0; i < 500; ++i) {
+        {
+            lxcd::string json = "{\"name\": \"John\", \"age\": 30}";
+            lxcd::JsonParser parser(json);
+            lxcd::JsonValue root = parser.parse();
+            lxcd::string name = root["name"].asString();  // "John"
+            int age = root["age"].asInt();          // 30
+        }
         // Test lxcd::string class
         lxcd::string s1 = "hello";
         assert(s1.size() == 5);

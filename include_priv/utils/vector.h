@@ -51,8 +51,10 @@ public:
         bool operator==(const iterator& other) const { return ptr_ == other.ptr_; }
         bool operator!=(const iterator& other) const { return ptr_ != other.ptr_; }
         ptrdiff_t operator-(const iterator& other) const { return ptr_ - other.ptr_; }
+        iterator operator-(size_t offset) const { return iterator(ptr_ - offset); }
         T& operator*() { return *ptr_; }
         T* operator->() { return ptr_; }
+
     private:
         T* ptr_;
     };
@@ -99,11 +101,50 @@ public:
     // Implementation of the end() method
     iterator end() { return iterator(data_ + size_); }
 
+    iterator erase(iterator pos);
+
+    iterator erase(iterator first, iterator last);
+
 private:
     T* data_;
     lxcd::size_t size_;
     lxcd::size_t capacity_;
 };
+
+template<typename T>
+typename vector<T>::iterator vector<T>::erase(iterator pos) {
+        if (pos == end()) {
+            return end();
+        }
+
+        iterator i = pos;
+        ++i;
+        for (iterator j = i; j != end(); ++j, ++pos) {
+            *pos = std::move(*j);
+        }
+        pop_back();
+
+        return i;
+    }
+
+template<typename T>
+typename vector<T>::iterator vector<T>::erase(typename vector<T>::iterator first, typename vector<T>::iterator last) {
+        if (first == last) {
+            return last;
+        }
+
+        iterator i = first;
+        for (iterator j = last; j != end(); ++j, ++i) {
+            *i = std::move(*j);
+        }
+
+        size_t n = last - first;
+        for (size_t k = 0; k < n; ++k) {
+            pop_back();
+        }
+
+        return first;
+    }
 
 template<typename T>
 vector<T>::vector() : data_(nullptr), size_(0), capacity_(0) {}

@@ -1,4 +1,5 @@
 #include "deployment_unit_helper.h"
+#include "utils/linux.h"
 
 #define CACHE_PATH "/run/tr157.cache"
 
@@ -50,9 +51,8 @@ struct lxc_container* DeploymentUnitHelper::getContainer(const lxcd::string& c){
 }
 
 bool DeploymentUnitHelper::addDeploymentUnit(const lxcd::string& executionEnvRef, const lxcd::string& tarballPath, const lxcd::string& uuid) {
-    struct lxc_container *container;
-    // Initialize the container
-    container = lxc_container_new(executionEnvRef.c_str(), NULL);
+    
+    struct lxc_container *container = lxc_container_new(executionEnvRef.c_str(), NULL);
     if (!container) {
         fprintf(stderr, "Failed to initialize the container\n");
         return false;
@@ -78,9 +78,9 @@ bool DeploymentUnitHelper::addDeploymentUnit(const lxcd::string& executionEnvRef
         const std::shared_ptr<DeploymentUnit>& _du = duPair.second;
         if (_du->name == du->name) {
             std::cout << "Found DeploymentUnit with UUID: " << _du->uuid<<", with name :  " << _du->name<< std::endl;
-            if(_du->version==du->version){
+            if(!_du->version){//_du->version==du->version
                 std::cerr << "Error : to upgrade the du you need to increment the version code atleast by 1, the current version is "<<du->version;
-                std::cerr <<"the installed version is "<<_du->version<<" abord." << std::endl;
+                std::cerr <<"the installed version is "<<_du->version<<", abord." << std::endl;
                 lxc_container_put(container);
                 return false;
             }else{
@@ -95,8 +95,7 @@ bool DeploymentUnitHelper::addDeploymentUnit(const lxcd::string& executionEnvRef
             break;
         }
     }
-
-    //name must not contains spaces 
+    //name must not contains spaces
     if(contains_space(du->name.c_str())){
         printf("the name of the du tarball must not contains a space, abord.\n");
         lxc_container_put(container);
@@ -112,6 +111,8 @@ bool DeploymentUnitHelper::addDeploymentUnit(const lxcd::string& executionEnvRef
         return false;
     }
 
+    mountSquashfs(du->rootfsPath + ".squashfs",du->rootfsPath);
+
     // Add the DeploymentUnit to the internal context
     deploymentUnits[uuid] = du;
 
@@ -122,72 +123,83 @@ bool DeploymentUnitHelper::addDeploymentUnit(const lxcd::string& executionEnvRef
         return false;
     }
 
-    // Get the lxc.rootfs.mount configuration item and store it in a lxcd::string
-    char lxcRootfsMount[MAXPARAMLEN];
-    container->get_config_item(container, "lxc.rootfs.path", lxcRootfsMount, MAXPARAMLEN);
-    if (strlen(lxcRootfsMount)) {
-        lxcd::string rootfsBackend(lxcRootfsMount);
 
-        lxcd::vector<lxcd::string> tokens = rootfsBackend.split(':');
-        lxcd::string token;
-
-        if (!tokens.empty()) {
-            tokens.insert(tokens.end() - 1, du->rootfsPath);
-
-            //rootfsBackend = oss.str();
-
-            rootfsBackend.insert(0,"overlay:");
-            std::cerr << "rootfsBackend : "<<rootfsBackend << std::endl;
-
-            container->clear_config(container);           
-
-            if (!container->load_config(container, NULL)) {
-                fprintf(stderr, "Failed to load config for container \n");
-                lxc_container_put(container);
-                return false;
-            }
-
-            container->clear_config_item(container, "lxc.rootfs.path");
-            // Set the configuration item
-            if (!container->set_config_item(container, "lxc.rootfs.path", rootfsBackend.c_str())) {
-                fprintf(stderr, "Failed to set the configuration item\n");
-                lxc_container_put(container);
-                return false;
-            }
-            // Save the configuration to the file
-            if (!container->save_config(container, NULL)) {
-                fprintf(stderr, "Failed to save the configuration to the file\n");
-                lxc_container_put(container);
-                return false;
-            }
-
-            // Check if the container is already running
-            if (container->is_running(container)) {
-                fprintf(stderr, "Container is already running\n");
-                // Start the container
-                if (!container->stop(container)) {
-                    fprintf(stderr, "-----------------------------------Failed to stop the container\n");
-                    lxc_container_put(container);
-                    return false;
-                }
-            }
-
-            // Start the container
-            if (!container->start(container, 0, NULL)) {
-                fprintf(stderr, "-----------------------------------Failed to start the container\n");
-                lxc_container_put(container);
-                return false;
-            }else{
-                fprintf(stderr, "-----------------------------------ok\n");
-            }
-        }
-    }
-
+    if(!updateFullRootPath(container)){
+        fprintf(stderr, "Can't handle updating lxc.rootfs.path, abord. \n");
+        return false;
+    };
+    
     lxc_container_put(container);
 
     return true;
 }
+bool DeploymentUnitHelper::restartContainer(struct lxc_container *container){
+    // Check if the container is already running
+    if (container->is_running(container)) {
+        printf("Container is already running, restarting.\n");
+        // Start the container
+        if (!container->stop(container)) {
+            printf("Failed to stop the container\n");
+            lxc_container_put(container);
+            return false;
+        }else{
+            printf("stopped the container\n");
+        }
+    }
 
+    // Start the container
+    if (!container->start(container, 0, NULL)) {
+        printf("Failed to start the container, abord.\n");
+        lxc_container_put(container);
+        return false;
+    }else{
+        printf("container started\n");
+    }
+    return true;
+}
+
+bool DeploymentUnitHelper::updateFullRootPath(struct lxc_container *container){
+    auto lxcPath = getLxcPath();
+    auto initialRootfs = lxcPath + "/" + lxcd::string(container->name) + "/rootfs";
+    auto initialOverlayDelta = lxcPath + "/" + lxcd::string(container->name) + "/overlay/delta";
+
+    lxcd::string newRootfsBackend("overlay:");
+    newRootfsBackend.append(initialRootfs);
+
+    for (const auto& entry : deploymentUnits) {
+        if(entry.second->executionEnvRef == container->name) {
+            std::cout << entry.second->name << " found "<<std::endl;
+            newRootfsBackend.append(":");
+            newRootfsBackend.append(entry.second->rootfsPath);
+        }
+    }
+    newRootfsBackend.append(":");
+    newRootfsBackend.append(initialOverlayDelta);
+    std::cout << "newRootfsBackend "<< newRootfsBackend << std::endl;
+
+    container->clear_config(container);
+
+    if (!container->load_config(container, NULL)) {
+        fprintf(stderr, "Failed to load config for container \n");
+        lxc_container_put(container);
+        return false;
+    }
+    container->clear_config_item(container, "lxc.rootfs.path");
+    // Set the configuration item
+    if (!container->set_config_item(container, "lxc.rootfs.path", newRootfsBackend.c_str())) {
+        fprintf(stderr, "Failed to set the configuration item\n");
+        lxc_container_put(container);
+        return false;
+    }
+    // Save the configuration to the file
+    if (!container->save_config(container, NULL)) {
+        fprintf(stderr, "Failed to save the configuration to the file\n");
+        lxc_container_put(container);
+        return false;
+    }
+    
+    return restartContainer(container);
+}
 
 bool DeploymentUnitHelper::removeDeploymentUnit(const lxcd::string& uuid) {
 
@@ -195,32 +207,20 @@ bool DeploymentUnitHelper::removeDeploymentUnit(const lxcd::string& uuid) {
     auto it = deploymentUnits.find(uuid);
     if (it != deploymentUnits.end()) {
 
-        struct lxc_container* container = this->getContainer(it->second->executionEnvRef);
-        if(container == nullptr) return false;
-
-        char lxcRootfsMount[MAXPARAMLEN];
-        container->get_config_item(container, "lxc.rootfs.mount", lxcRootfsMount, MAXPARAMLEN);
-
-        if (strlen(lxcRootfsMount)) {
-            lxcd::string rootfsBackend(lxcRootfsMount);
-            lxcd::string duRootfsPath = it->second->rootfsPath;
-
-            // Find the position of the path to remove in the string
-            std::size_t pathPos = rootfsBackend.find(duRootfsPath);
-            if (pathPos != lxcd::string::npos) {
-                // Remove the path and the preceding colon
-                if (pathPos > 0) {
-                    pathPos--; // Move to the colon before the path
-                }
-                rootfsBackend.erase(pathPos, duRootfsPath.length() + 1);
-
-                // Update the container configuration without the removed path
-                container->set_config_item(container, "lxc.rootfs.mount", rootfsBackend.c_str());
-            } else {
-                std::cerr << "Failed to find the path to remove in lxc.rootfs.mount" << std::endl;
-                return false;
-            }
+        //struct lxc_container* container = this->getContainer(it->second->executionEnvRef);
+        struct lxc_container *container = lxc_container_new(it->second->executionEnvRef, NULL);
+        if (!container) {
+            fprintf(stderr, "Failed to initialize the container\n");
+            return false;
         }
+
+        if (!container->is_defined(container)) {
+            std::cerr << "Error: Container is not defined" << std::endl;
+            lxc_container_put(container);
+            return false;
+        }
+        updateFullRootPath(container);
+
         lxc_container_put(container);
 
         // Remove the DeploymentUnit
@@ -349,7 +349,7 @@ void DeploymentUnitHelper::listDeploymentUnits() {
 
     Json::StreamWriterBuilder writer;
     writer["indentation"] = "  ";
-    lxcd::string jsonString = Json::writeString(writer, output);
+    lxcd::string jsonString = Json::writeString(writer, output).c_str();
     std::cout << "Installed DeploymentUnits:" << std::endl;
     std::cout << jsonString << std::endl;
 }
