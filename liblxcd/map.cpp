@@ -304,6 +304,7 @@ lxcd::map<K, M>::map(const lxcd::map<K, M>& _map) {
 }
 
 // Constructor definition with initializer_list
+
 template<typename K, typename M>
 lxcd::map<K, M>::map(std::initializer_list<lxcd::pair<const K, M>> _l) {
     map_ctor();
@@ -326,30 +327,30 @@ lxcd::map<K, M>::~map(){
 }
 
 template<typename K, typename M>
-lxcd::Node<K, M> *lxcd::map::get_head() const{
+lxcd::Node<K, M> *lxcd::map<K, M>::get_head() const{
     return _head;
 }
 
 template<typename K, typename M>
-lxcd::Node<K, M> *lxcd::map::get_tail() const{
+lxcd::Node<K, M> *lxcd::map<K, M>::get_tail() const{
     return _tail;
 }
 
 template<typename K, typename M>
-void lxcd::map::map_ctor(){
+void lxcd::map<K, M>::map_ctor(){
     init_head_tail();
     init_assign_head_tail();
     init_size();
 }
 
 template<typename K, typename M>
-void lxcd::map::init_head_tail(){
+void lxcd::map<K, M>::init_head_tail(){
     _head = new lxcd::Node<K, M>(_LEVELS);
     _tail = new lxcd::Node<K, M>(_LEVELS);
 }
 
 template<typename K, typename M>
-void lxcd::map::init_assign_head_tail(){
+void lxcd::map<K, M>::init_assign_head_tail(){
     _head->_forward_links[0] = _tail;
     _tail->_prev = _head;
     _head->_prev = NULL;
@@ -357,25 +358,25 @@ void lxcd::map::init_assign_head_tail(){
 }
 
 template<typename K, typename M>
-void lxcd::map::init_size(){
+void lxcd::map<K, M>::init_size(){
     _max = 0;
     _size = 0;
 }
 
 template<typename K, typename M>
-void lxcd::map::reset_head_tail(){
+void lxcd::map<K, M>::reset_head_tail(){
     _head = NULL;
     _tail = NULL;
 }
 
 template<typename K, typename M>
-void lxcd::map::reset_size(){
+void lxcd::map<K, M>::reset_size(){
     _max = 0;
     _size = 0;
 }
 
 template<typename K, typename M>
-lxcd::map::Iterator lxcd::map::find(const K &_key){
+typename lxcd::map<K, M>::Iterator lxcd::map<K, M>::find(const K &_key) {
     lxcd::Node<K, M> *_temp_head = find_at_bottom(_key);
     if(_temp_head == NULL){
         return map<K, M>::Iterator(_tail);
@@ -384,7 +385,7 @@ lxcd::map::Iterator lxcd::map::find(const K &_key){
 }
 
 template<typename K, typename M>
-lxcd::map::ConstIterator lxcd::map::find(const K &_key) const{
+typename lxcd::map<K, M>::ConstIterator lxcd::map<K, M>::find(const K &_key) const{
     lxcd::Node<K, M> *_temp_head = find_at_bottom(_key);
     if(_temp_head == NULL){
         return map<K, M>::ConstIterator(_tail);
@@ -393,34 +394,34 @@ lxcd::map::ConstIterator lxcd::map::find(const K &_key) const{
 }
 
 template<typename K, typename M>
-lxcd::map::Iterator lxcd::map::begin(){return map<K, M>::Iterator(_head->_forward_links[0]);}
+typename lxcd::map<K, M>::Iterator lxcd::map<K, M>::begin(){return map<K, M>::Iterator(_head->_forward_links[0]);}
 
 template<typename K, typename M>
-lxcd::map::Iterator lxcd::map::end(){return map<K, M>::Iterator(_tail);}
+typename lxcd::map<K, M>::Iterator lxcd::map<K, M>::end(){return map<K, M>::Iterator(_tail);}
 
 template<typename K, typename M>
-lxcd::map::ConstIterator lxcd::map::begin() const{return ConstIterator(_head->_forward_links[0]);}
+typename lxcd::map<K, M>::ConstIterator lxcd::map<K, M>::begin() const{return ConstIterator(_head->_forward_links[0]);}
 
 template<typename K, typename M>
-lxcd::map::ConstIterator lxcd::map::end() const{return ConstIterator(_tail);}
+typename lxcd::map<K, M>::ConstIterator lxcd::map<K, M>::end() const{return ConstIterator(_tail);}
 
 template<typename K, typename M>
-lxcd::map::ReverseIterator lxcd::map::rbegin(){return ReverseIterator(_tail->_prev);}
+typename lxcd::map<K, M>::ReverseIterator lxcd::map<K, M>::rbegin(){return ReverseIterator(_tail->_prev);}
 
 template<typename K, typename M>
-lxcd::map::ReverseIterator lxcd::map::rend(){return ReverseIterator(_head);}
+typename lxcd::map<K, M>::ReverseIterator lxcd::map<K, M>::rend(){return ReverseIterator(_head);}
 
 template<typename K, typename M>
-std::size_t lxcd::map::size() const{return _size;}
+std::size_t lxcd::map<K, M>::size() const{return _size;}
 
 template<typename K, typename M>
-std::size_t lxcd::map::count() const{return _size;}
+std::size_t lxcd::map<K, M>::count() const{return _size;}
 
 template<typename K, typename M>
-bool lxcd::map::empty() const{return (_size == 0)? true : false;}
+bool lxcd::map<K, M>::empty() const{return (_size == 0)? true : false;}
 
 template<typename K, typename M>
-M &lxcd::map::at(const K &_key){
+M &lxcd::map<K, M>::at(const K &_key){
     lxcd::Node<K, M> *_temp_head = find_at_bottom(_key);
     if(_temp_head == NULL){
         throw std::out_of_range("out of range");
@@ -430,7 +431,7 @@ M &lxcd::map::at(const K &_key){
 }
 
 template<typename K, typename M>
-const M &lxcd::map::at(const K &_key) const{
+const M &lxcd::map<K, M>::at(const K &_key) const{
     lxcd::Node<K, M> *_temp_head = find_at_bottom(_key);
     if(_temp_head == NULL){
         throw std::out_of_range("out of range");
@@ -439,79 +440,79 @@ const M &lxcd::map::at(const K &_key) const{
 }
 
 template<typename K, typename M>
-bool lxcd::map::operator==(const lxcd::map::Iterator &_iter1, const lxcd::map::Iterator &_iter2){
+bool operator==(const typename lxcd::map<K, M>::Iterator &_iter1, const typename lxcd::map<K, M>::Iterator &_iter2){
     return (_iter1.get_cur() == _iter2.get_cur())? true : false;
 }
 
 template<typename K, typename M>
-bool lxcd::map::operator!=(const lxcd::map::Iterator &_iter1, const lxcd::map::Iterator &_iter2){
+bool operator!=(const typename lxcd::map<K, M>::Iterator &_iter1, const typename lxcd::map<K, M>::Iterator &_iter2){
     return (_iter1.get_cur() != _iter2.get_cur())? true : false;
 }
 
 template<typename K, typename M>
-bool lxcd::map::operator==(const lxcd::map::ConstIterator &_citer1, const lxcd::map::ConstIterator &_citer2){
+bool operator==(const typename lxcd::map<K, M>::ConstIterator &_citer1, const typename lxcd::map<K, M>::ConstIterator &_citer2){
     return (_citer1.get_cur() == _citer2.get_cur())? true : false;
 }
 
 template<typename K, typename M>
-bool lxcd::map::operator!=(const lxcd::map::ConstIterator &_citer1, const lxcd::map::ConstIterator &_citer2){
+bool operator!=(const typename lxcd::map<K, M>::ConstIterator &_citer1, const typename lxcd::map<K, M>::ConstIterator &_citer2){
     return (_citer1.get_cur() != _citer2.get_cur())? true : false;
 }
 
 template<typename K, typename M>
-bool lxcd::map::operator==(const lxcd::map::ReverseIterator &_riter1, const lxcd::map::ReverseIterator &_riter2){
+bool operator==(const typename lxcd::map<K, M>::ReverseIterator &_riter1, const typename lxcd::map<K, M>::ReverseIterator &_riter2){
     return (_riter1.get_cur() == _riter2.get_cur())? true : false;
 }
 
 template<typename K, typename M>
-bool lxcd::map::operator!=(const lxcd::map::ReverseIterator &_riter1, const lxcd::map::ReverseIterator &_riter2){
+bool operator!=(const typename lxcd::map<K, M>::ReverseIterator &_riter1, const typename lxcd::map<K, M>::ReverseIterator &_riter2){
     return (_riter1.get_cur() != _riter2.get_cur())? true : false;
 }
 
 template<typename K, typename M>
-bool lxcd::map::operator==(const lxcd::map::Iterator &_iter, const lxcd::map::ConstIterator &_citer){
+bool operator==(const typename lxcd::map<K, M>::Iterator &_iter, const typename lxcd::map<K, M>::ConstIterator &_citer){
     return (_iter.get_cur() == _citer.get_cur())? true : false;
 }
 
 template<typename K, typename M>
-bool lxcd::map::operator==(const lxcd::map::ConstIterator &_citer, const lxcd::map::Iterator &_iter){
+bool operator==(const typename lxcd::map<K, M>::ConstIterator &_citer, const typename lxcd::map<K, M>::Iterator &_iter){
     return (_citer.get_cur() == _iter.get_cur())? true : false;
 }
 
 template<typename K, typename M>
-bool lxcd::map::operator!=(const lxcd::map::Iterator &_iter, const lxcd::map::ConstIterator &_citer){
+bool operator!=(const typename lxcd::map<K, M>::Iterator &_iter, const typename lxcd::map<K, M>::ConstIterator &_citer){
     return (_iter.get_cur() != _citer.get_cur())? true : false;
 }
 
 template<typename K, typename M>
-bool lxcd::map::operator!=(const lxcd::map::ConstIterator &_citer, const lxcd::map::Iterator &_iter){
+bool operator!=(const typename lxcd::map<K, M>::ConstIterator& _citer, const typename lxcd::map<K, M>::Iterator& _iter){
     return (_citer.get_cur() != _iter.get_cur())? true : false;
 }
 
 template<typename K, typename M>
-lxcd::map::ReverseIterator::ReverseIterator(const lxcd::map::ReverseIterator &_riter) : _cur(_riter.get_cur()){}
+lxcd::map<K, M>::ReverseIterator::ReverseIterator(const lxcd::map<K, M>::ReverseIterator &_riter) : _cur(_riter.get_cur()){}
 
 template<typename K, typename M>
-lxcd::map::ReverseIterator::ReverseIterator(lxcd::Node<K, M> *_node) : _cur(_node){}
+lxcd::map<K, M>::ReverseIterator::ReverseIterator(lxcd::Node<K, M> *_node) : _cur(_node){}
 
 template<typename K, typename M>
-lxcd::Node<K, M> *lxcd::map::ReverseIterator::get_cur() const{return _cur;}
+lxcd::Node<K, M> *lxcd::map<K, M>::ReverseIterator::get_cur() const{return _cur;}
 
 template<typename K, typename M>
-lxcd::map::ReverseIterator &lxcd::map::ReverseIterator::operator=(const lxcd::map::ReverseIterator &_riter){
+typename lxcd::map<K, M>::ReverseIterator &lxcd::map<K, M>::ReverseIterator::operator=(const lxcd::map<K, M>::ReverseIterator &_riter){
     _cur = _riter.get_cur();
     return *this;
 }
 
 template<typename K, typename M>
-lxcd::map::ReverseIterator &lxcd::map::ReverseIterator::operator++(){
+typename lxcd::map<K, M>::ReverseIterator &lxcd::map<K, M>::ReverseIterator::operator++(){
     if(_cur == NULL) return *this;
     _cur = _cur->_prev;
     return *this;
 }
 
 template<typename K, typename M>
-lxcd::map::ReverseIterator lxcd::map::ReverseIterator::operator++(int){
+typename lxcd::map<K, M>::ReverseIterator lxcd::map<K, M>::ReverseIterator::operator++(int){
     map<K, M>::ReverseIterator _this = *this;
     if(_cur == NULL) return _this;
     _cur = _cur->_prev;
@@ -519,14 +520,14 @@ lxcd::map::ReverseIterator lxcd::map::ReverseIterator::operator++(int){
 }
 
 template<typename K, typename M>
-lxcd::map::ReverseIterator &lxcd::map::ReverseIterator::operator--(){
+typename lxcd::map<K, M>::ReverseIterator &lxcd::map<K, M>::ReverseIterator::operator--(){
     if(_cur == NULL) return *this;
     _cur = _cur->_forward_links[0];
     return *this;
 }
 
 template<typename K, typename M>
-lxcd::map::ReverseIterator lxcd::map::ReverseIterator::operator--(int){
+typename lxcd::map<K, M>::ReverseIterator lxcd::map<K, M>::ReverseIterator::operator--(int){
     map<K, M>::ReverseIterator _this = *this;
     if(_cur == NULL) return _this;
     _cur = _cur->_prev;
@@ -534,47 +535,47 @@ lxcd::map::ReverseIterator lxcd::map::ReverseIterator::operator--(int){
 }
 
 template<typename K, typename M>
-lxcd::map::ValueType &lxcd::map::ReverseIterator::operator*() const{
+typename lxcd::map<K, M>::ValueType &lxcd::map<K, M>::ReverseIterator::operator*() const{
     return *_cur->_value;
 }
 
 template<typename K, typename M>
-lxcd::map::ValueType *lxcd::map::ReverseIterator::operator->() const{
+typename lxcd::map<K, M>::ValueType *lxcd::map<K, M>::ReverseIterator::operator->() const{
     return _cur->_value;
 }
 
 template<typename K, typename M>
-lxcd::map::ReverseIterator::~ReverseIterator(){
+lxcd::map<K, M>::ReverseIterator::~ReverseIterator(){
     _cur = nullptr;
 }
 
 template<typename K, typename M>
-lxcd::map::ConstIterator::ConstIterator(const lxcd::map::ConstIterator &_citer) : _cur(_citer.get_cur()){}
+lxcd::map<K, M>::ConstIterator::ConstIterator(const lxcd::map<K, M>::ConstIterator &_citer) : _cur(_citer.get_cur()){}
 
 template<typename K, typename M>
-lxcd::map::ConstIterator::ConstIterator(const lxcd::map::Iterator &_iter) : _cur(_iter.get_cur()){}
+lxcd::map<K, M>::ConstIterator::ConstIterator(const lxcd::map<K, M>::Iterator &_iter) : _cur(_iter.get_cur()){}
 
 template<typename K, typename M>
-lxcd::map::ConstIterator::ConstIterator(lxcd::Node<K, M> *_node) : _cur(_node){}
+lxcd::map<K, M>::ConstIterator::ConstIterator(lxcd::Node<K, M> *_node) : _cur(_node){}
 
 template<typename K, typename M>
-lxcd::Node<K, M> *lxcd::map::ConstIterator::get_cur() const{return _cur;}
+lxcd::Node<K, M> *lxcd::map<K, M>::ConstIterator::get_cur() const{return _cur;}
 
 template<typename K, typename M>
-lxcd::map::ConstIterator &lxcd::map::ConstIterator::operator=(const lxcd::map::ConstIterator &_citer){
+typename lxcd::map<K, M>::ConstIterator &lxcd::map<K, M>::ConstIterator::operator=(const lxcd::map<K, M>::ConstIterator &_citer){
     _cur = _citer.get_cur();
     return *this;
 }
 
 template<typename K, typename M>
-lxcd::map::ConstIterator &lxcd::map::ConstIterator::operator++(){
+typename lxcd::map<K, M>::ConstIterator &lxcd::map<K, M>::ConstIterator::operator++(){
     if(_cur == NULL) return *this;
     _cur = _cur->_forward_links[0];
     return *this;
 }
 
 template<typename K, typename M>
-lxcd::map::ConstIterator lxcd::map::ConstIterator::operator++(int){
+typename lxcd::map<K, M>::ConstIterator lxcd::map<K, M>::ConstIterator::operator++(int){
     map<K, M>::ConstIterator _this = *this;
     if(_cur == NULL) return _this;
     _cur = _cur->_forward_links[0];
@@ -582,14 +583,14 @@ lxcd::map::ConstIterator lxcd::map::ConstIterator::operator++(int){
 }
 
 template<typename K, typename M>
-lxcd::map::ConstIterator &lxcd::map::ConstIterator::operator--(){
+typename lxcd::map<K, M>::ConstIterator &lxcd::map<K, M>::ConstIterator::operator--(){
     if(_cur == NULL) return *this;
     _cur = _cur->_prev;
     return *this;
 }
 
 template<typename K, typename M>
-lxcd::map::ConstIterator lxcd::map::ConstIterator::operator--(int){
+typename lxcd::map<K, M>::ConstIterator lxcd::map<K, M>::ConstIterator::operator--(int){
     map<K, M>::ConstIterator _this = *this;
     if(_cur == NULL) return _this;
     _cur = _cur->_prev;
@@ -597,44 +598,44 @@ lxcd::map::ConstIterator lxcd::map::ConstIterator::operator--(int){
 }
 
 template<typename K, typename M>
-const lxcd::map::ValueType &lxcd::map::ConstIterator::operator*() const{
+const typename lxcd::map<K, M>::ValueType &lxcd::map<K, M>::ConstIterator::operator*() const{
     return *_cur->_value;
 }
 
 template<typename K, typename M>
-const lxcd::map::ValueType *lxcd::map::ConstIterator::operator->() const{
+const typename lxcd::map<K, M>::ValueType *lxcd::map<K, M>::ConstIterator::operator->() const{
     return _cur->_value;
 }
 
 template<typename K, typename M>
-lxcd::map::ConstIterator::~ConstIterator(){
+lxcd::map<K, M>::ConstIterator::~ConstIterator(){
     _cur = nullptr;
 }
 
 template<typename K, typename M>
-lxcd::map::Iterator::Iterator(const lxcd::map::Iterator &_iter) : _cur(_iter.get_cur()){}
+lxcd::map<K, M>::Iterator::Iterator(const lxcd::map<K, M>::Iterator &_iter) : _cur(_iter.get_cur()){}
 
 template<typename K, typename M>
-lxcd::map::Iterator::Iterator(lxcd::Node<K, M> *_node) : _cur(_node){}
+lxcd::map<K, M>::Iterator::Iterator(lxcd::Node<K, M> *_node) : _cur(_node){}
 
 template<typename K, typename M>
-lxcd::Node<K, M> *lxcd::map::Iterator::get_cur() const{return _cur;}
+lxcd::Node<K, M> *lxcd::map<K, M>::Iterator::get_cur() const{return _cur;}
 
 template<typename K, typename M>
-lxcd::map::Iterator &lxcd::map::Iterator::operator=(const lxcd::map::Iterator &_iter){
+typename lxcd::map<K, M>::Iterator &lxcd::map<K, M>::Iterator::operator=(const lxcd::map<K, M>::Iterator &_iter){
     _cur = _iter.get_cur();
     return *this;
 }
 
 template<typename K, typename M>
-lxcd::map::Iterator &lxcd::map::Iterator::operator++(){
+typename lxcd::map<K, M>::Iterator &lxcd::map<K, M>::Iterator::operator++(){
     if(_cur == NULL) return *this;
     _cur = _cur->_forward_links[0];
     return *this;
 }
 
 template<typename K, typename M>
-lxcd::map::Iterator lxcd::map::Iterator::operator++(int){
+typename lxcd::map<K, M>::Iterator lxcd::map<K, M>::Iterator::operator++(int){
     map<K, M>::Iterator _this = *this;
     if(_cur == NULL) return _this;
     _cur = _cur->_forward_links[0];
@@ -642,14 +643,14 @@ lxcd::map::Iterator lxcd::map::Iterator::operator++(int){
 }
 
 template<typename K, typename M>
-lxcd::map::Iterator &lxcd::map::Iterator::operator--(){
+typename lxcd::map<K, M>::Iterator &lxcd::map<K, M>::Iterator::operator--(){
     if(_cur == NULL) return *this;
     _cur = _cur->_prev;
     return *this;
 }
 
 template<typename K, typename M>
-lxcd::map::Iterator lxcd::map::Iterator::operator--(int){
+typename lxcd::map<K, M>::Iterator lxcd::map<K, M>::Iterator::operator--(int){
     map<K, M>::Iterator _this = *this;
     if(_cur == NULL) return _this;
     _cur = _cur->_prev;
@@ -657,22 +658,22 @@ lxcd::map::Iterator lxcd::map::Iterator::operator--(int){
 }
 
 template<typename K, typename M>
-lxcd::map::ValueType &lxcd::map::Iterator::operator*() const{
+typename lxcd::map<K, M>::ValueType &lxcd::map<K, M>::Iterator::operator*() const{
     return *_cur->_value;
 }
 
 template<typename K, typename M>
-lxcd::map::ValueType *lxcd::map::Iterator::operator->() const{
+typename lxcd::map<K, M>::ValueType *lxcd::map<K, M>::Iterator::operator->() const{
     return _cur->_value;
 }
 
 template<typename K, typename M>
-lxcd::map::Iterator::~Iterator(){
+lxcd::map<K, M>::Iterator::~Iterator(){
     _cur = nullptr;
 }
 
 template<typename K, typename M>
-lxcd::Node::Node(std::size_t _level){
+lxcd::Node<K, M>::Node(std::size_t _level){
     int _temp_level = _level+1;
     _forward_links = new Node*[_temp_level];
     size_t _total_size = sizeof(Node*)*(_temp_level);
@@ -682,7 +683,7 @@ lxcd::Node::Node(std::size_t _level){
 }
 
 template<typename K, typename M>
-lxcd::Node::Node(std::size_t _level, const lxcd::Node::ValueType &_val){
+lxcd::Node<K, M>::Node(std::size_t _level, const lxcd::Node<K, M>::ValueType& _val){
     int _temp_level = _level+1;
     _forward_links = new Node*[_temp_level];
     size_t _total_size = sizeof(Node*)*(_temp_level);
@@ -692,7 +693,7 @@ lxcd::Node::Node(std::size_t _level, const lxcd::Node::ValueType &_val){
 }
 
 template<typename K, typename M>
-lxcd::Node::~Node(){
+lxcd::Node<K, M>::~Node() {
     delete [] _forward_links;
     delete _value;
 }
