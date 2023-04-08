@@ -1,4 +1,5 @@
 #include "deployment_unit.h"
+#include "utils/map.h"
 
 class DeploymentUnitHelper {
 public:
@@ -14,7 +15,7 @@ public:
     void listDeploymentUnits();
 
 private:
-    std::map<lxcd::string, std::shared_ptr<DeploymentUnit>> deploymentUnits;
+    lxcd::map<lxcd::string, std::shared_ptr<DeploymentUnit>> deploymentUnits;
     bool loadCache();
     bool saveCache();
 };

@@ -78,7 +78,7 @@ bool DeploymentUnitHelper::addDeploymentUnit(const lxcd::string& executionEnvRef
         const std::shared_ptr<DeploymentUnit>& _du = duPair.second;
         if (_du->name == du->name) {
             std::cout << "Found DeploymentUnit with UUID: " << _du->uuid<<", with name :  " << _du->name<< std::endl;
-            if(!_du->version){//_du->version==du->version
+            if(_du->version > du->version){//_du->version==du->version
                 std::cerr << "Error : to upgrade the du you need to increment the version code atleast by 1, the current version is "<<du->version;
                 std::cerr <<"the installed version is "<<_du->version<<", abord." << std::endl;
                 lxc_container_put(container);
@@ -111,7 +111,7 @@ bool DeploymentUnitHelper::addDeploymentUnit(const lxcd::string& executionEnvRef
         return false;
     }
 
-    mountSquashfs(du->rootfsPath + ".squashfs",du->rootfsPath);
+    lxcd::mountSquashfs(du->rootfsPath + ".squashfs",du->rootfsPath);
 
     // Add the DeploymentUnit to the internal context
     deploymentUnits[uuid] = du;
@@ -122,7 +122,6 @@ bool DeploymentUnitHelper::addDeploymentUnit(const lxcd::string& executionEnvRef
         lxc_container_put(container);
         return false;
     }
-
 
     if(!updateFullRootPath(container)){
         fprintf(stderr, "Can't handle updating lxc.rootfs.path, abord. \n");
@@ -202,38 +201,34 @@ bool DeploymentUnitHelper::updateFullRootPath(struct lxc_container *container){
 }
 
 bool DeploymentUnitHelper::removeDeploymentUnit(const lxcd::string& uuid) {
+    for (const auto& entry : deploymentUnits) {
+        //std::cerr << "it ---------> "<<*it << std::endl;
+        if (uuid == entry.second->uuid) {
 
-    // Find the DeploymentUnit in the internal context
-    auto it = deploymentUnits.find(uuid);
-    if (it != deploymentUnits.end()) {
+            struct lxc_container *container = lxc_container_new(entry.second->executionEnvRef, NULL);
+            if (!container) {
+                fprintf(stderr, "Failed to initialize the container\n");
+                return false;
+            }
 
-        //struct lxc_container* container = this->getContainer(it->second->executionEnvRef);
-        struct lxc_container *container = lxc_container_new(it->second->executionEnvRef, NULL);
-        if (!container) {
-            fprintf(stderr, "Failed to initialize the container\n");
-            return false;
-        }
-
-        if (!container->is_defined(container)) {
-            std::cerr << "Error: Container is not defined" << std::endl;
+            if (!container->is_defined(container)) {
+                std::cerr << "Error: Container is not defined" << std::endl;
+                lxc_container_put(container);
+                return false;
+            }
+            if(!updateFullRootPath(container)){
+                fprintf(stderr, "Can't handle updating lxc.rootfs.path, abord. \n");
+                return false;
+            };
+            lxcd::umountSquashfs(entry.second->rootfsPath);
             lxc_container_put(container);
-            return false;
+            if (entry.second->remove()) {
+                std::cerr << "Failed to remove DeploymentUnit" << std::endl;
+                return false;
+            }
+            deploymentUnits.erase(entry);
+            return true;
         }
-        updateFullRootPath(container);
-
-        lxc_container_put(container);
-
-        // Remove the DeploymentUnit
-        if (!it->second->remove()) {
-            std::cerr << "Failed to remove DeploymentUnit" << std::endl;
-            return false;
-        }
-
-        // Remove the DeploymentUnit from the internal context
-        deploymentUnits.erase(it);
-    } else {
-        std::cerr << "DeploymentUnit not found" << std::endl;
-        return false;
     }
 
     // Save the cache

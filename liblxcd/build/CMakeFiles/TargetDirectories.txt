@@ -1,0 +1,7 @@
+/home/sah0610/tmp/lxcd/liblxcd/build/CMakeFiles/install/strip.dir
+/home/sah0610/tmp/lxcd/liblxcd/build/CMakeFiles/install/local.dir
+/home/sah0610/tmp/lxcd/liblxcd/build/CMakeFiles/install.dir
+/home/sah0610/tmp/lxcd/liblxcd/build/CMakeFiles/list_install_components.dir
+/home/sah0610/tmp/lxcd/liblxcd/build/CMakeFiles/rebuild_cache.dir
+/home/sah0610/tmp/lxcd/liblxcd/build/CMakeFiles/edit_cache.dir
+/home/sah0610/tmp/lxcd/liblxcd/build/CMakeFiles/lxcd.dir

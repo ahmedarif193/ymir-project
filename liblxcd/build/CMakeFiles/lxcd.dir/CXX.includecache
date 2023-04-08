@@ -1,0 +1,28 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../../include_priv/utils/map.h
+iostream
+-
+utility
+-
+string.h
+-
+cmath
+-
+ctime
+-
+cstdlib
+-
+stdexcept
+-
+
+/home/sah0610/tmp/lxcd/liblxcd/map.cpp
+utils/map.h
+/home/sah0610/tmp/lxcd/liblxcd/utils/map.h
+

@@ -276,6 +276,7 @@ bool DeploymentUnit::install() {
 }
 
 bool DeploymentUnit::remove() {
+    std::cerr << "----------------------2 " <<this->rootfsPath<< std::endl;
     remove_directory(this->rootfsPath);
 
     if (this->type == "squashfs") {
