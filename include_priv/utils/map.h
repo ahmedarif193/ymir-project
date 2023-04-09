@@ -2,20 +2,21 @@
 #define MAP_H
 
 #include "vector.h"
+#include "string.h"
 
 #define _LEVELS 100
 namespace lxcd{
 
 class OutOfRangeException {
 public:
-    explicit OutOfRangeException(const std::string& message) : message_(message) {}
+    explicit OutOfRangeException(const string& message) : message_(message) {}
 
     virtual const char* what() const noexcept {
         return message_.c_str();
     }
 
 private:
-    std::string message_;
+    string message_;
 };
 
 

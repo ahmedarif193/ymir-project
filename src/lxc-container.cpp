@@ -1,5 +1,5 @@
 #include "lxc-container.h"
-LxcContainer::LxcContainer(const std::string name, const char* m_template, const Method action) {
+LxcContainer::LxcContainer(const lxcd::string name, const char* m_template, const Method action) {
 
     this->m_action = action;
     this->m_name = name;
@@ -63,11 +63,11 @@ int LxcContainer::create() {
             return -1;
         }
         int fd;
-        const std::string lxc_default_folder = "/var/lib/lxc/";
-        std::string container_path = lxc_default_folder + container->name;
-        std::string container_overlay_img = container_path +"/overlay.img";
-        std::string container_overlay_dir = container_path +"/overlay";
-        std::string container_delta_dir = container_overlay_dir +"/delta";
+        const lxcd::string lxc_default_folder = "/var/lib/lxc/";
+        lxcd::string container_path = lxc_default_folder + container->name;
+        lxcd::string container_overlay_img = container_path +"/overlay.img";
+        lxcd::string container_overlay_dir = container_path +"/overlay";
+        lxcd::string container_delta_dir = container_overlay_dir +"/delta";
         std::cout<<"--------------000 : "<<container_overlay_img.c_str()<<std::endl;
 
         // create a file with the desired size
@@ -223,7 +223,7 @@ int LxcContainer::destroy() {
         return -1;
     }
     int ret = 0;
-    std::string overlay_path = LXC_DEFAULT_FOLDER + std::string(container->name)+"/overlay" ;
+    lxcd::string overlay_path = LXC_DEFAULT_FOLDER + lxcd::string(container->name)+"/overlay" ;
     // Unmount the file system
     ret = umount(overlay_path.c_str());
     if (ret == -1) {
@@ -238,12 +238,12 @@ int LxcContainer::destroy() {
     return 0;
 }
 
-void LxcContainer::setName(const std::string &newName)
+void LxcContainer::setName(const lxcd::string &newName)
 {
     m_name = newName;
 }
 
-void LxcContainer::setTemplate(const std::string &newTemplate)
+void LxcContainer::setTemplate(const lxcd::string &newTemplate)
 {
     m_template = newTemplate;
 }
@@ -253,17 +253,17 @@ void LxcContainer::setStorage_space(const int newStorage_space)
     storage_space = newStorage_space;
 }
 
-void LxcContainer::setMemory(const std::string &newMemory)
+void LxcContainer::setMemory(const lxcd::string &newMemory)
 {
     memory = newMemory;
 }
 
-void LxcContainer::setCpuset(const std::string &newCpuset)
+void LxcContainer::setCpuset(const lxcd::string &newCpuset)
 {
     cpuset = newCpuset;
 }
 
-void LxcContainer::setCpupercent(const std::string &newCpupercent)
+void LxcContainer::setCpupercent(const lxcd::string &newCpupercent)
 {
     cpupercent = newCpupercent;
 }

@@ -2,7 +2,7 @@
 
 RestApiListener::RestApiListener(int port) : port_(port), is_running_(false) {}
 
-void RestApiListener::register_handler(const std::string &path, const std::string &http_method, handler_t handler) {
+void RestApiListener::register_handler(const lxcd::string &path, const lxcd::string &http_method, handler_t handler) {
     handlers_[path][http_method] = handler;
 }
 
@@ -25,9 +25,9 @@ void RestApiListener::stop() {
 }
 
 int RestApiListener::dispatch_handler(void *cls, MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **con_cls) {
-    std::string mmethod = method;
-    std::string murl = url;
-    std::string mversion = version;
+    lxcd::string mmethod = method;
+    lxcd::string murl = url;
+    lxcd::string mversion = version;
 
     static int count= 0;
 
@@ -49,10 +49,10 @@ int RestApiListener::dispatch_handler(void *cls, MHD_Connection *connection, con
 
     std::cout <<"-------------------------------"<<buffer << std::endl;
     auto *rest_api_listener = reinterpret_cast<RestApiListener*>(cls);
-    std::unordered_map<std::string, std::string> params;
-    std::string request_body = buffer;
-    std::string http_method = method ? method : "";
-    std::string path = url ? url : "";
+    std::unordered_map<lxcd::string, lxcd::string> params;
+    lxcd::string request_body = buffer;
+    lxcd::string http_method = method ? method : "";
+    lxcd::string path = url ? url : "";
 
     // Find the handler function for the path and HTTP method
     //    auto path_handlers_it = rest_api_listener->handlers_.find(path);
@@ -63,7 +63,7 @@ int RestApiListener::dispatch_handler(void *cls, MHD_Connection *connection, con
     auto path_handlers_it = rest_api_listener->handlers_.begin();
     for(; path_handlers_it != rest_api_listener->handlers_.end(); ++path_handlers_it)
     {
-        std::string k =  path_handlers_it->first;
+        lxcd::string k =  path_handlers_it->first;
 
         if(rest_api_listener->is_match_match_regex(k,path, params)){
 
@@ -90,12 +90,12 @@ int RestApiListener::dispatch_handler(void *cls, MHD_Connection *connection, con
     return handler(connection, params, request_body);
 }
 
-bool RestApiListener::is_match_match_regex(std::string path, std::string request, std::unordered_map<std::string, std::string> &params){
+bool RestApiListener::is_match_match_regex(lxcd::string path, lxcd::string request, std::unordered_map<lxcd::string, lxcd::string> &params){
     if(are_paths_equal(path,request))
         return true;
     const std::regex param_regex("\\{([^}]+)\\}");
 
-    std::vector<std::string> param_names;
+    std::vector<lxcd::string> param_names;
     std::sregex_iterator param_begin(path.begin(), path.end(), param_regex);
     std::sregex_iterator param_end;
     for (std::sregex_iterator i = param_begin; i != param_end; ++i) {
@@ -103,7 +103,7 @@ bool RestApiListener::is_match_match_regex(std::string path, std::string request
     }
 
     // Build regular expression to match path
-    std::string path_regex = path;
+    lxcd::string path_regex = path;
     std::smatch match;
     for (const auto& param_name : param_names) {
         path_regex.replace(path_regex.find("{" + param_name + "}"), param_name.length() + 2, "([^/]+)");
@@ -124,11 +124,11 @@ bool RestApiListener::is_match_match_regex(std::string path, std::string request
     return false;
 }
 
-bool RestApiListener::are_paths_equal(std::string path1, std::string path2) {
+bool RestApiListener::are_paths_equal(lxcd::string path1, lxcd::string path2) {
     // Replace double forward slashes with a single forward slash
     std::regex regex("//+");
-    std::string path1Normalized = std::regex_replace(path1, regex, "/");
-    std::string path2Normalized = std::regex_replace(path2, regex, "/");
+    lxcd::string path1Normalized = std::regex_replace(path1, regex, "/");
+    lxcd::string path2Normalized = std::regex_replace(path2, regex, "/");
     std::cout <<"are_paths_equal "<<path2Normalized<< "  --  "<<path1Normalized << "  --  "<< (path1Normalized == path2Normalized)<< std::endl;
 
     // Compare the normalized paths

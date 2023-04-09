@@ -1,8 +1,53 @@
 #include "string.h"
 #include "vector.h"
 #include "map.h"
-
+#include <stdio.h>
 namespace lxcd {
+
+class RuntimeError {
+public:
+    // Constructor that takes a const char pointer as error message
+    RuntimeError(const char* errMsg) {
+        int len = 0;
+        while (errMsg[len] != '\0') {
+            len++;
+        }
+        len++; // For null character
+
+        message = new char[len];
+        for (int i = 0; i < len; i++) {
+            message[i] = errMsg[i];
+        }
+    }
+
+    // Copy constructor
+    RuntimeError(const RuntimeError& other) {
+        int len = 0;
+        while (other.message[len] != '\0') {
+            len++;
+        }
+        len++; // For null character
+
+        message = new char[len];
+        for (int i = 0; i < len; i++) {
+            message[i] = other.message[i];
+        }
+    }
+
+    // Destructor
+    ~RuntimeError() {
+        delete[] message;
+    }
+
+    // Accessor for the error message
+    const char* what() const {
+        return message;
+    }
+
+private:
+    char* message;
+};
+
 
 struct mount {
     string device;
@@ -21,7 +66,7 @@ struct mount {
 vector<mount> parseProcMounts() {
     FILE* fp = fopen("/proc/mounts", "r");
     if (!fp) {
-        throw std::runtime_error("failed to open /proc/mounts");
+        throw RuntimeError("failed to open /proc/mounts");
     }
     
     vector<mount> entries;
@@ -71,9 +116,8 @@ vector<string> getProcMountPoints() {
 bool isMountExist(const string& mountPoint){
         auto  mounts=  getProcMountPoints();
     for (auto it = mounts.begin(); it != mounts.end(); ++it) {
-        //std::cerr << "it ---------> "<<*it << std::endl;
         if (*it == mountPoint) {
-            std::cerr << "Already mounted, return "<<*it << std::endl;
+            fprintf(stderr, "Already mounted, return %s\n", (*it).c_str());
             return true;
         }
     }
