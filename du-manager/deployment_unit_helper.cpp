@@ -114,7 +114,7 @@ bool DeploymentUnitHelper::addDeploymentUnit(const lxcd::string& executionEnvRef
     lxcd::mountSquashfs(du->rootfsPath + ".squashfs",du->rootfsPath);
 
     // Add the DeploymentUnit to the internal context
-    deploymentUnits[uuid] = du;
+    deploymentUnits.insert({uuid,du});
 
     // Save the cache
     if (!saveCache()) {
@@ -226,7 +226,7 @@ bool DeploymentUnitHelper::removeDeploymentUnit(const lxcd::string& uuid) {
                 std::cerr << "Failed to remove DeploymentUnit" << std::endl;
                 return false;
             }
-            deploymentUnits.erase(entry);
+            deploymentUnits.erase(entry.second->uuid);
             return true;
         }
     }
@@ -270,8 +270,7 @@ bool DeploymentUnitHelper::loadCache() {
 
         // Load installation date
         du->installationDate = duData["InstallationDate"].asUInt64();
-
-        deploymentUnits[du->uuid] = du;
+        deploymentUnits.insert({du->uuid,du});
     }
 
     return true;

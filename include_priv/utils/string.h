@@ -111,7 +111,10 @@ int stoi(const string& str);
 string to_string(int value);
 
 string to_string(double value);
+
+#include "impl_string.hpp"
+
 }
 
-#endif // LXCQUEUE_H
+#endif // LXCDSTRING_H
 

@@ -1,12 +1,23 @@
-#include<iostream>
-#include<utility>
-#include<string.h>
-#include<cmath>
-#include<ctime>
-#include<cstdlib>
-#include<stdexcept>
+#ifndef MAP_H
+#define MAP_H
+
+#include "vector.h"
+
 #define _LEVELS 100
 namespace lxcd{
+
+class OutOfRangeException {
+public:
+    explicit OutOfRangeException(const std::string& message) : message_(message) {}
+
+    virtual const char* what() const noexcept {
+        return message_.c_str();
+    }
+
+private:
+    std::string message_;
+};
+
 
 template<typename T1, typename T2>
 class pair {
@@ -33,9 +44,9 @@ public:
     friend class map<K, M>;
     typedef pair<const K, M> ValueType;
 
-    Node(std::size_t _level);
+    Node(size_t _level);
 
-    Node(std::size_t _level, const ValueType& _val);
+    Node(size_t _level, const ValueType& _val);
 
     //delete forward links and value
     ~Node();
@@ -65,6 +76,12 @@ public:
 
         //defining operators for Iterator
         Iterator& operator=(const Iterator& _iter);
+        bool operator==(const Iterator &_iter) const {
+            return (_cur == _iter._cur);
+        }
+        bool operator!=(const Iterator &_iter) const {
+            return !(*this == _iter);
+        }
         Iterator& operator++();
         Iterator operator++(int);
         Iterator& operator--();
@@ -134,7 +151,7 @@ public:
 
     map(const map& _map);
 
-    map(std::initializer_list<pair<const K, M>> _l);
+    map(InitializerList<pair<const K, M>> _l);
 
     //delete every node in the map
     ~map();
@@ -172,8 +189,8 @@ public:
     ReverseIterator rbegin();
     ReverseIterator rend();
 
-    std::size_t size() const;
-    std::size_t count() const;
+    size_t size() const;
+    size_t count() const;
     bool empty() const;
 
     //return mapped type for the given key
@@ -182,16 +199,26 @@ public:
     const M& at(const K& _key) const;
 
     //comparison operators on iterator
-    friend bool operator==(const Iterator& _iter1, const Iterator& _iter2);
-    friend bool operator!=(const Iterator& _iter1, const Iterator& _iter2);
-    friend bool operator==(const ConstIterator& _citer1, const ConstIterator& _citer2);
-    friend bool operator!=(const ConstIterator& _citer1, const ConstIterator& _citer2);
-    friend bool operator==(const ReverseIterator& _riter1, const ReverseIterator& _riter2);
-    friend bool operator!=(const ReverseIterator& _riter1, const ReverseIterator& _riter2);
-    friend bool operator==(const Iterator& _iter, const ConstIterator& _citer);
-    friend bool operator==(const ConstIterator& _citer, const Iterator& _iter);
-    friend bool operator!=(const Iterator& _iter, const ConstIterator& _citer);
-    friend bool operator!=(const ConstIterator& _citer, const Iterator& _iter);
+    template<typename K1, typename M1>
+    friend bool operator==(const typename map<K1, M1>::Iterator& _iter1, const typename map<K1, M1>::Iterator& _iter2);
+    template<typename K1, typename M1>
+    friend bool operator!=(const typename map<K1, M1>::Iterator& _iter1, const typename map<K1, M1>::Iterator& _iter2);
+    template<typename K1, typename M1>
+    friend bool operator==(const typename map<K1, M1>::ConstIterator& _citer1, const typename map<K1, M1>::ConstIterator& _citer2);
+    template<typename K1, typename M1>
+    friend bool operator!=(const typename map<K1, M1>::ConstIterator& _citer1, const typename map<K1, M1>::ConstIterator& _citer2);
+    template<typename K1, typename M1>
+    friend bool operator==(const typename map<K1, M1>::ConstIterator& _citer, const typename map<K1, M1>::Iterator& _iter);
+    template<typename K1, typename M1>
+    friend bool operator!=(const typename map<K1, M1>::Iterator& _iter, const typename map<K1, M1>::ConstIterator& _citer);
+    template<typename K1, typename M1>
+    friend bool operator==(const typename map<K1, M1>::Iterator& _iter, const typename map<K1, M1>::ConstIterator& _citer);
+    template<typename K1, typename M1>
+    friend bool operator==(const typename map<K1, M1>::ConstIterator& _citer, const typename map<K1, M1>::Iterator& _iter);
+    template<typename K1, typename M1>
+    friend bool operator!=(const typename map<K1, M1>::Iterator& _iter, const typename map<K1, M1>::ConstIterator& _citer);
+    template<typename K1, typename M1>
+    friend bool operator!=(const typename map<K1, M1>::ConstIterator& _citer, const typename map<K1, M1>::Iterator& _iter);
 
     //clear all nodes in the map
     void clear();
@@ -224,10 +251,12 @@ public:
 private:
     Node<K, M>* _head;
     Node<K, M>* _tail;
-    std::size_t _max;
-    std::size_t _size;
+    size_t _max;
+    size_t _size;
 };
-
 
 }
 
+#include "impl_map.hpp"
+
+#endif

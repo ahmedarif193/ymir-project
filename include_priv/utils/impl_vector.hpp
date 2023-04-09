@@ -1,9 +1,5 @@
-#include "utils/vector.h"
-
-using namespace lxcd;
-
 template<typename T>
-typename vector<T>::iterator vector<T>::erase(iterator pos) {
+inline typename vector<T>::iterator vector<T>::erase(iterator pos) {
         if (pos == end()) {
             return end();
         }
@@ -11,7 +7,7 @@ typename vector<T>::iterator vector<T>::erase(iterator pos) {
         iterator i = pos;
         ++i;
         for (iterator j = i; j != end(); ++j, ++pos) {
-            *pos = std::move(*j);
+            *pos = move(*j);
         }
         pop_back();
 
@@ -19,14 +15,14 @@ typename vector<T>::iterator vector<T>::erase(iterator pos) {
     }
 
 template<typename T>
-typename vector<T>::iterator vector<T>::erase(typename vector<T>::iterator first, typename vector<T>::iterator last) {
+inline typename vector<T>::iterator vector<T>::erase(typename vector<T>::iterator first, typename vector<T>::iterator last) {
         if (first == last) {
             return last;
         }
 
         iterator i = first;
         for (iterator j = last; j != end(); ++j, ++i) {
-            *i = std::move(*j);
+            *i = move(*j);
         }
 
         size_t n = last - first;
@@ -38,38 +34,38 @@ typename vector<T>::iterator vector<T>::erase(typename vector<T>::iterator first
     }
 
 template<typename T>
-vector<T>::vector() : data_(nullptr), size_(0), capacity_(0) {}
+inline vector<T>::vector() : data_(nullptr), size_(0), capacity_(0) {}
 
 template<typename T>
-vector<T>::vector(lxcd::size_t size) : data_(new T[size]), size_(size), capacity_(size) {}
+inline vector<T>::vector(size_t size) : data_(new T[size]), size_(size), capacity_(size) {}
 
 template<typename T>
-vector<T>::vector(lxcd::size_t size, const T& value) : data_(new T[size]), size_(size), capacity_(size) {
-    for (lxcd::size_t i = 0; i < size_; ++i) {
+inline vector<T>::vector(size_t size, const T& value) : data_(new T[size]), size_(size), capacity_(size) {
+    for (size_t i = 0; i < size_; ++i) {
         data_[i] = value;
     }
 }
 
 template<typename T>
-vector<T>::vector(const vector<T>& other) : data_(new T[other.capacity_]), size_(other.size_), capacity_(other.capacity_) {
-    for (lxcd::size_t i = 0; i < size_; ++i) {
+inline vector<T>::vector(const vector<T>& other) : data_(new T[other.capacity_]), size_(other.size_), capacity_(other.capacity_) {
+    for (size_t i = 0; i < size_; ++i) {
         data_[i] = other.data_[i];
     }
 }
 
 template<typename T>
-vector<T>::~vector() {
+inline vector<T>::~vector() {
     delete[] data_;
 }
 
 template<typename T>
-vector<T>& vector<T>::operator=(const vector<T>& other) {
+inline vector<T>& vector<T>::operator=(const vector<T>& other) {
     if (this != &other) {
         delete[] data_;
         data_ = new T[other.capacity_];
         size_ = other.size_;
         capacity_ = other.capacity_;
-        for (lxcd::size_t i = 0; i < size_; ++i) {
+        for (size_t i = 0; i < size_; ++i) {
             data_[i] = other.data_[i];
         }
     }
@@ -77,17 +73,17 @@ vector<T>& vector<T>::operator=(const vector<T>& other) {
 }
 
 template<typename T>
-T& vector<T>::operator[](lxcd::size_t index) {
+inline T& vector<T>::operator[](size_t index) {
     return data_[index];
 }
 
 template<typename T>
-const T& vector<T>::operator[](lxcd::size_t index) const {
+inline const T& vector<T>::operator[](size_t index) const {
     return data_[index];
 }
 
 template<typename T>
-void vector<T>::push_back(const T& value) {
+inline void vector<T>::push_back(const T& value) {
     if (size_ == capacity_) {
         reserve(capacity_ == 0 ? 1 : capacity_ * 2);
     }
@@ -95,32 +91,32 @@ void vector<T>::push_back(const T& value) {
 }
 
 template<typename T>
-void vector<T>::pop_back() {
+inline void vector<T>::pop_back() {
     if (size_ > 0) {
         --size_;
     }
 }
 
 template<typename T>
-lxcd::size_t vector<T>::size() const {
+inline size_t vector<T>::size() const {
     return size_;
 }
 
 template<typename T>
-lxcd::size_t vector<T>::capacity() const {
+inline size_t vector<T>::capacity() const {
     return capacity_;
 }
 
 template<typename T>
-bool vector<T>::empty() const {
+inline bool vector<T>::empty() const {
     return size_ == 0;
 }
 
 template<typename T>
-void vector<T>::reserve(lxcd::size_t capacity) {
+inline void vector<T>::reserve(size_t capacity) {
     if (capacity > capacity_) {
         T* new_data = new T[capacity];
-        for (lxcd::size_t i = 0; i < size_; ++i) {
+        for (size_t i = 0; i < size_; ++i) {
             new_data[i] = data_[i];
         }
         delete[] data_;
@@ -130,17 +126,17 @@ void vector<T>::reserve(lxcd::size_t capacity) {
 }
 
 template<typename T>
-void vector<T>::resize(lxcd::size_t size) {
+inline void vector<T>::resize(size_t size) {
     if (size > size_) {
         reserve(size);
-        for (lxcd::size_t i = size_; i < size; ++i) {
+        for (size_t i = size_; i < size; ++i) {
             data_[i] = T();
         }
     }
     size_ = size;
 }
 template <typename T>
-void vector<T>::insert(iterator pos, const T& value) {
+inline void vector<T>::insert(iterator pos, const T& value) {
 
     size_t index = pos - begin();
     if (size_ == capacity_) {

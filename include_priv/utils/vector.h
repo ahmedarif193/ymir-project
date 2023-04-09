@@ -2,8 +2,6 @@
 
 #ifndef VECTOR_H
 #define VECTOR_H
-#include <cstring>
-#include <iostream>
 
 namespace lxcd {
 #if __WORDSIZE == 64
@@ -13,29 +11,6 @@ typedef long long int ptrdiff_t;
 typedef unsigned long size_t;
 typedef int ptrdiff_t;
 #endif
-
-template <typename T>
-class initializer_list {
-public:
-    using value_type = T;
-    using reference = const T&;
-    using const_reference = const T&;
-    using size_type = size_t;
-
-    using iterator = const T*;
-    using const_iterator = const T*;
-
-    initializer_list() noexcept : ptr(nullptr), len(0) {}
-    initializer_list(const T* p, size_t n) noexcept : ptr(p), len(n) {}
-
-    size_t size() const noexcept { return len; }
-    const T* begin() const noexcept { return ptr; }
-    const T* end() const noexcept { return ptr + len; }
-
-private:
-    const T* ptr;
-    size_t len;
-};
 
 template<typename T>
 class vector {
@@ -59,18 +34,15 @@ public:
         T* ptr_;
     };
 
-    //TODO : fix lxcd::vector<int> vec = {1, 2, 3, 4, 5};
-    vector(initializer_list<T> ilist) : data_(nullptr), size_(0), capacity_(0) {
-        for (auto it = ilist.begin(); it != ilist.end(); ++it) {
-            push_back(*it);
-        }
-    }
-
     vector(T* arr, size_t size) : size_(size), capacity_(size * 2) {
         data_ = new T[capacity_];
         for (size_t i = 0; i < size; i++) {
             data_[i] = arr[i];
         }
+    }
+
+    T&& move(T& obj) {
+        return static_cast<T&&>(obj);
     }
 
     vector();
@@ -111,6 +83,42 @@ private:
     lxcd::size_t capacity_;
 };
 
+template<typename T>
+class InitializerList {
+public:
+    InitializerList() {}
+
+    template<typename First, typename... Args>
+    InitializerList(First first, Args... args) {
+        data_.push_back(first);
+        insert(args...);
+    }
+
+    const T* begin() const noexcept {
+        return data_.data();
+    }
+
+    const T* end() const noexcept {
+        return data_.data() + data_.size();
+    }
+
+    size_t size() const noexcept {
+        return data_.size();
+    }
+
+private:
+    vector<T> data_;
+
+    void insert() {}
+
+    template<typename First, typename... Args>
+    void insert(First first, Args... args) {
+        data_.push_back(first);
+        insert(args...);
+    }
+};
+
+#include "impl_vector.hpp"
 
 }
 #endif
