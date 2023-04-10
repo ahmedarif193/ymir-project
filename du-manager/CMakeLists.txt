@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.10)
 project(tr181-du-manager)
 
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(UUID REQUIRED IMPORTED_TARGET uuid)
 pkg_check_modules(CURL REQUIRED IMPORTED_TARGET libcurl)
 
 set(CMAKE_CXX_STANDARD 17)
