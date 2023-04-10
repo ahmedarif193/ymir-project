@@ -1,0 +1,7 @@
+{
+    "Name": "nameExample",
+    "Type": "squashfs",
+    "Description": "Example DeploymentUnit",
+    "Vendor": "YourVendor",
+    "Version": 3
+}

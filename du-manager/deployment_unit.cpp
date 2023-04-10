@@ -73,8 +73,7 @@ int create_directories(const lxcd::string& path) {
         if (tmp[i] == '/') {
             tmp[i] = 0;
             if (mkdir(tmp.c_str(), mode & ~current_umask) != 0) {
-                perror("Failed to create directory");
-                return -1;
+                perror("");
             }
             tmp[i] = '/';
         }
