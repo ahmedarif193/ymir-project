@@ -18,6 +18,6 @@ file(GLOB SOURCES "*.cpp")
 
 add_executable(tr181-du-manager ${SOURCES})
 
-target_link_libraries(tr181-du-manager PRIVATE PkgConfig::UUID PkgConfig::CURL lxc json-c)
+target_link_libraries(tr181-du-manager PRIVATE PkgConfig::CURL lxc json-c)
 
 install(TARGETS tr181-du-manager DESTINATION bin)

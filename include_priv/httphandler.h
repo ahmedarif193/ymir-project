@@ -1,9 +1,10 @@
 #ifndef HTTPHANDLER_H
 #define HTTPHANDLER_H
-#include <iostream>
-#include <regex>
 
+#include <stdio.h>
+#include <cstdlib>
 #include <functional>
+
 #include <microhttpd.h>
 
 #include "utils/string.h"
@@ -14,10 +15,11 @@
 #include <sys/utsname.h>
 
 
-typedef std::function<int(MHD_Connection*
-                          , const lxcd::map<lxcd::string, lxcd::string>
-                          , lxcd::string )> handler_t;
 
+typedef std::function<int(MHD_Connection*,
+                          const lxcd::map<lxcd::string, lxcd::string>,
+                          const lxcd::string&)> handler_t;
+                   
 class RestApiListener {
     enum TYPE{
         GET=0,

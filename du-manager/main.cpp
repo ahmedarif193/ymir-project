@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include <uuid/uuid.h>
+#include "utils/uuid.h"
+
 #include "deployment_unit_helper.h"
 
 void printUsage() {
@@ -25,7 +26,7 @@ int main(int argc, char* argv[]) {
     } else if (strcmp(action, "--install") == 0) {
         char* container = NULL;
         char* path = NULL;
-        char uuidStr[37];
+        lxcd::string uuidStr;
         uuid_t _uuid;
 
         for (int i = 2; i < argc; i++) {
@@ -34,8 +35,7 @@ int main(int argc, char* argv[]) {
             } else if (strcmp(argv[i], "-d") == 0 && i + 1 < argc) {
                 path = argv[++i];
             } else if (strcmp(argv[i], "-u") == 0 && i + 1 < argc) {
-                uuid_parse(argv[++i], _uuid);
-                uuid_unparse(_uuid, uuidStr);
+                uuidStr = argv[++i];
             } else {
                 printf("Unknown or incomplete option: %s\n", argv[i]);
                 printUsage();
@@ -49,10 +49,7 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
-        if (uuid_is_null(_uuid)) {
-            uuid_generate(_uuid);
-            uuid_unparse(_uuid, uuidStr);
-        }
+        uuidStr = lxcd::UUIDGenerator::generate();
 
         if (!helper.addDeploymentUnit(container, path, uuidStr)){
             printf("Error: Failed to install the DeploymentUnit.\n");
