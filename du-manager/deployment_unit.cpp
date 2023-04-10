@@ -255,12 +255,14 @@ bool DeploymentUnit::prepare(const lxcd::string& tarballPath, const lxcd::string
     
     this->rootfsPath = lxcPath+"/"+this->executionEnvRef+"/deploymentunits/" + uuid;
     
+    printf("-----------------DU global informations : -------\n");
     printf("executionEnvRef %s\n", this->executionEnvRef.c_str());
     printf("description %s\n", this->description.c_str());
     printf("vendor %s\n", this->vendor.c_str());
     printf("type %s\n", this->type.c_str());
     printf("name %s\n", this->name.c_str());
-    
+    printf("-------------------------------------------------\n");
+
     return true;
     
 }
@@ -314,8 +316,6 @@ bool DeploymentUnit::install() {
     
     return true;
 }
-
-
 bool DeploymentUnit::remove() {
     remove_directory(this->rootfsPath);
     

@@ -81,14 +81,19 @@ bool DeploymentUnitHelper::addDeploymentUnit(const lxcd::string& executionEnvRef
         const lxcd::SharedPtr<DeploymentUnit>& _du = duPair.second;
         if (_du->name == du->name) {
             printf("Found DeploymentUnit with UUID: %s, with name: %s\n", _du->uuid.c_str(), _du->name.c_str());
-            if (_du->version > du->version) { //_du->version == du->version
+
+            if (_du->version > du->version) { //_du->version == du->version<=
+                printf("1\n");
                 printf("Error: to upgrade the du you need to increment the version code at least by 1, the current version is %d, the installed version is %d, abort.\n", du->version, _du->version);
                 lxc_container_put(container);
                 return false;
             } else {
+                printf("removing the old DU ...\n");
                 if (removeDeploymentUnit(_du->uuid)) {
+                    printf("3\n");
                     printf("The old package is successfully removed, continue the installation with the new one.\n");
                 } else {
+                    printf("4\n");
                     printf("Fatal: can't uninstall the old package.\n");
                     lxc_container_put(container);
                     return false;
@@ -205,7 +210,6 @@ bool DeploymentUnitHelper::updateFullRootPath(struct lxc_container *container){
 bool DeploymentUnitHelper::removeDeploymentUnit(const lxcd::string& uuid) {
     for (const auto& entry : deploymentUnits) {
         if (uuid == entry.second->uuid) {
-
             struct lxc_container *container = lxc_container_new(entry.second->executionEnvRef, NULL);
             if (!container) {
                 fprintf(stderr, "Failed to initialize the container\n");
@@ -217,25 +221,27 @@ bool DeploymentUnitHelper::removeDeploymentUnit(const lxcd::string& uuid) {
                 lxc_container_put(container);
                 return false;
             }
-            if(!updateFullRootPath(container)){
-                fprintf(stderr, "Can't handle updating lxc.rootfs.path, abord. \n");
-                return false;
-            };
             lxcd::umountSquashfs(entry.second->rootfsPath);
-            lxc_container_put(container);
-            if (entry.second->remove()) {
+            if (!entry.second->remove()) {
                 fprintf(stderr, "Failed to remove DeploymentUnit\n");
                 return false;
             }
             deploymentUnits.erase(entry.second->uuid);
+
+            if(!updateFullRootPath(container)){
+                fprintf(stderr, "Can't handle updating lxc.rootfs.path, abord. \n");
+                return false;
+            };
+
+            lxc_container_put(container);
+            // Save the cache
+            if (!saveCache()) {
+                fprintf(stderr, "Failed to save cache\n");
+                return false;
+            }
+
             return true;
         }
-    }
-
-    // Save the cache
-    if (!saveCache()) {
-        fprintf(stderr, "Failed to save cache\n");
-        return false;
     }
 
     return true;
