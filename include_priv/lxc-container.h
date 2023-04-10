@@ -1,8 +1,6 @@
 #ifndef LXCCONTAINER_H
 #define LXCCONTAINER_H
-#include <iostream>
 #include <stdio.h>
-#include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -50,11 +48,11 @@ public:
 
 private:
     lxcd::string exec(lxcd::string cmd, int &retcode) {
-        std::cout<<"execute the cmd : "<<cmd<<std::endl;
+        printf("execute the cmd %s", cmd.c_str());
         lxcd::string result = "";
         char buffer[128];
         FILE* pipe = popen(cmd.c_str(), "r");
-        if (!pipe) throw std::runtime_error("popen() failed!");
+        if (!pipe) throw lxcd::runtimeErrorException("popen() failed!");
         try {
             while (fgets(buffer, sizeof buffer, pipe) != NULL) {
                 result += buffer;

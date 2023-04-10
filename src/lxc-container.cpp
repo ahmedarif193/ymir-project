@@ -9,14 +9,12 @@ LxcContainer::LxcContainer(const lxcd::string name, const char* m_template, cons
     this->cpuset = "0-1";
     this->cpupercent = "50";
     this->use_overlay = true;
-    std::cout<<"---------LxcContainer::LxcContainer: "<<m_name<<std::endl;
 
     container = lxc_container_new(m_name.c_str(), NULL);
     if (!container) {
-        std::cerr<<"Failed to setup lxc_container struct"<<std::endl;
+        fprintf(stderr, "Failed to setup lxc_container struct\n");
         return;
     }
-    std::cout<<"---------Create the container 2: "<<container->name<<std::endl;
 
 }
 
@@ -59,7 +57,7 @@ int LxcContainer::create() {
     int retcode = 0;
     if(this->use_overlay){
         if (!container->createl(container, "busybox", "overlayfs", nullptr, LXC_CREATE_QUIET, nullptr)) {
-            std::cerr<<"error createlb"<<std::endl;
+            fprintf(stderr, "Failed to create container.\n");
             return -1;
         }
         int fd;
@@ -68,7 +66,6 @@ int LxcContainer::create() {
         lxcd::string container_overlay_img = container_path +"/overlay.img";
         lxcd::string container_overlay_dir = container_path +"/overlay";
         lxcd::string container_delta_dir = container_overlay_dir +"/delta";
-        std::cout<<"--------------000 : "<<container_overlay_img.c_str()<<std::endl;
 
         // create a file with the desired size
         fd = open(container_overlay_img.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -154,31 +151,11 @@ int LxcContainer::create() {
             perror("mkdir");
             return 1;
         }
-        //--------------------------------
         printf("Mounted %s to %s\n", container_overlay_img.c_str(), container_overlay_dir.c_str());
 
-        //    if (!container->start(container,0,NULL)) {
-        //        std::cerr<<"error createlb"<<std::endl;
-        //        return -1;
-        //    }
-
-        // Set up the overlay and squashfs as the container's storage
-
-        // if (!container->set_config_item(container, "lxc.rootfs.options", ("lowerdir=" + overlay_lower + ",upperdir=" + overlay_upper + ",workdir=" + overlay_workdir).c_str())) {
-        //     throw std::runtime_error("Failed to set container rootfs options");
-        // }
-        // if (!container->set_config_item(container, "lxc.rootfs.mount", squashfs_mount.c_str())) {
-        //     throw std::runtime_error("Failed to set container rootfs mount");
-        // }
-        // if (!container->set_config_item(container, "lxc.rootfs.backend", "squashfs")) {
-        //     throw std::runtime_error("Failed to set container rootfs backend");
-        // }
-        // if (!container->set_config_item(container, "lxc.rootfs.options", ("loop=" + squashfs_file).c_str())) {
-        //     throw std::runtime_error("Failed to set container rootfs options");
-        // }
     }else{
         if (!container->createl(container, "busybox", nullptr, nullptr, LXC_CREATE_QUIET, nullptr)) {
-            std::cerr<<"error createlb"<<std::endl;
+            fprintf(stderr, "Failed to create container.\n");
             return -1;
         }
     }
@@ -187,12 +164,12 @@ int LxcContainer::create() {
 
 int LxcContainer::start() {
     if (!container) {
-        std::cerr<<"Failed to setup lxc_container struct"<<std::endl;
+        fprintf(stderr, "container no found !\n");
         return -1;
     }
 
     if (!container->start(container, 0, nullptr)) {
-        std::cerr<<"Failed to start the container"<<std::endl;
+        fprintf(stderr, "Failed to start the container\n");
         return -1;
     }
     return 0;
@@ -200,13 +177,13 @@ int LxcContainer::start() {
 
 int LxcContainer::stop() {
     if (!container) {
-        std::cerr<<"Failed to setup lxc_container struct"<<std::endl;
+        fprintf(stderr, "container no found !\n");
         return -1;
     }
 
     if (!container->shutdown(container, 30)) {
         if (!container->stop(container)) {
-            std::cerr<<"Failed to kill the container."<<std::endl;
+            fprintf(stderr, "Failed to stop the container\n");
             return -1;
         }
     }
@@ -219,7 +196,7 @@ int LxcContainer::reconfigure() {
 
 int LxcContainer::destroy() {
     if (!container) {
-        std::cerr<<"Failed to setup lxc_container struct"<<std::endl;
+        fprintf(stderr, "container no found !\n");
         return -1;
     }
     int ret = 0;
@@ -232,7 +209,7 @@ int LxcContainer::destroy() {
     }
     printf("Unmounted %s\n", overlay_path.c_str());
     if (!container->destroy(container)) {
-        std::cerr<<"Failed to destroy the container."<<std::endl;
+        fprintf(stderr, "Failed to remove the container\n");
         return -1;
     }
     return 0;

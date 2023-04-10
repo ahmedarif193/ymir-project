@@ -5,7 +5,6 @@
 
 #include <functional>
 #include <microhttpd.h>
-#include <json/json.h>
 
 #include "utils/string.h"
 #include "utils/map.h"

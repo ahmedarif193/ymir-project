@@ -129,6 +129,18 @@ private:
     string message_;
 };
 
+class runtimeErrorException  {
+public:
+    explicit runtimeErrorException(const lxcd::string& what_arg) : m_msg(what_arg) {}
+    explicit runtimeErrorException(const char* what_arg) : m_msg(what_arg) {}
+
+    virtual const char* what() const noexcept {
+        return m_msg.c_str();
+    }
+
+private:
+    lxcd::string m_msg;
+};
 #include "impl_string.hpp"
 
 }
