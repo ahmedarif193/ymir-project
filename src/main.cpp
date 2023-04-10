@@ -16,7 +16,7 @@
     } while (0)
 
 int supported_API_versions(struct MHD_Connection *connection
-                           , const std::unordered_map<lxcd::string, lxcd::string>& params
+                           , const lxcd::map<lxcd::string, lxcd::string>& params
                            , const lxcd::string &request_body) {
     // Return a response with the message "Hello, world!"
     Json::Value root;
@@ -32,7 +32,7 @@ int supported_API_versions(struct MHD_Connection *connection
 
 
 int handle_echo(struct MHD_Connection *connection
-                , const std::unordered_map<lxcd::string, lxcd::string>& params
+                , const lxcd::map<lxcd::string, lxcd::string>& params
                 , const lxcd::string &request_body) {
     //    for (const auto& kv : params) {
     //        std::cout << kv.first << " = " << kv.second << std::endl;
@@ -45,7 +45,7 @@ int handle_echo(struct MHD_Connection *connection
     SEND_RESPONSE(connection, request_body);
 }
 int get_Server_environment(struct MHD_Connection *connection
-                           , const std::unordered_map<lxcd::string, lxcd::string>& params
+                           , const lxcd::map<lxcd::string, lxcd::string>& params
                            , const lxcd::string &request_body){
     // Create a Json::Value object
     Json::Value root;
@@ -101,7 +101,7 @@ int get_Server_environment(struct MHD_Connection *connection
 }
 
 int execenv_create(struct MHD_Connection *connection
-                   , const std::unordered_map<lxcd::string, lxcd::string>& params
+                   , const lxcd::map<lxcd::string, lxcd::string>& params
                    , const lxcd::string &request_body){
     std::cout << "execenv_create" << std::endl;
     Json::Value rootrequest;
@@ -111,18 +111,17 @@ int execenv_create(struct MHD_Connection *connection
 
     Json::CharReaderBuilder builder;
     Json::CharReader* reader = builder.newCharReader();
-    lxcd::string errors;
-    bool parsingSuccessful = reader->parse(request_body.c_str(), request_body.c_str() + request_body.size(), &rootrequest, &errors);
+    bool parsingSuccessful = reader->parse(request_body.c_str(), request_body.c_str() + request_body.size(), &rootrequest, NULL);
     delete reader;
 
     if (!parsingSuccessful) {
-        std::cerr << "Failed to parse JSON: " << errors << std::endl;
-        rootreply["status"] = "Failed to parse JSON: " + errors;
+        std::cerr << "Failed to parse JSON file. " << std::endl;
+        rootreply["status"] = "Failed to parse JSON file.";
         rootreply["status_code"] = 500;
         SEND_RESPONSE(connection, rootreply.toStyledString());
     }
-    lxcd::string name = rootrequest["name"].asString();
-    lxcd::string type = rootrequest["type"].asString();
+    lxcd::string name = rootrequest["name"].asString().c_str();
+    lxcd::string type = rootrequest["type"].asString().c_str();
     std::cout << "Name: " << name << std::endl;
     std::cout << "type: " << type << std::endl;
 
@@ -135,7 +134,7 @@ int execenv_create(struct MHD_Connection *connection
     SEND_RESPONSE(connection, rootreply.toStyledString());
 }
 int execenv_ls(struct MHD_Connection *connection
-               , const std::unordered_map<lxcd::string, lxcd::string>& params
+               , const lxcd::map<lxcd::string, lxcd::string>& params
                , const lxcd::string &request_body){
     Json::Value root;
 
@@ -173,7 +172,7 @@ int execenv_ls(struct MHD_Connection *connection
 }
 
 int execenv_rm(struct MHD_Connection *connection
-               , const std::unordered_map<lxcd::string, lxcd::string>& params
+               , const lxcd::map<lxcd::string, lxcd::string>& params
                , const lxcd::string &request_body){
     Json::Value root;
 
@@ -183,11 +182,10 @@ int execenv_rm(struct MHD_Connection *connection
 
     Json::CharReaderBuilder builder;
     Json::CharReader* reader = builder.newCharReader();
-    lxcd::string errors;
-    bool parsingSuccessful = reader->parse(request_body.c_str(), request_body.c_str() + request_body.size(), &rootrequest, &errors);
+    bool parsingSuccessful = reader->parse(request_body.c_str(), request_body.c_str() + request_body.size(), &rootrequest, NULL);
     delete reader;
 
-    lxcd::string name = rootrequest["name"].asString();
+    lxcd::string name = rootrequest["name"].asString().c_str();
     LxcContainer container(name);
     container.setAction(Method::DESTROY);
     container.run();
@@ -195,7 +193,7 @@ int execenv_rm(struct MHD_Connection *connection
 }
 
 int execenv_update(struct MHD_Connection *connection
-                   , const std::unordered_map<lxcd::string, lxcd::string>& params
+                   , const lxcd::map<lxcd::string, lxcd::string>& params
                    , const lxcd::string &request_body){
     Json::Value root;
 
@@ -206,7 +204,7 @@ int execenv_update(struct MHD_Connection *connection
 }
 
 int deployementunit_create(struct MHD_Connection *connection
-                   , const std::unordered_map<lxcd::string, lxcd::string>& params
+                   , const lxcd::map<lxcd::string, lxcd::string>& params
                    , const lxcd::string &request_body){
     Json::Value root;
 
@@ -217,7 +215,7 @@ int deployementunit_create(struct MHD_Connection *connection
 }
 
 int deployementunit_delete(struct MHD_Connection *connection
-                   , const std::unordered_map<lxcd::string, lxcd::string>& params
+                   , const lxcd::map<lxcd::string, lxcd::string>& params
                    , const lxcd::string &request_body){
     Json::Value root;
 
@@ -228,7 +226,7 @@ int deployementunit_delete(struct MHD_Connection *connection
 }
 
 int deployementunit_ls(struct MHD_Connection *connection
-                   , const std::unordered_map<lxcd::string, lxcd::string>& params
+                   , const lxcd::map<lxcd::string, lxcd::string>& params
                    , const lxcd::string &request_body){
     Json::Value root;
 

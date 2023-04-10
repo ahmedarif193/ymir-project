@@ -1,10 +1,11 @@
 #ifndef LXCDSTRING_H
 #define LXCDSTRING_H
-#include "vector.h" // assume the vector class is defined in a separate header file
+#include "vector.h"
+
 #include <cstring>
-#include <iostream>
 
 namespace lxcd {
+
 
 class string {
 public:
@@ -60,7 +61,8 @@ public:
 
     // Find the first occurrence of a substring in this string
     size_t find(const string& substr, size_t pos = 0) const;
-
+    size_t find(const char subchar, size_t pos= 0) const;
+    
     bool contains(const char* str) const;
 
     bool contains(const string& str) const;
@@ -84,6 +86,7 @@ public:
     void insert(size_t pos, const string& str);
 
     void insert(size_t pos, const char* str);
+    string& replace(size_t pos, size_t count, const char* str);
 
     void resize(size_t n);
     void reserve(size_t n);
@@ -111,6 +114,20 @@ int stoi(const string& str);
 string to_string(int value);
 
 string to_string(double value);
+
+inline bool isdigit(char c) { return c >= '0' && c <= '9'; }
+
+class OutOfRangeException {
+public:
+    explicit OutOfRangeException(const string& message) : message_(message) {}
+
+    virtual const char* what() const noexcept {
+        return message_.c_str();
+    }
+
+private:
+    string message_;
+};
 
 #include "impl_string.hpp"
 

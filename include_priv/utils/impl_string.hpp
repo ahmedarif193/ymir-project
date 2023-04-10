@@ -157,6 +157,13 @@ inline lxcd::size_t lxcd::string::find(const lxcd::string &substr, lxcd::size_t 
     }
     return result - data_;
 }
+inline lxcd::size_t lxcd::string::find(const char subchar, lxcd::size_t pos) const {
+    const char* result = strchr(data_ + pos, subchar);
+    if (result == nullptr) {
+        return npos;
+    }
+    return result - data_;
+}
 
 inline bool lxcd::string::contains(const char *str) const {
     return find(str) != npos;
@@ -327,4 +334,21 @@ inline lxcd::string to_string(double value) {
     char buffer[20];
     sprintf(buffer, "%.8g", value);
     return string(buffer);
+}
+inline lxcd::string& lxcd::string::replace(lxcd::size_t pos, lxcd::size_t count, const char* str) {
+    if (pos > size_) {
+        throw OutOfRangeException("pos out of range");
+    }
+    if (pos + count > size_) {
+        count = size_ - pos;
+    }
+    size_t new_size = size_ - count + strlen(str);
+    char* new_data = new char[new_size + 1];
+    strncpy(new_data, data_, pos);
+    strcpy(new_data + pos, str);
+    strcpy(new_data + pos + strlen(str), data_ + pos + count);
+    delete[] data_;
+    data_ = new_data;
+    size_ = new_size;
+    return *this;
 }

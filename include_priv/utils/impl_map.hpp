@@ -1,13 +1,23 @@
+
 template <typename K, typename M>
 inline M& lxcd::map<K, M>::operator[](const K& _key){
     lxcd::Node<K, M> *_temp_head = find_at_bottom(_key);
     if(_temp_head == NULL){
-        lxcd::map<K, M>::Iterator _iter = insert(make_pair(_key, M())).first;
+        lxcd::map<K, M>::Iterator _iter = insert(lxcd::make_pair(_key, M())).first;
         return _iter.get_cur()->_value->second;
     }
     return _temp_head->_value->second;
 }
-
+template <typename K, typename M>
+const M& lxcd::map<K, M>::operator[](const K& _key) const {
+    const lxcd::Node<K, M>* _temp_head = find_at_bottom(_key);
+    if (_temp_head == NULL) {
+        // If key is not found, return a default-constructed value.
+        static const M default_value;
+        return default_value;
+    }
+    return _temp_head->_value->second;
+}
 template <typename K, typename M>
 inline lxcd::size_t lxcd::map<K, M>::random_level(lxcd::Node<K, M>** _nodes){
     size_t _level = 0;
@@ -72,7 +82,7 @@ inline lxcd::pair<typename lxcd::map<K, M>::Iterator, bool> lxcd::map<K, M>::ins
     _first_updated = _first_updated->_forward_links[0];
     if(_first_updated->_value != NULL && _first_updated->_value->first == _val.first){
         delete [] _updated;
-        return make_pair(map<K, M>::Iterator(_first_updated), false);
+        return lxcd::make_pair(map<K, M>::Iterator(_first_updated), false);
     }
 
     size_t _level = random_level(_updated);
@@ -93,7 +103,7 @@ inline lxcd::pair<typename lxcd::map<K, M>::Iterator, bool> lxcd::map<K, M>::ins
     }
     ++_size;
     delete [] _updated;
-    return make_pair(map<K, M>::Iterator(_first_updated), true);
+    return lxcd::make_pair(map<K, M>::Iterator(_first_updated), true);
 }
 
 template <typename K, typename M>
@@ -149,7 +159,7 @@ inline void lxcd::map<K, M>::erase(const K& _key){
         delete [] _updated;
     }
     else{
-        throw OutOfRangeException("out of range");
+        throw lxcd::OutOfRangeException("out of range");
     }
 }
 
@@ -197,7 +207,7 @@ inline void lxcd::map<K, M>::erase(map<K, M>::Iterator _iter){
         delete [] _updated;
     }
     else{
-        throw OutOfRangeException("out of range");
+        throw lxcd::OutOfRangeException("out of range");
     }
 }
 
@@ -422,7 +432,7 @@ template<typename K, typename M>
 inline M &lxcd::map<K, M>::at(const K &_key){
     lxcd::Node<K, M> *_temp_head = find_at_bottom(_key);
     if(_temp_head == NULL){
-        throw OutOfRangeException("out of range");
+        throw lxcd::OutOfRangeException("out of range");
     }
     else return _temp_head->_value->second;
 
@@ -432,7 +442,7 @@ template<typename K, typename M>
 inline const M &lxcd::map<K, M>::at(const K &_key) const{
     lxcd::Node<K, M> *_temp_head = find_at_bottom(_key);
     if(_temp_head == NULL){
-        throw OutOfRangeException("out of range");
+        throw lxcd::OutOfRangeException("out of range");
     }
     else return _temp_head->_value->second;
 }

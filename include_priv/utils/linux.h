@@ -1,8 +1,17 @@
+#ifndef LINUX_H
+#define LINUX_H
+
 #include "string.h"
 #include "vector.h"
 #include "map.h"
 #include <stdio.h>
 namespace lxcd {
+
+#if __WORDSIZE == 64
+typedef unsigned long long time_t;
+#else
+typedef unsigned long time_t;
+#endif
 
 class RuntimeError {
 public:
@@ -63,10 +72,10 @@ struct mount {
     {}
 };
 
-vector<mount> parseProcMounts() {
+inline vector<mount> parseProcMounts() {
     FILE* fp = fopen("/proc/mounts", "r");
     if (!fp) {
-        throw RuntimeError("failed to open /proc/mounts");
+        //throw RuntimeError("failed to open /proc/mounts");
     }
     
     vector<mount> entries;
@@ -105,7 +114,7 @@ vector<mount> parseProcMounts() {
     return entries;
 }
 
-vector<string> getProcMountPoints() {
+inline vector<string> getProcMountPoints() {
     auto mounts = parseProcMounts();
     vector<string> mountPoints;
     for (auto it = mounts.begin(); it != mounts.end(); ++it) {
@@ -113,7 +122,8 @@ vector<string> getProcMountPoints() {
     }
     return mountPoints;
 }
-bool isMountExist(const string& mountPoint){
+
+inline bool isMountExist(const string& mountPoint){
         auto  mounts=  getProcMountPoints();
     for (auto it = mounts.begin(); it != mounts.end(); ++it) {
         if (*it == mountPoint) {
@@ -123,7 +133,7 @@ bool isMountExist(const string& mountPoint){
     }
     return false;
 }
-void mountSquashfs(const string& path, const string& mountPoint) {
+inline void mountSquashfs(const string& path, const string& mountPoint) {
     if(!isMountExist(mountPoint)){
         // Not mounted, mount it
         string command = "mount -t squashfs " + path + " " + mountPoint;
@@ -131,7 +141,7 @@ void mountSquashfs(const string& path, const string& mountPoint) {
     }
 
 }
-void umountSquashfs(const string& mountPoint) {
+inline void umountSquashfs(const string& mountPoint) {
     if(isMountExist(mountPoint)){
         // Not mounted, mount it
         string command = "umount " + mountPoint;
@@ -173,4 +183,4 @@ private:
 
 } // namespace lxcd
 
-        
+#endif 

@@ -4,7 +4,6 @@
 #include <regex>
 
 #include <functional>
-#include <unordered_map>
 #include <microhttpd.h>
 #include <json/json.h>
 
@@ -17,7 +16,7 @@
 
 
 typedef std::function<int(MHD_Connection*
-                          , const std::unordered_map<lxcd::string, lxcd::string>
+                          , const lxcd::map<lxcd::string, lxcd::string>
                           , lxcd::string )> handler_t;
 
 class RestApiListener {
@@ -36,18 +35,19 @@ public:
     void start();
 
     void stop();
-    std::unordered_map<lxcd::string, std::unordered_map<lxcd::string, handler_t>> handlers_;
+    lxcd::map<lxcd::string, lxcd::map<lxcd::string, handler_t>> handlers_;
+    
 
 private:
     static int dispatch_handler(void *cls, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **ptr);
-    bool is_match_match_regex(lxcd::string path, lxcd::string request, std::unordered_map<lxcd::string, lxcd::string> &params);
+    bool is_match_match_regex(lxcd::string path, lxcd::string request, lxcd::map<lxcd::string, lxcd::string> &params);
 
     int port_;
     bool is_running_;
     struct MHD_Daemon *daemon_;
 
     bool are_paths_equal(lxcd::string path1, lxcd::string path2);
-
+    lxcd::string replace_double_slashes(const lxcd::string& str);
 };
 
 #endif // HTTPHANDLER_H

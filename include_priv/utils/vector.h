@@ -12,6 +12,7 @@ typedef unsigned long size_t;
 typedef int ptrdiff_t;
 #endif
 
+
 template<typename T>
 class vector {
 public:
@@ -77,6 +78,7 @@ public:
 
     iterator erase(iterator first, iterator last);
 
+    void clear();
 private:
     T* data_;
     lxcd::size_t size_;

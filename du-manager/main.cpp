@@ -1,13 +1,13 @@
-#include <iostream>
-#include <string>
+#include <stdio.h>
+#include <uuid/uuid.h>
 #include "deployment_unit_helper.h"
 
 void printUsage() {
-    std::cout << "Usage: du-manager --ls|--install|--remove [options]" << std::endl;
-    std::cout << "Options:" << std::endl;
-    std::cout << "  --ls                           List installed DeploymentUnits" << std::endl;
-    std::cout << "  --install -e <container> -d <path> [-u <uuid>]   Install a DeploymentUnit" << std::endl;
-    std::cout << "  --remove <uuid>                Remove a DeploymentUnit by UUID" << std::endl;
+    printf("Usage: du-manager --ls|--install|--remove [options]\n");
+    printf("Options:\n");
+    printf("  --ls                           List installed DeploymentUnits\n");
+    printf("  --install -e <container> -d <path> [-u <uuid>]   Install a DeploymentUnit\n");
+    printf("  --remove <uuid>                Remove a DeploymentUnit by UUID\n");
 }
 
 int main(int argc, char* argv[]) {
@@ -17,64 +17,63 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    lxcd::string action = argv[1];
+    char* action = argv[1];
     DeploymentUnitHelper helper;
 
-    if (action == "--ls") {
+    if (strcmp(action, "--ls") == 0) {
         helper.listDeploymentUnits();
-    } else if (action == "--install") {
-        lxcd::string container, path, uuid;
+    } else if (strcmp(action, "--install") == 0) {
+        char* container = NULL;
+        char* path = NULL;
+        char uuidStr[37];
+        uuid_t _uuid;
 
         for (int i = 2; i < argc; i++) {
-            if (lxcd::string(argv[i]) == "-e" && i + 1 < argc) {
+            if (strcmp(argv[i], "-e") == 0 && i + 1 < argc) {
                 container = argv[++i];
-            } else if (lxcd::string(argv[i]) == "-d" && i + 1 < argc) {
+            } else if (strcmp(argv[i], "-d") == 0 && i + 1 < argc) {
                 path = argv[++i];
-            } else if (lxcd::string(argv[i]) == "-u" && i + 1 < argc) {
-                uuid = argv[++i];
+            } else if (strcmp(argv[i], "-u") == 0 && i + 1 < argc) {
+                uuid_parse(argv[++i], _uuid);
+                uuid_unparse(_uuid, uuidStr);
             } else {
-                std::cout << "Unknown or incomplete option: " << argv[i] << std::endl;
+                printf("Unknown or incomplete option: %s\n", argv[i]);
                 printUsage();
                 return 1;
             }
         }
-        std::cout << "---1"<< std::endl;
 
-        if (container.empty() || path.empty()) {
-            std::cout << "Error: Both -e <container> and -d <path> options are required for --install." << std::endl;
+        if (container == NULL || path == NULL) {
+            printf("Error: Both -e <container> and -d <path> options are required for --install.\n");
             printUsage();
             return 1;
         }
-        // Generate a UUID for the DeploymentUnit
-        if (uuid.empty()){
-            uuid_t _uuid;
+
+        if (uuid_is_null(_uuid)) {
             uuid_generate(_uuid);
-            char uuidStr[37];
             uuid_unparse(_uuid, uuidStr);
-            uuid = uuidStr;
         }
-        std::cout << "---2"<< std::endl;
 
-        if (!helper.addDeploymentUnit(container, path, uuid)){
-            std::cout << "Error: Failed to install the DeploymentUnit." << std::endl;
+        if (!helper.addDeploymentUnit(container, path, uuidStr)){
+            printf("Error: Failed to install the DeploymentUnit.\n");
             return 1;
         }
-    } else if (action == "--remove") {
+    } else if (strcmp(action, "--remove") == 0) {
         if (argc != 3) {
-            std::cout << "Error: UUID is required for --remove." << std::endl;
+            printf("Error: UUID is required for --remove.\n");
             printUsage();
             return 1;
         }
 
-        lxcd::string uuidToRemove = argv[2];
+        char* uuidToRemove = argv[2];
         if (helper.removeDeploymentUnit(uuidToRemove)) {
-            std::cout << "Successfully removed DeploymentUnit with UUID: " << uuidToRemove << std::endl;
+            printf("Successfully removed DeploymentUnit with UUID: %s\n", uuidToRemove);
         } else {
-            std::cout << "Error: Failed to remove the DeploymentUnit with UUID: " << uuidToRemove << std::endl;
+            printf("Error: Failed to remove the DeploymentUnit with UUID: %s\n", uuidToRemove);
             return 1;
         }
     } else {
-        std::cout << "Unknown action: " << action << std::endl;
+        printf("Unknown action: %s\n", action);
         printUsage();
         return 1;
     }

@@ -6,6 +6,8 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(LXC REQUIRED IMPORTED_TARGET lxc)
 pkg_check_modules(HTTP REQUIRED IMPORTED_TARGET libmicrohttpd)
 pkg_check_modules(JSON REQUIRED IMPORTED_TARGET jsoncpp)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_subdirectory(du-manager)
 #add_subdirectory(liblxcd)
 

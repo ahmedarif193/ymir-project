@@ -4,7 +4,7 @@
 class DeploymentUnitHelper {
 public:
     DeploymentUnitHelper();
-    std::shared_ptr<DeploymentUnit> getDeploymentUnit(const lxcd::string& uuid);
+    lxcd::SharedPtr<DeploymentUnit> getDeploymentUnit(const lxcd::string& uuid);
     bool addDeploymentUnit(const lxcd::string &container, const lxcd::string& tarballPath, const lxcd::string &uuid);
     bool removeDeploymentUnit(const lxcd::string& uuid);
     bool updateFullRootPath(struct lxc_container *container);
@@ -15,7 +15,7 @@ public:
     void listDeploymentUnits();
 
 private:
-    lxcd::map<lxcd::string, std::shared_ptr<DeploymentUnit>> deploymentUnits;
+    lxcd::map<lxcd::string, lxcd::SharedPtr<DeploymentUnit>> deploymentUnits;
     bool loadCache();
     bool saveCache();
 };

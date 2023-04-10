@@ -146,3 +146,11 @@ inline void vector<T>::insert(iterator pos, const T& value) {
     data_[index] = value;
     size_++;
 }
+
+template<typename T>
+inline void vector<T>::clear() {
+    for (size_t i = 0; i < size_; i++) {
+        data_[i].~T();
+    }
+    size_ = 0;
+}

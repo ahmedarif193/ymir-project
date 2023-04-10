@@ -1,19 +1,12 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
-#include <memory>
-#include <map>
-#include <ctime>
-#include <sstream>
 
-
-#include <json/json.h>
+#include <json-c/json.h>
 #include <curl/curl.h>
 #include <uuid/uuid.h>
 #include <lxc/lxccontainer.h>
 
 #include "utils/string.h"
+#include "utils/sharedptr.h"
+#include "utils/linux.h"
 
 
 //for  syscalls
@@ -53,10 +46,10 @@ public:
 
 
     // IPK package names
-    std::vector<lxcd::string> ipkPackages;
+    lxcd::vector<lxcd::string> ipkPackages;
 
     //metadata
-    std::time_t installationDate;
+    lxcd::time_t installationDate;
 };
 
 lxcd::string getLxcPath();

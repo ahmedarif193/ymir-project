@@ -7,18 +7,6 @@
 #define _LEVELS 100
 namespace lxcd{
 
-class OutOfRangeException {
-public:
-    explicit OutOfRangeException(const string& message) : message_(message) {}
-
-    virtual const char* what() const noexcept {
-        return message_.c_str();
-    }
-
-private:
-    string message_;
-};
-
 
 template<typename T1, typename T2>
 class pair {
@@ -64,7 +52,7 @@ class map{
 public:
     //member type
     typedef pair<const K, M> ValueType;
-
+    
     /*
             defining Iterator class
             helps iterate through elements of the map
@@ -225,6 +213,7 @@ public:
     void clear();
     //operator[] for accessing mapped type for key
     M& operator[](const K&);
+    const M& operator[](const K&) const;
     //level randomizer for insert
     size_t random_level(Node<K, M>**);
     //getting node for key using bottom link

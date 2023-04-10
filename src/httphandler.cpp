@@ -10,16 +10,16 @@ void RestApiListener::start() {
     daemon_ = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port_, nullptr, nullptr, &RestApiListener::dispatch_handler, this, MHD_OPTION_END);
     if (daemon_) {
         is_running_ = true;
-        std::cout << "REST API listening on port " << port_ << std::endl;
+        printf("REST API listening on port %d.\n", port_);
     } else {
-        std::cerr << "Failed to start REST API" << std::endl;
+        fprintf(stderr,"Failed to start REST API\n");
     }
 }
 
 void RestApiListener::stop() {
     if (is_running_) {
         MHD_stop_daemon(daemon_);
-        std::cout << "REST API stopped" << std::endl;
+                printf("REST API stopped\n");
         is_running_ = false;
     }
 }
@@ -34,7 +34,8 @@ int RestApiListener::dispatch_handler(void *cls, MHD_Connection *connection, con
     static int dummy;
     static char* buffer = new char[500];
     int ret;
-    std::cout <<dummy<< count++<<"dispatch_handler" <<*upload_data_size<<murl<<mmethod<<mversion << std::endl;
+//    printf("dispatch_handler dummy %dcount %d upload_data_size %d murl %s mmethod %s mversion %s",dummy, count++);
+//    std::cout <<dummy<< count++<<"dispatch_handler" <<*upload_data_size<<murl<<mmethod<<mversion << std::endl;
 
     if (&dummy != *con_cls) {
         *con_cls = &dummy;
@@ -47,9 +48,8 @@ int RestApiListener::dispatch_handler(void *cls, MHD_Connection *connection, con
         return MHD_YES;
     }
 
-    std::cout <<"-------------------------------"<<buffer << std::endl;
     auto *rest_api_listener = reinterpret_cast<RestApiListener*>(cls);
-    std::unordered_map<lxcd::string, lxcd::string> params;
+    lxcd::map<lxcd::string, lxcd::string> params;
     lxcd::string request_body = buffer;
     lxcd::string http_method = method ? method : "";
     lxcd::string path = url ? url : "";
@@ -90,47 +90,84 @@ int RestApiListener::dispatch_handler(void *cls, MHD_Connection *connection, con
     return handler(connection, params, request_body);
 }
 
-bool RestApiListener::is_match_match_regex(lxcd::string path, lxcd::string request, std::unordered_map<lxcd::string, lxcd::string> &params){
+bool RestApiListener::is_match_match_regex(lxcd::string path, lxcd::string request, lxcd::map<lxcd::string, lxcd::string> &params){
     if(are_paths_equal(path,request))
         return true;
-    const std::regex param_regex("\\{([^}]+)\\}");
+    const lxcd::string param_regex = "\\{([^}]+)\\}";
 
-    std::vector<lxcd::string> param_names;
-    std::sregex_iterator param_begin(path.begin(), path.end(), param_regex);
-    std::sregex_iterator param_end;
-    for (std::sregex_iterator i = param_begin; i != param_end; ++i) {
-        param_names.push_back(i->str(1));
+    lxcd::vector<lxcd::string> param_names;
+    size_t pos = 0;
+    while ((pos = path.find(param_regex, pos)) != lxcd::string::npos) {
+        pos += 1; // Skip the '{' character
+        size_t param_end_pos = path.find('}', pos);
+        if (param_end_pos == lxcd::string::npos) {
+            break; // Invalid path: a parameter is not closed
+        }
+        size_t param_name_length = param_end_pos - pos;
+        param_names.push_back(path.substr(pos, param_name_length));
+        pos = param_end_pos + 1; // Skip the '}' character
     }
 
     // Build regular expression to match path
     lxcd::string path_regex = path;
-    std::smatch match;
     for (const auto& param_name : param_names) {
-        path_regex.replace(path_regex.find("{" + param_name + "}"), param_name.length() + 2, "([^/]+)");
+        size_t param_start_pos = path_regex.find("{" + param_name + "}");
+        if (param_start_pos == lxcd::string::npos) {
+            break; // Invalid path: parameter not found
+        }
+        path_regex.replace(param_start_pos, param_name.length() + 2, "([^/]+)");
     }
     path_regex = "^" + path_regex + "$";
 
     // Match request against path regular expression
-    std::regex regex(path_regex);
-
-    if (std::regex_match(request, match, regex)) {
-        // Extract parameter values into map
-        for (size_t i = 1; i < match.size(); ++i) {
-            params[param_names[i - 1]] = match[i].str();
+    bool match = false;
+    if (request.size() >= path.size()) {
+        lxcd::string request_prefix = request.substr(0, path.size());
+        if (request_prefix == path) {
+            lxcd::string request_suffix = request.substr(path.size());
+            lxcd::vector<lxcd::string> request_params;
+            size_t request_pos = 0;
+            for (const auto& param_name : param_names) {
+                size_t param_end_pos = request_suffix.find('/');
+                if (param_end_pos == lxcd::string::npos) {
+                    request_params.push_back(request_suffix);
+                    break;
+                }
+                request_params.push_back(request_suffix.substr(0, param_end_pos));
+                request_suffix = request_suffix.substr(param_end_pos + 1);
+            }
+            if (request_params.size() == param_names.size()) {
+                // Extract parameter values into map
+                for (size_t i = 0; i < param_names.size(); ++i) {
+                    params[param_names[i]] = request_params[i];
+                }
+                match = true;
+            }
         }
-        return true;
     }
-    //    std::cout << "Request does not match path" << std::endl;
-    return false;
+    return match;
+}
+
+lxcd::string RestApiListener::replace_double_slashes(const lxcd::string& str) {
+    lxcd::string result;
+    bool prev_is_slash = false;
+    for (char c : str) {
+        if (c == '/') {
+            if (!prev_is_slash) {
+                result += c;
+                prev_is_slash = true;
+            }
+        } else {
+            result += c;
+            prev_is_slash = false;
+        }
+    }
+    return result;
 }
 
 bool RestApiListener::are_paths_equal(lxcd::string path1, lxcd::string path2) {
-    // Replace double forward slashes with a single forward slash
-    std::regex regex("//+");
-    lxcd::string path1Normalized = std::regex_replace(path1, regex, "/");
-    lxcd::string path2Normalized = std::regex_replace(path2, regex, "/");
-    std::cout <<"are_paths_equal "<<path2Normalized<< "  --  "<<path1Normalized << "  --  "<< (path1Normalized == path2Normalized)<< std::endl;
+    lxcd::string path1Normalized = replace_double_slashes(path1);
+    lxcd::string path2Normalized = replace_double_slashes(path2);
 
-    // Compare the normalized paths
     return path1Normalized == path2Normalized;
 }
