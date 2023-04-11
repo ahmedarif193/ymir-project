@@ -338,7 +338,7 @@ bool DeploymentUnitHelper::saveCache() {
         return false;
     }
 
-    lxcd::string jsonString = json_object_to_json_string(cache);
+    lxcd::string jsonString = json_object_to_json_string_ext(cache, JSON_C_TO_STRING_PRETTY);
 
     ssize_t bytesWritten = write(cacheFd, jsonString.c_str(), jsonString.length());
     if (bytesWritten == -1) {
@@ -386,7 +386,7 @@ void DeploymentUnitHelper::listDeploymentUnits() {
         json_object_array_add(root, duData);
     }
 
-    const char* jsonString = json_object_to_json_string(root);
+    const char* jsonString = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
     printf("Installed DeploymentUnits:\n%s\n", jsonString);
 
     json_object_put(root);

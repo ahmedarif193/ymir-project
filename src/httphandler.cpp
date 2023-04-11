@@ -3,10 +3,13 @@
 RestApiListener::RestApiListener(int port) : port_(port), is_running_(false) {}
 
 void RestApiListener::register_handler(const lxcd::string &path, const lxcd::string &http_method, handler_t handler) {
+    printf("register_handler %s,%s \n", path.c_str(),http_method.c_str());
+
     handlers_[path][http_method] = handler;
 }
 
 void RestApiListener::start() {
+    printf("start%d.\n", port_);
     daemon_ = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port_, nullptr, nullptr, &RestApiListener::dispatch_handler, this, MHD_OPTION_END);
     if (daemon_) {
         is_running_ = true;
@@ -19,11 +22,11 @@ void RestApiListener::start() {
 void RestApiListener::stop() {
     if (is_running_) {
         MHD_stop_daemon(daemon_);
-                printf("REST API stopped\n");
+        printf("REST API stopped\n");
         is_running_ = false;
     }
 }
-
+#include <iostream>
 int RestApiListener::dispatch_handler(void *cls, MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **con_cls) {
     lxcd::string mmethod = method;
     lxcd::string murl = url;
@@ -34,8 +37,8 @@ int RestApiListener::dispatch_handler(void *cls, MHD_Connection *connection, con
     static int dummy;
     static char* buffer = new char[500];
     int ret;
-//    printf("dispatch_handler dummy %dcount %d upload_data_size %d murl %s mmethod %s mversion %s",dummy, count++);
-//    std::cout <<dummy<< count++<<"dispatch_handler" <<*upload_data_size<<murl<<mmethod<<mversion << std::endl;
+    printf("dispatch_handler dummy %dcount %d upload_data_size %lu murl %s mmethod %s mversion %s",dummy, count++, *upload_data_size, murl.c_str(), mmethod.c_str(), mversion.c_str());
+    //    std::cout <<dummy<< count++<<"dispatch_handler" <<*upload_data_size<<murl<<mmethod<<mversion << std::endl;
 
     if (&dummy != *con_cls) {
         *con_cls = &dummy;
@@ -47,6 +50,7 @@ int RestApiListener::dispatch_handler(void *cls, MHD_Connection *connection, con
         *upload_data_size = 0;
         return MHD_YES;
     }
+    printf("start.\n");
 
     auto *rest_api_listener = reinterpret_cast<RestApiListener*>(cls);
     lxcd::map<lxcd::string, lxcd::string> params;
@@ -64,30 +68,34 @@ int RestApiListener::dispatch_handler(void *cls, MHD_Connection *connection, con
     for(; path_handlers_it != rest_api_listener->handlers_.end(); ++path_handlers_it)
     {
         lxcd::string k =  path_handlers_it->first;
-
+        printf("k =  path_handlers_it->first %s == %s.\n",k.c_str(),path.c_str());
         if(rest_api_listener->is_match_match_regex(k,path, params)){
+            printf("k =  ---------- found\n");
 
-            // Print parameter values for debugs
-            //            for (const auto& kv : params) {
-            //                std::cout << kv.first << " = " << kv.second << std::endl;
-            //            }
+            for (const auto& kv : params) {
+                std::cout << kv.first << " = " << kv.second << std::endl;
+            }
             found = true;
             break;
         }
         //ignore value
         //Value v = iter->second;
     }
+    printf("start2.\n");
+
     if(!found)
         return MHD_NO;
-
-    auto method_handlers_it = path_handlers_it->second.find(http_method);
-    if (method_handlers_it == path_handlers_it->second.end()) {
-        // Method not supported for this path
-        return MHD_NO;
+    printf("start3.\n");
+    printf("k for test  ---------- found %s\n",http_method.c_str());
+    //TODO : fix map's find function
+    for(const auto &method : path_handlers_it->second){
+        if(method.first == http_method){
+            printf("k =  ---------- found %s\n",method.first.c_str());
+            handler_t handler = method.second;
+            return handler(connection, params, request_body);
+        }
     }
-
-    handler_t handler = method_handlers_it->second;
-    return handler(connection, params, request_body);
+    return MHD_YES;
 }
 
 bool RestApiListener::is_match_match_regex(lxcd::string path, lxcd::string request, lxcd::map<lxcd::string, lxcd::string> &params){
