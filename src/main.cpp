@@ -1,4 +1,4 @@
-/* Feel free to use this example code in any way
+﻿/* Feel free to use this example code in any way
    you see fit (Public Domain) */
 
 
@@ -7,18 +7,7 @@
 #include "lxc-container.h"
 #include "lxcqueue.h"
 
-#include <json-c/json.h>
-
-#define SEND_RESPONSE(connection, output) \
-    do { \
-    struct MHD_Response *mhd_response = MHD_create_response_from_buffer(output.length(), (void*) output.c_str(), MHD_RESPMEM_MUST_COPY); \
-    int ret = MHD_queue_response(connection, MHD_HTTP_OK, mhd_response); \
-    MHD_destroy_response(mhd_response); \
-    json_object_put(root);\
-    return ret; \
-    } while (0)
-
-int supported_API_versions(struct MHD_Connection *connection, const lxcd::map<lxcd::string, lxcd::string>& params, const lxcd::string& request_body) {
+int supported_API_versions(const lxcd::map<lxcd::string, lxcd::string>& params, const lxcd::string& request_body,lxcd::string &reply_body) {
     // Create a new JSON object
     json_object* root = json_object_new_object();
     json_object* metadata = json_object_new_array();
@@ -28,24 +17,20 @@ int supported_API_versions(struct MHD_Connection *connection, const lxcd::map<lx
     json_object_object_add(root, "status_code", json_object_new_int(200));
     json_object_object_add(root, "type", json_object_new_string("sync"));
 
-    lxcd::string output = json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
-    SEND_RESPONSE(connection, output);
+    reply_body = json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
+    json_object_put(root);
 
-    return 0;
+    return MHD_HTTP_OK;
 }
 
-
-
-int handle_echo(struct MHD_Connection *connection
-                , const lxcd::map<lxcd::string, lxcd::string>& params
-                , const lxcd::string &request_body) {
+int handle_echo(const lxcd::map<lxcd::string, lxcd::string>& params
+                , const lxcd::string &request_body,lxcd::string &reply_body) {
                     json_object* root = json_object_new_object();
-    SEND_RESPONSE(connection, request_body);
+    return MHD_HTTP_OK;
 }
 
-int get_Server_environment(struct MHD_Connection *connection,
-                           const lxcd::map<lxcd::string, lxcd::string>& params,
-                           const lxcd::string &request_body) {
+int get_Server_environment(const lxcd::map<lxcd::string, lxcd::string>& params,
+                           const lxcd::string &request_body,lxcd::string &reply_body) {
 
     // Create a json-c object
     json_object* root = json_object_new_object();
@@ -106,13 +91,12 @@ int get_Server_environment(struct MHD_Connection *connection,
     json_object_object_add(lxc_features, "server_pid", json_object_new_int(getpid()));
     json_object_object_add(lxc_features, "server_version", json_object_new_string("1.0"));
     json_object_object_add(environment, "storage", json_object_new_string("dir | overlay"));
-    lxcd::string output = json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
-    SEND_RESPONSE(connection, output);
+    reply_body = json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
+    return MHD_HTTP_OK;
 }
 
-int execenv_create(struct MHD_Connection *connection,
-                   const lxcd::map<lxcd::string, lxcd::string>& params,
-                   const lxcd::string& request_body) {
+int execenv_create(const lxcd::map<lxcd::string, lxcd::string>& params,
+                   const lxcd::string& request_body,lxcd::string &reply_body) {
     printf("execenv_create\n");
     json_object* rootrequest = json_tokener_parse(request_body.c_str());
     json_object* root = json_object_new_object();
@@ -127,9 +111,8 @@ int execenv_create(struct MHD_Connection *connection,
         fprintf(stderr, "Failed to parse JSON file.\n");
         json_object_object_add(root, "status", json_object_new_string("Failed to parse JSON file."));
         json_object_object_add(root, "status_code", json_object_new_int(500));
-        lxcd::string output = json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
-        SEND_RESPONSE(connection, output);
-        return -1;
+        reply_body =json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
+        return MHD_HTTP_NO_CONTENT;
     }
 
     const char* name = json_object_get_string(json_object_object_get(rootrequest, "name"));
@@ -144,13 +127,11 @@ int execenv_create(struct MHD_Connection *connection,
 
     json_object_object_add(root, "status", json_object_new_string("Success"));
     json_object_object_add(root, "status_code", json_object_new_int(200));
-    lxcd::string output = json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
-    SEND_RESPONSE(connection, output);
-
-    return 0;
+    reply_body = json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
+    return MHD_HTTP_OK;
 }
 
-int execenv_ls(struct MHD_Connection *connection, const lxcd::map<lxcd::string, lxcd::string>& params, const lxcd::string &request_body) {
+int execenv_ls(const lxcd::map<lxcd::string, lxcd::string>& params, const lxcd::string &request_bodyn,lxcd::string &reply_body) {
     json_object *root = json_object_new_object();
     printf("Type: %s\n", "output.c_str()");
 
@@ -160,8 +141,8 @@ int execenv_ls(struct MHD_Connection *connection, const lxcd::map<lxcd::string, 
 
     rc = list_all_containers(NULL, &names, &cret);
     if (rc == -1) {
-        lxcd::string output = json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
-        SEND_RESPONSE(connection, output);
+        reply_body =json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
+        return MHD_HTTP_OK;
     }
 
     json_object *containers_array = json_object_new_array();
@@ -185,13 +166,11 @@ int execenv_ls(struct MHD_Connection *connection, const lxcd::map<lxcd::string, 
     json_object_object_add(root, "containers", containers_array);
     json_object_object_add(root, "numberOfContainers", json_object_new_int(rc));
 
-    lxcd::string output = json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
-        printf("Type: %s\n", output.c_str());
-    SEND_RESPONSE(connection, output);
+    reply_body =json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
+        printf("Type: %s\n", reply_body.c_str());
+    return MHD_HTTP_OK;
 }
-
-
-int execenv_rm(struct MHD_Connection *connection, const lxcd::map<lxcd::string, lxcd::string>& params, const lxcd::string &request_body) {
+int execenv_rm(const lxcd::map<lxcd::string, lxcd::string>& params, const lxcd::string &request_body,lxcd::string &reply_body) {
     json_object *root = json_object_new_object();
 
     json_object *rootrequest = json_tokener_parse(request_body.c_str());
@@ -208,13 +187,12 @@ int execenv_rm(struct MHD_Connection *connection, const lxcd::map<lxcd::string, 
     json_object_object_add(root, "status_code", json_object_new_int(200));
 
     json_object_put(rootrequest);
-    lxcd::string output = json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
-    SEND_RESPONSE(connection, output);
+    reply_body =json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
+    return MHD_HTTP_OK;
 }
 
-int execenv_update(struct MHD_Connection *connection
-                   , const lxcd::map<lxcd::string, lxcd::string>& params
-                   , const lxcd::string &request_body){
+int execenv_update(const lxcd::map<lxcd::string, lxcd::string>& params
+                   , const lxcd::string &request_body,lxcd::string &reply_body){
 
     json_object *root = json_object_new_object();
 
@@ -223,13 +201,12 @@ int execenv_update(struct MHD_Connection *connection
     json_object_array_add(metadata, json_object_new_string("patch"));
     json_object_object_add(root, "metadata", metadata);
 
-    lxcd::string output = json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
-    SEND_RESPONSE(connection, output);
+    reply_body =json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
+    return MHD_HTTP_OK;
 }
 
-int deployementunit_create(struct MHD_Connection *connection
-                   , const lxcd::map<lxcd::string, lxcd::string>& params
-                   , const lxcd::string &request_body){
+int deployementunit_create(const lxcd::map<lxcd::string, lxcd::string>& params
+                   , const lxcd::string &request_body,lxcd::string &reply_body){
     json_object *root = json_object_new_object();
 
     json_object *metadata = json_object_new_object();
@@ -237,13 +214,12 @@ int deployementunit_create(struct MHD_Connection *connection
     json_object_array_add(metadata, json_object_new_string("patch"));
     json_object_object_add(root, "metadata", metadata);
 
-    lxcd::string output = json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
-    SEND_RESPONSE(connection, output);
+    reply_body =json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
+    return MHD_HTTP_OK;
 }
 
-int deployementunit_delete(struct MHD_Connection *connection
-                   , const lxcd::map<lxcd::string, lxcd::string>& params
-                   , const lxcd::string &request_body){
+int deployementunit_delete(const lxcd::map<lxcd::string, lxcd::string>& params
+                   , const lxcd::string &request_body,lxcd::string &reply_body){
     json_object *root = json_object_new_object();
 
     json_object *metadata = json_object_new_object();
@@ -251,13 +227,12 @@ int deployementunit_delete(struct MHD_Connection *connection
     json_object_array_add(metadata, json_object_new_string("patch"));
     json_object_object_add(root, "metadata", metadata);
 
-    lxcd::string output = json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
-    SEND_RESPONSE(connection, output);
+    reply_body =json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
+    return MHD_HTTP_OK;
 }
 
-int deployementunit_ls(struct MHD_Connection *connection
-                   , const lxcd::map<lxcd::string, lxcd::string>& params
-                   , const lxcd::string &request_body){
+int deployementunit_ls(const lxcd::map<lxcd::string, lxcd::string>& params
+                   , const lxcd::string &request_body,lxcd::string &reply_body){
     json_object *root = json_object_new_object();
 
     json_object *metadata = json_object_new_object();
@@ -265,10 +240,46 @@ int deployementunit_ls(struct MHD_Connection *connection
     json_object_array_add(metadata, json_object_new_string("patch"));
     json_object_object_add(root, "metadata", metadata);
 
-    lxcd::string output = json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
-    SEND_RESPONSE(connection, output);
+    reply_body =json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
+    return MHD_HTTP_OK;
 }
 
+int executionunit_create(const lxcd::map<lxcd::string, lxcd::string>& params
+                   , const lxcd::string &request_body,lxcd::string &reply_body){
+    json_object *root = json_object_new_object();
+
+    json_object *metadata = json_object_new_object();
+    json_object_array_add(metadata, json_object_new_string("etag"));
+    json_object_array_add(metadata, json_object_new_string("patch"));
+    json_object_object_add(root, "metadata", metadata);
+
+    reply_body =json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
+    return MHD_HTTP_OK;
+}
+int executionunit_ls(const lxcd::map<lxcd::string, lxcd::string>& params
+                   , const lxcd::string &request_body,lxcd::string &reply_body){
+    json_object *root = json_object_new_object();
+
+    json_object *metadata = json_object_new_object();
+    json_object_array_add(metadata, json_object_new_string("etag"));
+    json_object_array_add(metadata, json_object_new_string("patch"));
+    json_object_object_add(root, "metadata", metadata);
+
+    reply_body =json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
+    return MHD_HTTP_OK;
+}
+int executionunit_delete(const lxcd::map<lxcd::string, lxcd::string>& params
+                   , const lxcd::string &request_body,lxcd::string &reply_body){
+    json_object *root = json_object_new_object();
+
+    json_object *metadata = json_object_new_object();
+    json_object_array_add(metadata, json_object_new_string("etag"));
+    json_object_array_add(metadata, json_object_new_string("patch"));
+    json_object_object_add(root, "metadata", metadata);
+
+    reply_body =json_object_to_json_string_ext(root,JSON_C_TO_STRING_PRETTY) ;
+    return MHD_HTTP_OK;
+}
 
 int main() {
     // Create a RestApiListener instance on port 8080
@@ -288,10 +299,15 @@ int main() {
     rest_api.register_handler("/2.0/deployementunit", "GET", deployementunit_ls);
     rest_api.register_handler("/2.0/deployementunit", "DELETE", deployementunit_delete);
 
+    rest_api.register_handler("/2.0/executionunit", "POST", executionunit_create);
+    rest_api.register_handler("/2.0/executionunit", "GET", executionunit_ls);
+    rest_api.register_handler("/2.0/executionunit", "DELETE", executionunit_delete);
+
     rest_api.register_handler("/echo/{value1}", "GET", handle_echo);
 
     // Start the listener
     rest_api.start();
+    //rest_api.listenUnix("/tmp/test-pipe");
 
     // Wait for user input to stop the listener
     printf("Press Enter to stop the REST API...\n");

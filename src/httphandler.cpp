@@ -26,6 +26,22 @@ void RestApiListener::stop() {
         is_running_ = false;
     }
 }
+
+bool RestApiListener::create_pipe_socket() {
+    if (mkfifo(pipe_name_.c_str(), 0666) < 0) {
+        perror("Failed to create pipe socket");
+        return false;
+    }
+    return true;
+}
+
+bool RestApiListener::remove_pipe_socket() {
+    if (unlink(pipe_name_.c_str()) < 0) {
+        perror("Failed to remove pipe socket");
+        return false;
+    }
+    return true;
+}
 #include <iostream>
 int RestApiListener::dispatch_handler(void *cls, MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **con_cls) {
     lxcd::string mmethod = method;
@@ -92,11 +108,15 @@ int RestApiListener::dispatch_handler(void *cls, MHD_Connection *connection, con
         if(method.first == http_method){
             printf("k =  ---------- found %s\n",method.first.c_str());
             handler_t handler = method.second;
-            return handler(connection, params, request_body);
+            lxcd::string reply_body;
+            auto ret = handler(params, request_body, reply_body);
+            struct MHD_Response *mhd_response = MHD_create_response_from_buffer(reply_body.length(), (void*) reply_body.c_str(), MHD_RESPMEM_MUST_COPY);
+            return MHD_queue_response(connection, ret , mhd_response);
         }
     }
     return MHD_YES;
 }
+
 
 bool RestApiListener::is_match_match_regex(lxcd::string path, lxcd::string request, lxcd::map<lxcd::string, lxcd::string> &params){
     if(are_paths_equal(path,request))
@@ -171,6 +191,55 @@ lxcd::string RestApiListener::replace_double_slashes(const lxcd::string& str) {
         }
     }
     return result;
+}
+
+void *RestApiListener::listen_thread_func(void *arg) {
+    RestApiListener *handler = reinterpret_cast<RestApiListener *>(arg);
+    int fd = open(handler->pipe_name_.c_str(), O_RDONLY);
+    if (fd < 0) {
+        perror("Failed to open pipe socket");
+        return NULL;
+    }
+
+    char buf[1024];
+    while (true) {
+        size_t len = read(fd, buf, sizeof(buf));
+        printf("len %lu buf %s",len, buf);
+
+        if (len <= 0) {
+            break;
+        }
+        buf[len] = '\0';
+
+        json_object *root = json_tokener_parse(buf);
+        if (root == NULL) {
+            perror("Failed to parse JSON data");
+            continue;
+        }
+
+        lxcd::SharedPtr<json_object *> path_obj = lxcd::makeShared<json_object *>(json_object_object_get(root, "path"));
+        if (!path_obj) {
+            perror("Failed to find path in JSON data");
+            json_object_put(root);
+            continue;
+        }
+        lxcd::string path_obj_str = json_object_get_string(*path_obj);
+
+        lxcd::SharedPtr<json_object *> method_obj = lxcd::makeShared<json_object *>(json_object_object_get(root, "method"));
+        if (!method_obj) {
+            perror("Failed to find Method in JSON data");
+            json_object_put(root);
+            continue;
+        }
+
+        lxcd::string method_obj_str = json_object_get_string(*method_obj);
+        printf("listen_thread_func method_obj_str %s path_obj_str %s",method_obj_str.c_str(), path_obj_str.c_str());
+        dispatch_handler(arg, NULL, path_obj_str, method_obj_str, NULL, buf, &len, NULL);
+        //TODO : add handler to fix deleting method
+    }
+
+    close(fd);
+    return NULL;
 }
 
 bool RestApiListener::are_paths_equal(lxcd::string path1, lxcd::string path2) {
