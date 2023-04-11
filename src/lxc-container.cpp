@@ -1,5 +1,6 @@
 #include "lxc-container.h"
 
+#define EXITIFFAIL(A) {int ret= A; if(ret) return ret;}
 
 LxcContainer::LxcContainer(const lxcd::string name, const char* m_template, const Method action) {
 
