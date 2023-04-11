@@ -1,10 +1,12 @@
 #include "lxcqueue.h"
 
-LxcQueue::LxcQueue() : stopped(false) {}
+LxcQueue::LxcQueue() : stopped(false) {
+}
 
-LxcQueue::~LxcQueue() {}
+LxcQueue::~LxcQueue() {
+}
 
-void LxcQueue::addTask(Task *task) {
+void LxcQueue::addTask(Task* task) {
     std::unique_lock<std::mutex> lock(_mutex);
     _tasks.push(task);
     _cond.notify_one();
@@ -27,10 +29,12 @@ bool LxcQueue::isFinished() {
 }
 
 void LxcQueue::run() {
-    while (true) {
+    while(true) {
         std::unique_lock<std::mutex> lock(_mutex);
-        _cond.wait(lock, [this](){ return !_tasks.empty() || stopped; });
-        if (stopped && _tasks.empty()) {
+        _cond.wait(lock, [this]() {
+            return !_tasks.empty() || stopped;
+        });
+        if(stopped && _tasks.empty()) {
             return;
         }
         Task* task = _tasks.front();

@@ -5,14 +5,15 @@
 namespace lxcd {
 class OutOfRangeException {
 public:
-    explicit OutOfRangeException(const string& message) : message_(message) {}
+explicit OutOfRangeException(const string& message) : message_(message) {
+}
 
-    virtual const char* what() const noexcept {
-        return message_.c_str();
-    }
+virtual const char* what() const noexcept {
+    return message_.c_str();
+}
 
 private:
-    string message_;
+string message_;
 };
 
 }

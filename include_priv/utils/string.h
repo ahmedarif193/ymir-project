@@ -9,94 +9,94 @@ namespace lxcd {
 
 class string {
 public:
-    string();
-    
-    string(const char* str);
-    
-    string(const string& other);
-    
-    ~string();
+string();
 
-    char* begin();
-    const char* begin() const;
-    char* end();
-    const char* end() const;
+string(const char* str);
 
-    string& operator=(const string& other);
+string(const string& other);
 
-    // Move assignment operator
-    string& operator=(string&& other) noexcept;
+~string();
 
-    // Assignment operator from C-style string
-    string& operator=(const char* str);
-    char& operator[](size_t index);
-    
-    const char& operator[](size_t index) const;
-    
-    size_t size() const;
-    
-    const char* c_str() const;
-    operator const char*() const;
-    bool operator==(const char* other) const;
-    bool operator==(const string& other) const;
+char* begin();
+const char* begin() const;
+char* end();
+const char* end() const;
 
-    bool operator!=(const string& other) const;
-    
-    string operator+(const string& other) const;
+string& operator=(const string& other);
 
-    string& operator+=(const string& other);
+// Move assignment operator
+string& operator=(string&& other) noexcept;
 
-    string& operator+=(const char* other);
+// Assignment operator from C-style string
+string& operator=(const char* str);
+char& operator[](size_t index);
 
-    string& operator+=(const char other);
-    friend string operator+(const char* lhs, const string& rhs);
-    
-    friend string operator+(const string& rhs, const char* lhs);
+const char& operator[](size_t index) const;
 
-    vector<string> split(char delimiter) const;
+size_t size() const;
+
+const char* c_str() const;
+operator const char*() const;
+bool operator==(const char* other) const;
+bool operator==(const string& other) const;
+
+bool operator!=(const string& other) const;
+
+string operator+(const string& other) const;
+
+string& operator+=(const string& other);
+
+string& operator+=(const char* other);
+
+string& operator+=(const char other);
+friend string operator+(const char* lhs, const string& rhs);
+
+friend string operator+(const string& rhs, const char* lhs);
+
+vector<string> split(char delimiter) const;
 
 
-    // Erase a portion of this string
-    string& erase(size_t pos, size_t count = npos);
+// Erase a portion of this string
+string& erase(size_t pos, size_t count = npos);
 
-    // Find the first occurrence of a substring in this string
-    size_t find(const string& substr, size_t pos = 0) const;
-    size_t find(const char subchar, size_t pos= 0) const;
-    
-    bool contains(const char* str) const;
+// Find the first occurrence of a substring in this string
+size_t find(const string& substr, size_t pos = 0) const;
+size_t find(const char subchar, size_t pos = 0) const;
 
-    bool contains(const string& str) const;
+bool contains(const char* str) const;
 
-    // Check if this string is empty
-    bool empty() const;
+bool contains(const string& str) const;
 
-    // Get the length of this string
-    size_t length() const;
+// Check if this string is empty
+bool empty() const;
 
-    size_t rfind(const char* str, size_t pos = npos) const;
+// Get the length of this string
+size_t length() const;
 
-    string substr(size_t pos = 0, size_t len = npos) const;
+size_t rfind(const char* str, size_t pos = npos) const;
 
-    string& append(const char* str, size_t len);
+string substr(size_t pos = 0, size_t len = npos) const;
 
-    string& append(const string& other);
+string& append(const char* str, size_t len);
 
-    string& append(const char* str);
+string& append(const string& other);
 
-    void insert(size_t pos, const string& str);
+string& append(const char* str);
 
-    void insert(size_t pos, const char* str);
-    string& replace(size_t pos, size_t count, const char* str);
+void insert(size_t pos, const string& str);
 
-    void resize(size_t n);
-    void reserve(size_t n);
+void insert(size_t pos, const char* str);
+string& replace(size_t pos, size_t count, const char* str);
 
-    static const size_t npos = static_cast<size_t>(-1);
+void resize(size_t n);
+void reserve(size_t n);
+
+static const size_t npos = static_cast<size_t>(-1);
 private:
-    char* data_;
-    size_t size_;
-    
-    string(const char* str, size_t size);
+char* data_;
+size_t size_;
+
+string(const char* str, size_t size);
 };
 
 inline string operator+(const char* lhs, const string& rhs) {
@@ -115,31 +115,36 @@ string to_string(int value);
 
 string to_string(double value);
 
-inline bool isdigit(char c) { return c >= '0' && c <= '9'; }
+inline bool isdigit(char c) {
+    return c >= '0' && c <= '9';
+}
 
 class OutOfRangeException {
 public:
-    explicit OutOfRangeException(const string& message) : message_(message) {}
+explicit OutOfRangeException(const string& message) : message_(message) {
+}
 
-    virtual const char* what() const noexcept {
-        return message_.c_str();
-    }
+virtual const char* what() const noexcept {
+    return message_.c_str();
+}
 
 private:
-    string message_;
+string message_;
 };
 
-class runtimeErrorException  {
+class runtimeErrorException {
 public:
-    explicit runtimeErrorException(const lxcd::string& what_arg) : m_msg(what_arg) {}
-    explicit runtimeErrorException(const char* what_arg) : m_msg(what_arg) {}
+explicit runtimeErrorException(const lxcd::string& what_arg) : m_msg(what_arg) {
+}
+explicit runtimeErrorException(const char* what_arg) : m_msg(what_arg) {
+}
 
-    virtual const char* what() const noexcept {
-        return m_msg.c_str();
-    }
+virtual const char* what() const noexcept {
+    return m_msg.c_str();
+}
 
 private:
-    lxcd::string m_msg;
+lxcd::string m_msg;
 };
 #include "impl_string.hpp"
 

@@ -10,25 +10,25 @@
 
 class LxcQueue {
 public:
-    LxcQueue();
-    ~LxcQueue();
+LxcQueue();
+~LxcQueue();
 
-    void addTask(Task* task);
+void addTask(Task* task);
 
-    void start();
+void start();
 
-    void stop();
+void stop();
 
-    bool isFinished();
-
-private:
-    void run();
+bool isFinished();
 
 private:
-    std::queue<Task*> _tasks;
-    std::mutex _mutex;
-    std::condition_variable _cond;
-    bool stopped;
+void run();
+
+private:
+std::queue<Task*> _tasks;
+std::mutex _mutex;
+std::condition_variable _cond;
+bool stopped;
 };
 
 #endif // LXCQUEUE_H

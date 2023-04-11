@@ -22,34 +22,34 @@
 
 class DeploymentUnit {
 public:
-    DeploymentUnit(const lxcd::string &uuid);
-    bool prepare(const lxcd::string& tarballPath, const lxcd::string &executionEnvRef);
-    bool install();
+DeploymentUnit(const lxcd::string &uuid);
+bool prepare(const lxcd::string& tarballPath, const lxcd::string &executionEnvRef);
+bool install();
 
-    bool remove();
+bool remove();
 
-    //TODO :  to be used
-    lxcd::string squashfsPath;
-    static lxcd::string cacheFilePath;
-    static lxcd::string tempDir;
+//TODO :  to be used
+lxcd::string squashfsPath;
+static lxcd::string cacheFilePath;
+static lxcd::string tempDir;
 
-    // DeploymentUnit parameters
-    lxcd::string uuid;
-    lxcd::string executionEnvRef;
-    lxcd::string description;
-    lxcd::string vendor;
-    lxcd::string type;
-    lxcd::string name;
-    lxcd::string rootfsPath;
-    int version;
-    bool mounted;
+// DeploymentUnit parameters
+lxcd::string uuid;
+lxcd::string executionEnvRef;
+lxcd::string description;
+lxcd::string vendor;
+lxcd::string type;
+lxcd::string name;
+lxcd::string rootfsPath;
+int version;
+bool mounted;
 
 
-    // IPK package names
-    lxcd::vector<lxcd::string> ipkPackages;
+// IPK package names
+lxcd::vector<lxcd::string> ipkPackages;
 
-    //metadata
-    lxcd::time_t installationDate;
+//metadata
+lxcd::time_t installationDate;
 };
 
 lxcd::string getLxcPath();

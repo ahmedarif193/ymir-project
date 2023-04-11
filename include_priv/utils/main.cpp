@@ -10,60 +10,60 @@
 
 int main() {
     {
-        
+
         // Generate a UUID
         lxcd::string uuid = lxcd::UUIDGenerator::generate();
-        
+
         // Verify that the UUID is in the correct format (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
-        if (uuid.length() != 36 ||
-                uuid[8] != '-' ||
-                uuid[13] != '-' ||
-                uuid[18] != '-' ||
-                uuid[23] != '-') {
+        if((uuid.length() != 36) ||
+           (uuid[8] != '-') ||
+           (uuid[13] != '-') ||
+           (uuid[18] != '-') ||
+           (uuid[23] != '-')) {
             std::cout << "Invalid UUID format: " << uuid << std::endl;
             return 1;
         }
-        
+
         // Check that all characters in the UUID are hexadecimal digits or hyphens
         const char* validChars = "0123456789abcdefABCDEF-";
-        for (lxcd::size_t i = 0; i < uuid.length(); ++i) {
-            if (std::strchr(validChars, uuid[i]) == nullptr) {
+        for(lxcd::size_t i = 0; i < uuid.length(); ++i) {
+            if(std::strchr(validChars, uuid[i]) == nullptr) {
                 std::cout << "Invalid UUID character: " << uuid[i] << std::endl;
                 return 1;
             }
         }
-        
+
         // Generate 500 UUIDs and store them in a vector
         lxcd::vector<lxcd::string> uuids;
-        for (int i = 0; i < 500; ++i) {
+        for(int i = 0; i < 500; ++i) {
             uuids.push_back(lxcd::UUIDGenerator::generate());
         }
-        
+
         // Verify that all UUIDs are unique
-        for (lxcd::size_t i = 0; i < uuids.size(); ++i) {
-            for (lxcd::size_t j = i + 1; j < uuids.size(); ++j) {
-                if (uuids[i] == uuids[j]) {
+        for(lxcd::size_t i = 0; i < uuids.size(); ++i) {
+            for(lxcd::size_t j = i + 1; j < uuids.size(); ++j) {
+                if(uuids[i] == uuids[j]) {
                     std::cout << "Duplicate UUID: " << uuids[i] << std::endl;
                     return 1;
                 }
             }
         }
-        
+
     }
     int arr[] = {1, 2, 3, 4, 5};
     lxcd::vector<int> vec(arr, 5);
-    
-    for (auto it = vec.begin(); it != vec.end(); ++it) {
+
+    for(auto it = vec.begin(); it != vec.end(); ++it) {
         std::cout << *it << " ";
     }
-    std::cout << std::endl;    
-    for (int i = 0; i < 500; ++i) {
+    std::cout << std::endl;
+    for(int i = 0; i < 500; ++i) {
         {
             lxcd::string json = "{\"name\": \"John\", \"age\": 30}";
             lxcd::JsonParser parser(json);
             lxcd::JsonValue root = parser.parse();
-            lxcd::string name = root["name"].asString();  // "John"
-            int age = root["age"].asInt();          // 30
+            lxcd::string name = root["name"].asString(); // "John"
+            int age = root["age"].asInt();               // 30
         }
         // Test lxcd::string class
         lxcd::string s1 = "hello";
@@ -74,7 +74,7 @@ int main() {
         assert(s1[3] == 'l');
         assert(s1[4] == 'o');
         auto s22 = s1 + " world";
-        
+
         // Test split function
         lxcd::string s2 = "foo,bar,baz";
         lxcd::vector<lxcd::string> v = s2.split(',');
@@ -82,23 +82,23 @@ int main() {
         assert(v[0] == "foo");
         assert(v[1] == "bar");
         assert(v[2] == "baz");
-        
+
         {
             // test insert at beginning of string
             lxcd::string s("world");
             s.insert(0, "hello ");
             assert(s == "hello world");
-            
+
             // test insert in middle of string
             lxcd::string s2("the fox jumps");
             s2.insert(4, "quick brown ");
             assert(s2 == "the quick brown fox jumps");//the fox quick brown jumps
-            
+
             // test insert at end of string
             lxcd::string s3("hello");
             s3.insert(s3.size(), " world");
             assert(s3 == "hello world");
-            
+
         }
         {
             // test insert with string argument
@@ -115,40 +115,40 @@ int main() {
             s3.append(", how are you?");
             assert(s3 == "hello world, how are you?");
             s3.erase(5, 6);
-            
+
             assert(s3 == "hello, how are you?");
             assert(s3.find("how") == 7);
             assert(s3.find("xyz") == lxcd::string::npos);
             assert(!s3.empty());
             assert(s3.length() == 19);
         }
-        
+
         {
             // Test rfind
             lxcd::string s1("hello, world");
             assert(s1.rfind("world") == 7);
             assert(s1.rfind("o") == 8);
             assert(s1.rfind("foo") == lxcd::string::npos);
-            
+
             // Test substr
             lxcd::string s2("hello, world");
             assert(s2.substr(0, 5) == "hello");
             assert(s2.substr(7) == "world");
             assert(s2.substr(0, 0).empty());
             assert(s2.substr(0, lxcd::string::npos) == s2);
-            
+
             // Test append with char* and length
             lxcd::string s3("hello");
             s3.append(", world!", 7);
             assert(s3 == "hello, world");
-            
+
             // Test append with lxcd::string
             lxcd::string s4("hello");
             s4.append(lxcd::string(", world!"));
             assert(s4 == "hello, world!");
-            
+
         }
-        
+
         // Test lxcd::vector class
         lxcd::vector<int> v1;
         assert(v1.empty());
@@ -170,7 +170,7 @@ int main() {
         assert(v1[2] == 0);
         v1.reserve(10);
         assert(v1.capacity() == 10);
-        
+
         // Test with Valgrind
         lxcd::string* s3 = new lxcd::string("test");
         assert(s3->size() == 4);
@@ -187,25 +187,25 @@ int main() {
             vec.push_back(1);
             vec.push_back(2);
             vec.push_back(3);
-            
+
 
         }
-        
+
         {
             lxcd::vector<int> vec;
             vec.push_back(1);
             vec.push_back(2);
             vec.push_back(3);
-            
+
             // Iterate over the vector using iterators
-            for (lxcd::vector<int>::iterator it = vec.begin(); it != vec.end(); ++it) {
+            for(lxcd::vector<int>::iterator it = vec.begin(); it != vec.end(); ++it) {
                 //std::cout << *it << " "<<std::endl;
             }
         }
-        
+
         {
             // Test map class
-            lxcd::map<int,lxcd::string> m;
+            lxcd::map<int, lxcd::string> m;
             m.insert({1, lxcd::string("one")});
             m.insert({2, lxcd::string("two")});
             m.insert({3, lxcd::string("three")});
