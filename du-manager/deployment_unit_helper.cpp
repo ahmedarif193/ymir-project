@@ -38,7 +38,9 @@ lxcd::SharedPtr<DeploymentUnit> DeploymentUnitHelper::getDeploymentUnit(const lx
 }
 
 struct lxc_container* DeploymentUnitHelper::getContainer(const lxcd::string& c) {
-    struct lxc_container* container = lxc_container_new("Container-4", "/var/lib/lxc/");
+    auto lxcPath = getLxcPath();
+
+    struct lxc_container* container = lxc_container_new("Container-4", lxcPath);
     if(!container) {
         fprintf(stderr, "Error: Unable to create container object\n");
         return nullptr;
