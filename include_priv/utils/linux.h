@@ -15,48 +15,67 @@ typedef unsigned long time_t;
 
 class RuntimeError {
 public:
-// Constructor that takes a const char pointer as error message
-RuntimeError(const char* errMsg) {
-    int len = 0;
-    while(errMsg[len] != '\0') {
-        len++;
+    // Constructor that takes a const char pointer as error message
+    RuntimeError(const char* errMsg) {
+        int len = 0;
+        while(errMsg[len] != '\0') {
+            len++;
+        }
+        len++;     // For null character
+
+        message = new char[len];
+        for(int i = 0; i < len; i++) {
+            message[i] = errMsg[i];
+        }
     }
-    len++;     // For null character
 
-    message = new char[len];
-    for(int i = 0; i < len; i++) {
-        message[i] = errMsg[i];
+    // Copy constructor
+    RuntimeError(const RuntimeError& other) {
+        int len = 0;
+        while(other.message[len] != '\0') {
+            len++;
+        }
+        len++;     // For null character
+
+        message = new char[len];
+        for(int i = 0; i < len; i++) {
+            message[i] = other.message[i];
+        }
     }
-}
 
-// Copy constructor
-RuntimeError(const RuntimeError& other) {
-    int len = 0;
-    while(other.message[len] != '\0') {
-        len++;
+    // Destructor
+    ~RuntimeError() {
+        delete[] message;
     }
-    len++;     // For null character
 
-    message = new char[len];
-    for(int i = 0; i < len; i++) {
-        message[i] = other.message[i];
+    // Accessor for the error message
+    const char* what() const {
+        return message;
     }
-}
-
-// Destructor
-~RuntimeError() {
-    delete[] message;
-}
-
-// Accessor for the error message
-const char* what() const {
-    return message;
-}
 
 private:
-char* message;
+    char* message;
 };
 
+inline lxcd::string exec(lxcd::string cmd, int &retcode) {
+    printf("execute the cmd %s", cmd.c_str());
+    lxcd::string result = "";
+    char buffer[128];
+    FILE* pipe = popen(cmd.c_str(), "r");
+    if(!pipe) {
+        throw lxcd::runtimeErrorException("popen() failed!");
+    }
+    try {
+        while(fgets(buffer, sizeof buffer, pipe) != NULL) {
+            result += buffer;
+        }
+    } catch(...) {
+        pclose(pipe);
+        throw;
+    }
+    retcode = WEXITSTATUS(pclose(pipe));
+    return result;
+}
 
 struct mount {
     string device;
@@ -67,7 +86,7 @@ struct mount {
     mount() = default;
 
     mount(const string& device, const string& mountPoint,
-         const string& fsType, const string& options)
+          const string& fsType, const string& options)
         : device(device), mountPoint(mountPoint), fsType(fsType), options(options) {
     }
 };
@@ -151,15 +170,15 @@ inline void umountSquashfs(const string& mountPoint) {
 }
 class Process {
 public:
-Process(const string& cmd) : cmd_(cmd) {
-}
+    Process(const string& cmd) : cmd_(cmd) {
+    }
 
-int run() {
-    return system(cmd_.c_str());
-}
+    int run() {
+        return system(cmd_.c_str());
+    }
 
 private:
-string cmd_;
+    string cmd_;
 };
 // class Filesystem {
 // public:

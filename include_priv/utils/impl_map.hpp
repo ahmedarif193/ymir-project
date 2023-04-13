@@ -3,10 +3,10 @@ template <typename K, typename M>
 inline M& lxcd::map<K, M>::operator[](const K& _key){
     lxcd::Node<K, M> *_temp_head = find_at_bottom(_key);
     if(_temp_head == NULL){
-        lxcd::map<K, M>::Iterator _iter = insert(lxcd::make_pair(_key, M())).first;
-        return _iter.get_cur()->_value->second;
+        lxcd::map<K, M>::Iterator _iter = insert(lxcd::make_pair(_key, M())).key;
+        return _iter.get_cur()->_value->value;
     }
-    return _temp_head->_value->second;
+    return _temp_head->_value->value;
 }
 template <typename K, typename M>
 const M& lxcd::map<K, M>::operator[](const K& _key) const {
@@ -16,7 +16,7 @@ const M& lxcd::map<K, M>::operator[](const K& _key) const {
         static const M default_value;
         return default_value;
     }
-    return _temp_head->_value->second;
+    return _temp_head->_value->value;
 }
 template <typename K, typename M>
 inline lxcd::size_t lxcd::map<K, M>::random_level(lxcd::Node<K, M>** _nodes){
@@ -50,60 +50,60 @@ inline lxcd::map<K, M>& lxcd::map<K, M>::operator=(const lxcd::map<K, M>& _map){
     }
 
     map_ctor();
-    lxcd::Node<K, M> *_first = _map.get_head()->_forward_links[0];
-    if(_first == _map.get_tail()) return *this;
-    while(_first != _map.get_tail()){
-        insert(*(_first->_value));
-        _first = _first->_forward_links[0];
+    lxcd::Node<K, M> *_key = _map.get_head()->_forward_links[0];
+    if(_key == _map.get_tail()) return *this;
+    while(_key != _map.get_tail()){
+        insert(*(_key->_value));
+        _key = _key->_forward_links[0];
     }
     return *this;
 }
 
 template <typename K, typename M>
 inline lxcd::pair<typename lxcd::map<K, M>::Iterator, bool> lxcd::map<K, M>::insert(const lxcd::pair<const K, M>& _val){
-    const K& _key = _val.first;
+    const K& _key = _val.key;
     lxcd::Node<K, M> *_temp = _head;
     lxcd::Node<K, M> **_updated = new lxcd::Node<K, M>* [_LEVELS+1];
     memset(_updated, '\0', sizeof(Node<K, M>*)*(_LEVELS+1));
     size_t i = _max;
     while(i >= 1){
-        while(_temp->_forward_links[i] != NULL && _temp->_forward_links[i]->_value->first < _key){
+        while(_temp->_forward_links[i] != NULL && _temp->_forward_links[i]->_value->key < _key){
             _temp = _temp->_forward_links[i];
         }
         _updated[i] = _temp;
         i--;
     }
 
-    while(_temp->_forward_links[0] != _tail && _temp->_forward_links[0]->_value->first < _key){
+    while(_temp->_forward_links[0] != _tail && _temp->_forward_links[0]->_value->key < _key){
         _temp = _temp->_forward_links[0];
     }
     _updated[0] = _temp;
-    lxcd::Node<K, M> *_first_updated = _updated[0];
-    _first_updated = _first_updated->_forward_links[0];
-    if(_first_updated->_value != NULL && _first_updated->_value->first == _val.first){
+    lxcd::Node<K, M> *_key_updated = _updated[0];
+    _key_updated = _key_updated->_forward_links[0];
+    if(_key_updated->_value != NULL && _key_updated->_value->key == _val.key){
         delete [] _updated;
-        return lxcd::make_pair(map<K, M>::Iterator(_first_updated), false);
+        return lxcd::make_pair(map<K, M>::Iterator(_key_updated), false);
     }
 
     size_t _level = random_level(_updated);
-    _first_updated = NULL;
-    _first_updated = new lxcd::Node<K, M>(_level, _val);
+    _key_updated = NULL;
+    _key_updated = new lxcd::Node<K, M>(_level, _val);
     i = 0;
     while(i <= _level){
-        _first_updated->_forward_links[i] = _updated[i]->_forward_links[i];
-        _updated[i]->_forward_links[i] = _first_updated;
+        _key_updated->_forward_links[i] = _updated[i]->_forward_links[i];
+        _updated[i]->_forward_links[i] = _key_updated;
         ++i;
     }
-    _first_updated->_prev = _updated[0];
-    if(_first_updated->_forward_links[0] != _tail){
-        _first_updated->_forward_links[0]->_prev = _first_updated;
+    _key_updated->_prev = _updated[0];
+    if(_key_updated->_forward_links[0] != _tail){
+        _key_updated->_forward_links[0]->_prev = _key_updated;
     }
     else{
-        _tail->_prev = _first_updated;
+        _tail->_prev = _key_updated;
     }
     ++_size;
     delete [] _updated;
-    return lxcd::make_pair(map<K, M>::Iterator(_first_updated), true);
+    return lxcd::make_pair(map<K, M>::Iterator(_key_updated), true);
 }
 
 template <typename K, typename M>
@@ -123,35 +123,35 @@ inline void lxcd::map<K, M>::erase(const K& _key){
     memset(_updated, '\0', sizeof(Node<K, M>*)*(_LEVELS+1));
     size_t i = _max;
     while(i >= 1){
-        while(_temp->_forward_links[i] != NULL && _temp->_forward_links[i]->_value->first < _key){
+        while(_temp->_forward_links[i] != NULL && _temp->_forward_links[i]->_value->key < _key){
             _temp = _temp->_forward_links[i];
         }
         _updated[i] = _temp;
         i--;
     }
 
-    while(_temp->_forward_links[0] != _tail && _temp->_forward_links[0]->_value->first < _key){
+    while(_temp->_forward_links[0] != _tail && _temp->_forward_links[0]->_value->key < _key){
         _temp = _temp->_forward_links[0];
     }
     _updated[0] = _temp;
-    lxcd::Node<K, M> *_first_updated = _updated[0];
-    _first_updated = _first_updated->_forward_links[0];
-    if(_first_updated->_value->first == _key){
+    lxcd::Node<K, M> *_key_updated = _updated[0];
+    _key_updated = _key_updated->_forward_links[0];
+    if(_key_updated->_value->key == _key){
         i = 0;
-        while(i <= _max && _updated[i]->_forward_links[i] == _first_updated){
-            _updated[i]->_forward_links[i] = _first_updated->_forward_links[i];
+        while(i <= _max && _updated[i]->_forward_links[i] == _key_updated){
+            _updated[i]->_forward_links[i] = _key_updated->_forward_links[i];
             ++i;
         }
 
-        if(_first_updated->_forward_links[0] != _tail){
-            _first_updated->_forward_links[0]->_prev = _first_updated->_prev;
+        if(_key_updated->_forward_links[0] != _tail){
+            _key_updated->_forward_links[0]->_prev = _key_updated->_prev;
         }
         else{
-            _tail->_prev = _first_updated->_prev;
-            _first_updated->_prev->_forward_links[0] = _tail;
+            _tail->_prev = _key_updated->_prev;
+            _key_updated->_prev->_forward_links[0] = _tail;
         }
 
-        delete _first_updated;
+        delete _key_updated;
         while(_max > 0 && _head->_forward_links[_max] == NULL){
             --_max;
         }
@@ -165,41 +165,41 @@ inline void lxcd::map<K, M>::erase(const K& _key){
 
 template <typename K, typename M>
 inline void lxcd::map<K, M>::erase(map<K, M>::Iterator _iter){
-    const K& _key = _iter.get_cur()->_value->first;
+    const K& _key = _iter.get_cur()->_value->key;
     lxcd::Node<K, M> *_temp = _head;
     lxcd::Node<K, M> **_updated = new lxcd::Node<K, M>* [_LEVELS+1];
     memset(_updated, '\0', sizeof(Node<K, M>*)*(_LEVELS+1));
     size_t i = _max;
     while(i >= 1){
-        while(_temp->_forward_links[i] != NULL && _temp->_forward_links[i]->_value->first < _key){
+        while(_temp->_forward_links[i] != NULL && _temp->_forward_links[i]->_value->key < _key){
             _temp = _temp->_forward_links[i];
         }
         _updated[i] = _temp;
         i--;
     }
 
-    while(_temp->_forward_links[0] != _tail && _temp->_forward_links[0]->_value->first < _key){
+    while(_temp->_forward_links[0] != _tail && _temp->_forward_links[0]->_value->key < _key){
         _temp = _temp->_forward_links[0];
     }
     _updated[0] = _temp;
-    lxcd::Node<K, M> *_first_updated = _updated[0];
-    _first_updated = _first_updated->_forward_links[0];
-    if(_first_updated->_value->first == _key){
+    lxcd::Node<K, M> *_key_updated = _updated[0];
+    _key_updated = _key_updated->_forward_links[0];
+    if(_key_updated->_value->key == _key){
         i = 0;
-        while(i <= _max && _updated[i]->_forward_links[i] == _first_updated){
-            _updated[i]->_forward_links[i] = _first_updated->_forward_links[i];
+        while(i <= _max && _updated[i]->_forward_links[i] == _key_updated){
+            _updated[i]->_forward_links[i] = _key_updated->_forward_links[i];
             ++i;
         }
 
-        if(_first_updated->_forward_links[0] != _tail){
-            _first_updated->_forward_links[0]->_prev = _first_updated->_prev;
+        if(_key_updated->_forward_links[0] != _tail){
+            _key_updated->_forward_links[0]->_prev = _key_updated->_prev;
         }
         else{
-            _tail->_prev = _first_updated->_prev;
-            _first_updated->_prev->_forward_links[0] = _tail;
+            _tail->_prev = _key_updated->_prev;
+            _key_updated->_prev->_forward_links[0] = _tail;
         }
 
-        delete _first_updated;
+        delete _key_updated;
         while(_max > 0 && _head->_forward_links[_max] == NULL){
             --_max;
         }
@@ -230,19 +230,19 @@ inline lxcd::Node<K, M>* lxcd::map<K, M>::find_at_bottom(const K& _key) const{
     lxcd::Node<K, M> *_temp = _head;
     int i = _max;
     while(i >= 1){
-        while(_temp->_forward_links[i] != NULL && _temp->_forward_links[i]->_value->first < _key){
+        while(_temp->_forward_links[i] != NULL && _temp->_forward_links[i]->_value->key < _key){
             _temp = _temp->_forward_links[i];
         }
         i--;
     }
 
-    while(_temp->_forward_links[0] != _tail && _temp->_forward_links[0]->_value->first < _key){
+    while(_temp->_forward_links[0] != _tail && _temp->_forward_links[0]->_value->key < _key){
         _temp = _temp->_forward_links[0];
     }
     _temp = _temp->_forward_links[0];
     if(_temp == _tail) return NULL;
     if(_temp != NULL){
-        if(_temp->_value->first == _key)
+        if(_temp->_value->key == _key)
             return _temp;
     }
     return NULL;
@@ -284,8 +284,8 @@ inline bool operator<(const lxcd::map<K, M>& _map1, const lxcd::map<K, M>& _map2
     auto _iter1 = _map1.begin();
     auto _iter2 = _map2.begin();
     while(_iter1 != _map1.end() && _iter2 != _map2.end()){
-        bool _less = (*_iter1).first < (*_iter2).first;
-        bool _less2 = (*_iter2).first < (*_iter1).first;
+        bool _less = (*_iter1).key < (*_iter2).key;
+        bool _less2 = (*_iter2).key < (*_iter1).key;
         if(_less) return true;
         if(_less2) return false;
         ++_iter1;
@@ -434,7 +434,7 @@ inline M &lxcd::map<K, M>::at(const K &_key){
     if(_temp_head == NULL){
         throw lxcd::OutOfRangeException("out of range");
     }
-    else return _temp_head->_value->second;
+    else return _temp_head->_value->value;
 
 }
 
@@ -444,7 +444,7 @@ inline const M &lxcd::map<K, M>::at(const K &_key) const{
     if(_temp_head == NULL){
         throw lxcd::OutOfRangeException("out of range");
     }
-    else return _temp_head->_value->second;
+    else return _temp_head->_value->value;
 }
 
 template<typename K, typename M>

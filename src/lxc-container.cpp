@@ -86,7 +86,7 @@ int LxcContainer::create() {
         // format the file as an ext4 file system
         char command[100];
         sprintf(command, "mkfs.ext4 -F %s", container_overlay_img.c_str());
-        exec(command, retcode);
+        lxcd::exec(command, retcode);
 
         printf("Created ext4 image file: %s\n", container_overlay_img.c_str());
 

@@ -5,6 +5,37 @@
 
 #include <cstdio>
 
+bool parse_lxcd_info(const lxcd::string &json_str, LxcdInfo &info) {
+    json_object *root_obj = json_tokener_parse(json_str.c_str());
+
+    if (!root_obj) {
+        fprintf(stderr, "Error parsing JSON string\n");;
+        return false;
+    }
+
+    json_object *uuid_obj, *executionEnvRef_obj, *url_obj, *user_obj, *password_obj;
+
+    if (json_object_object_get_ex(root_obj, "uuid", &uuid_obj) &&
+            json_object_object_get_ex(root_obj, "executionEnvRef", &executionEnvRef_obj) &&
+            json_object_object_get_ex(root_obj, "url", &url_obj) &&
+            json_object_object_get_ex(root_obj, "user", &user_obj) &&
+            json_object_object_get_ex(root_obj, "password", &password_obj)) {
+
+        info.uuid = json_object_get_string(uuid_obj);
+        info.executionEnvRef = json_object_get_string(executionEnvRef_obj);
+        info.url = json_object_get_string(url_obj);
+        info.user = json_object_get_string(user_obj);
+        info.password = json_object_get_string(password_obj);
+
+        json_object_put(root_obj);
+        return true;
+    }
+
+    fprintf(stderr, "Error retrieving JSON values\n");;
+    json_object_put(root_obj);
+    return false;
+}
+
 DeploymentUnitHelper::DeploymentUnitHelper() {
     loadCache();
 }
@@ -26,7 +57,7 @@ bool contains_space(const char* str) {
 lxcd::SharedPtr<DeploymentUnit> DeploymentUnitHelper::getDeploymentUnit(const lxcd::string& uuid) {
     // TODO: Implement getDeploymentUnit method
     for(const auto& duPair : deploymentUnits) {
-        const lxcd::SharedPtr<DeploymentUnit>& _du = duPair.second;
+        const lxcd::SharedPtr<DeploymentUnit>& _du = duPair.value;
         if(_du->uuid == uuid) {
             // The current DeploymentUnit has the target version
             fprintf(stderr, "Found DeploymentUnit with UUID: %s, with name: %s\n", _du->uuid.c_str(), _du->name.c_str());
@@ -53,18 +84,20 @@ struct lxc_container* DeploymentUnitHelper::getContainer(const lxcd::string& c) 
     return container;
 }
 
-bool DeploymentUnitHelper::addDeploymentUnit(const lxcd::string& executionEnvRef, const lxcd::string& tarballPath, const lxcd::string& uuid) {
-
+lxcd::pair<lxcd::map<lxcd::string, lxcd::SharedPtr<DeploymentUnit>>::Iterator, bool> DeploymentUnitHelper::addDeploymentUnit(const lxcd::string& executionEnvRef, const lxcd::string& tarballPath, const lxcd::string& uuid) {
+    lxcd::pair<lxcd::map<lxcd::string, lxcd::SharedPtr<DeploymentUnit>>::Iterator, bool> ret;
     struct lxc_container* container = lxc_container_new(executionEnvRef.c_str(), NULL);
     if(!container) {
         fprintf(stderr, "Failed to initialize the container\n");
-        return false;
+        ret.value = false;
+        return ret;
     }
 
     if(!container->is_defined(container)) {
         fprintf(stderr, "Error: Container is not defined\n");
         lxc_container_put(container);
-        return false;
+        ret.value = false;
+        return ret;
     }
 
     // Create a new DeploymentUnit instance
@@ -72,13 +105,14 @@ bool DeploymentUnitHelper::addDeploymentUnit(const lxcd::string& executionEnvRef
 
     // prepare the DeploymentUnit
     if(!du->prepare(tarballPath, executionEnvRef)) {
-        fprintf(stderr, "Failed to install DeploymentUnit\n");
+        fprintf(stderr, "Failed to download/prepare DeploymentUnit\n");
         lxc_container_put(container);
-        return false;
+        ret.value = false;
+        return ret;
     }
 
     for(const auto& duPair : deploymentUnits) {
-        const lxcd::SharedPtr<DeploymentUnit>& _du = duPair.second;
+        const lxcd::SharedPtr<DeploymentUnit>& _du = duPair.value;
         if(_du->name == du->name) {
             printf("Found DeploymentUnit with UUID: %s, with name: %s\n", _du->uuid.c_str(), _du->name.c_str());
 
@@ -86,7 +120,8 @@ bool DeploymentUnitHelper::addDeploymentUnit(const lxcd::string& executionEnvRef
                 printf("1\n");
                 printf("Error: to upgrade the du you need to increment the version code at least by 1, the current version is %d, the installed version is %d, abort.\n", du->version, _du->version);
                 lxc_container_put(container);
-                return false;
+                ret.value = false;
+                return ret;
             } else {
                 printf("removing the old DU ...\n");
                 if(removeDeploymentUnit(_du->uuid)) {
@@ -96,7 +131,8 @@ bool DeploymentUnitHelper::addDeploymentUnit(const lxcd::string& executionEnvRef
                     printf("4\n");
                     printf("Fatal: can't uninstall the old package.\n");
                     lxc_container_put(container);
-                    return false;
+                    ret.value = false;
+                    return ret;
                 }
             }
             break;
@@ -106,7 +142,8 @@ bool DeploymentUnitHelper::addDeploymentUnit(const lxcd::string& executionEnvRef
     if(contains_space(du->name.c_str())) {
         printf("the name of the du tarball must not contains a space, abord.\n");
         lxc_container_put(container);
-        return false;
+        ret.value = false;
+        return ret;
     }
 
     //validate using regex
@@ -115,29 +152,34 @@ bool DeploymentUnitHelper::addDeploymentUnit(const lxcd::string& executionEnvRef
     if(!du->install()) {
         fprintf(stderr, "Failed to install DeploymentUnit\n");
         lxc_container_put(container);
-        return false;
+        ret.value = false;
+        return ret;
     }
 
     lxcd::mountSquashfs(du->rootfsPath + ".squashfs", du->rootfsPath);
 
     // Add the DeploymentUnit to the internal context
-    deploymentUnits.insert({uuid, du});
+    ret = deploymentUnits.insert({uuid, du});
 
     // Save the cache
     if(!saveCache()) {
-        fprintf(stderr, "Failed to save cache\n");
+        fprintf(stderr, "Failed to save cache, rolling back the installation ...\n");
+        removeDeploymentUnit(du->uuid);
         lxc_container_put(container);
-        return false;
+        ret.value = false;
+        return ret;
     }
 
     if(!updateFullRootPath(container)) {
-        fprintf(stderr, "Can't handle updating lxc.rootfs.path, abord. \n");
-        return false;
+        fprintf(stderr, "Can't handle updating lxc.rootfs.path, rolling back the installation ...\n");
+        removeDeploymentUnit(du->uuid);
+        ret.value = false;
+        return ret;
     }
 
     lxc_container_put(container);
 
-    return true;
+    return ret;
 }
 bool DeploymentUnitHelper::restartContainer(struct lxc_container* container) {
     // Check if the container is already running
@@ -173,10 +215,10 @@ bool DeploymentUnitHelper::updateFullRootPath(struct lxc_container* container) {
     newRootfsBackend.append(initialRootfs);
 
     for(const auto& entry : deploymentUnits) {
-        if(entry.second->executionEnvRef == container->name) {
-            fprintf(stdout, "%s found\n", entry.second->name.c_str());
+        if(entry.value->executionEnvRef == container->name) {
+            fprintf(stdout, "%s found\n", entry.value->name.c_str());
             newRootfsBackend.append(":");
-            newRootfsBackend.append(entry.second->rootfsPath);
+            newRootfsBackend.append(entry.value->rootfsPath);
         }
     }
     newRootfsBackend.append(":");
@@ -209,8 +251,8 @@ bool DeploymentUnitHelper::updateFullRootPath(struct lxc_container* container) {
 
 bool DeploymentUnitHelper::removeDeploymentUnit(const lxcd::string& uuid) {
     for(const auto& entry : deploymentUnits) {
-        if(uuid == entry.second->uuid) {
-            struct lxc_container* container = lxc_container_new(entry.second->executionEnvRef, NULL);
+        if(uuid == entry.value->uuid) {
+            struct lxc_container* container = lxc_container_new(entry.value->executionEnvRef, NULL);
             if(!container) {
                 fprintf(stderr, "Failed to initialize the container\n");
                 return false;
@@ -221,12 +263,12 @@ bool DeploymentUnitHelper::removeDeploymentUnit(const lxcd::string& uuid) {
                 lxc_container_put(container);
                 return false;
             }
-            lxcd::umountSquashfs(entry.second->rootfsPath);
-            if(!entry.second->remove()) {
+            lxcd::umountSquashfs(entry.value->rootfsPath);
+            if(!entry.value->remove()) {
                 fprintf(stderr, "Failed to remove DeploymentUnit\n");
                 return false;
             }
-            deploymentUnits.erase(entry.second->uuid);
+            deploymentUnits.erase(entry.value->uuid);
 
             if(!updateFullRootPath(container)) {
                 fprintf(stderr, "Can't handle updating lxc.rootfs.path, abord. \n");
@@ -309,24 +351,24 @@ bool DeploymentUnitHelper::saveCache() {
     // Serialize DeploymentUnits to cache
     for(const auto& entry : deploymentUnits) {
         struct json_object* duData = json_object_new_object();
-        json_object_object_add(duData, "UUID", json_object_new_string(entry.second->uuid.c_str()));
-        json_object_object_add(duData, "ExecutionEnvRef", json_object_new_string(entry.second->executionEnvRef.c_str()));
-        json_object_object_add(duData, "Description", json_object_new_string(entry.second->description.c_str()));
-        json_object_object_add(duData, "Vendor", json_object_new_string(entry.second->vendor.c_str()));
-        json_object_object_add(duData, "Version", json_object_new_int(entry.second->version));
-        json_object_object_add(duData, "Name", json_object_new_string(entry.second->name.c_str()));
-        json_object_object_add(duData, "Type", json_object_new_string(entry.second->type.c_str()));
-        json_object_object_add(duData, "RootfsPath", json_object_new_string(entry.second->rootfsPath.c_str()));
+        json_object_object_add(duData, "UUID", json_object_new_string(entry.value->uuid.c_str()));
+        json_object_object_add(duData, "ExecutionEnvRef", json_object_new_string(entry.value->executionEnvRef.c_str()));
+        json_object_object_add(duData, "Description", json_object_new_string(entry.value->description.c_str()));
+        json_object_object_add(duData, "Vendor", json_object_new_string(entry.value->vendor.c_str()));
+        json_object_object_add(duData, "Version", json_object_new_int(entry.value->version));
+        json_object_object_add(duData, "Name", json_object_new_string(entry.value->name.c_str()));
+        json_object_object_add(duData, "Type", json_object_new_string(entry.value->type.c_str()));
+        json_object_object_add(duData, "RootfsPath", json_object_new_string(entry.value->rootfsPath.c_str()));
 
         // Serialize IPK package names
         struct json_object* ipkPackages = json_object_new_array();
-        for(const auto& ipkPackageName : entry.second->ipkPackages) {
+        for(const auto& ipkPackageName : entry.value->ipkPackages) {
             json_object_array_add(ipkPackages, json_object_new_string(ipkPackageName.c_str()));
         }
         json_object_object_add(duData, "ipkPackages", ipkPackages);
 
         // Serialize installation date
-        json_object_object_add(duData, "InstallationDate", json_object_new_int64(entry.second->installationDate));
+        json_object_object_add(duData, "InstallationDate", json_object_new_int64(entry.value->installationDate));
 
         json_object_array_add(cache, duData);
     }
@@ -362,11 +404,12 @@ lxcd::string formatTime(time_t timeValue) {
     return timeBuffer;
 }
 
-void DeploymentUnitHelper::listDeploymentUnits() {
-    struct json_object* root = json_object_new_array();
+lxcd::string DeploymentUnitHelper::listDeploymentUnits() {
+    json_object* root = json_object_new_object();
+    json_object* rootdu = json_object_new_array();
 
     for(const auto& entry : deploymentUnits) {
-        lxcd::SharedPtr<DeploymentUnit> du = entry.second;
+        lxcd::SharedPtr<DeploymentUnit> du = entry.value;
 
         lxcd::string installedOn = formatTime(du->installationDate);
 
@@ -383,11 +426,13 @@ void DeploymentUnitHelper::listDeploymentUnits() {
             json_object_object_add(duData, "IPKPackages", ipkPackages);
         }
 
-        json_object_array_add(root, duData);
+        json_object_array_add(rootdu, duData);
     }
-
-    const char* jsonString = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
-    printf("Installed DeploymentUnits:\n%s\n", jsonString);
+    json_object_object_add(root, "deploymentUnits", rootdu);
+    json_object_object_add(root, "numberOfDeploymentUnits", json_object_new_int(deploymentUnits.size()));
+    lxcd::string jsonString = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
+    printf("Installed DeploymentUnits:\n%s\n", jsonString.c_str());
 
     json_object_put(root);
+    return  jsonString;
 }

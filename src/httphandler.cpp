@@ -1,12 +1,52 @@
-#include "httphandler.h"
+﻿#include "httphandler.h"
+#include <iostream>
 
 RestApiListener::RestApiListener(int port) : port_(port), is_running_(false) {
 }
 
 void RestApiListener::register_handler(const lxcd::string &path, const lxcd::string &http_method, handler_t handler) {
-    printf("register_handler %s,%s \n", path.c_str(), http_method.c_str());
+    printf("%llu --------------------------------- -register_handler- %s %s ---------------------------------\n", handlers_.size(), path.c_str(),http_method.c_str() );
 
-    handlers_[path][http_method] = handler;
+    bool found = false;
+    //auto pathmethos = handlers_[path];
+    for(auto &handlermethod : handlers_){
+        printf(" |>>>>>>>>>>>>>>>>>>>>>            %s ==? %s \n", handlermethod.key.c_str(), path.c_str());
+
+        if(handlermethod.key == path){
+
+            lxcd::map<lxcd::string, handler_t> &path = handlermethod.value;
+            printf("equal %llu \n",path.size());
+            path.insert({http_method,handler});
+            printf("equal2 %llu \n",path.size());
+            for(auto handler_obg: path){
+                printf("equal2 %s \n",handler_obg.key.c_str());
+            }
+            found=true;
+            break;
+        }
+    }
+
+    if(!found){
+        printf("create \n");
+        //lxcd::map<lxcd::string, lxcd::map<lxcd::string, handler_t> >
+        lxcd::map<lxcd::string, handler_t> newpath;
+        newpath.insert({http_method,handler});
+        auto pairpath = lxcd::pair{path,newpath};
+        handlers_.insert(pairpath);
+    }
+
+    //    auto path_handlers_it = handlers_.begin();
+    //    for(; path_handlers_it != handlers_.end(); ++path_handlers_it) {
+    //        lxcd::string k = path_handlers_it->key;
+    //        printf(" >>>>>>>>>>>>>>>>>>>>>            %s == %s \n", k.c_str(), path.c_str());
+    //        for(const auto &method : path_handlers_it->value) {
+    //            printf("      method:%s      second.size:%llu    \n", method.key.c_str(),  path_handlers_it->value.size());
+    //        }
+    //    }
+
+    //    printf("register_handler %s,%s \n", path.c_str(), http_method.c_str());
+    //    printf("/-------------------------------- *register_handler* ---------------------------------\n");
+
 }
 
 void RestApiListener::start() {
@@ -43,9 +83,8 @@ bool RestApiListener::remove_pipe_socket() {
     }
     return true;
 }
-#include <iostream>
+
 int RestApiListener::dispatch_handler(void* cls, MHD_Connection* connection, const char* url, const char* method, const char* version, const char* upload_data, size_t* upload_data_size, void** con_cls) {
-    lxcd::string mmethod = method;
     lxcd::string murl = url;
     lxcd::string mversion = version;
 
@@ -54,7 +93,7 @@ int RestApiListener::dispatch_handler(void* cls, MHD_Connection* connection, con
     static int dummy;
     static char* buffer = new char[500];
     int ret;
-    printf("dispatch_handler dummy %dcount %d upload_data_size %lu murl %s mmethod %s mversion %s", dummy, count++, *upload_data_size, murl.c_str(), mmethod.c_str(), mversion.c_str());
+    printf("dispatch_handler dummy %dcount %d upload_data_size %lu murl %s mmethod %s mversion %s\n", dummy, count++, *upload_data_size, murl.c_str(), method, mversion.c_str());
     //    std::cout <<dummy<< count++<<"dispatch_handler" <<*upload_data_size<<murl<<mmethod<<mversion << std::endl;
 
     if(&dummy != *con_cls) {
@@ -83,99 +122,81 @@ int RestApiListener::dispatch_handler(void* cls, MHD_Connection* connection, con
     bool found = false;
     auto path_handlers_it = rest_api_listener->handlers_.begin();
     for(; path_handlers_it != rest_api_listener->handlers_.end(); ++path_handlers_it) {
-        lxcd::string k = path_handlers_it->first;
-        printf("k =  path_handlers_it->first %s == %s.\n", k.c_str(), path.c_str());
+        lxcd::string k = path_handlers_it->key;
+        printf("k =  path_handlers_it->key %s == %s \n", k.c_str(), path.c_str());
         if(rest_api_listener->is_match_match_regex(k, path, params)) {
             printf("k =  ---------- found\n");
 
             for(const auto& kv : params) {
-                std::cout << kv.first << " = " << kv.second << std::endl;
+                std::cout << kv.key << " = " << kv.value << std::endl;
             }
             found = true;
             break;
         }
         //ignore value
-        //Value v = iter->second;
+        //Value v = iter->value;
     }
-    printf("start2.\n");
 
     if(!found) {
         return MHD_NO;
     }
-    printf("start3.\n");
-    printf("k for test  ---------- found %s\n", http_method.c_str());
+
+    printf("key for test %s %llu\n", http_method.c_str(), path_handlers_it->value.size());
     //TODO : fix map's find function
-    for(const auto &method : path_handlers_it->second) {
-        if(method.first == http_method) {
-            printf("k =  ---------- found %s\n", method.first.c_str());
-            handler_t handler = method.second;
+    for(const auto &method : path_handlers_it->value) {
+        printf("search  %s == %s %llu \n", method.key.c_str(), http_method.c_str(), path_handlers_it->value.size());
+
+        if(method.key == http_method) {
+            printf("found  key %s\n", method.key.c_str());
+            handler_t handler = method.value;
             lxcd::string reply_body;
             auto ret = handler(params, request_body, reply_body);
-            struct MHD_Response* mhd_response = MHD_create_response_from_buffer(reply_body.length(), (void*) reply_body.c_str(), MHD_RESPMEM_MUST_COPY);
-            return MHD_queue_response(connection, ret, mhd_response);
+
+            if(connection != NULL){
+                struct MHD_Response* mhd_response = MHD_create_response_from_buffer(reply_body.length(), (void*) reply_body.c_str(), MHD_RESPMEM_MUST_COPY);
+                return MHD_queue_response(connection, ret, mhd_response);
+            }
+            //TODO : queue response to unix socket
+
         }
     }
-    return MHD_YES;
+    return MHD_NO;
 }
 
-
-bool RestApiListener::is_match_match_regex(lxcd::string path, lxcd::string request, lxcd::map<lxcd::string, lxcd::string> &params) {
-    if(are_paths_equal(path, request)) {
+bool RestApiListener::is_match_match_regex(const lxcd::string& path, const lxcd::string& request, lxcd::map<lxcd::string, lxcd::string>& params) {
+    if (are_paths_equal(path, request)) {
         return true;
     }
-    const lxcd::string param_regex = "\\{([^}]+)\\}";
+    printf("key for test %s %s \n", path.c_str(), request.c_str());
+    lxcd::vector<lxcd::string> path_parts = path.split('/');
+    lxcd::vector<lxcd::string> request_parts = request.split('/');
+    //    path_parts.remove_empty();
+    //    request_parts.remove_empty();
 
-    lxcd::vector<lxcd::string> param_names;
-    size_t pos = 0;
-    while((pos = path.find(param_regex, pos)) != lxcd::string::npos) {
-        pos += 1; // Skip the '{' character
-        size_t param_end_pos = path.find('}', pos);
-        if(param_end_pos == lxcd::string::npos) {
-            break; // Invalid path: a parameter is not closed
-        }
-        size_t param_name_length = param_end_pos - pos;
-        param_names.push_back(path.substr(pos, param_name_length));
-        pos = param_end_pos + 1; // Skip the '}' character
+    if (path_parts.size() != request_parts.size()) {
+        return false;
     }
+    printf("key for test %llu %llu \n", path_parts.size(), request_parts.size());
 
-    // Build regular expression to match path
-    lxcd::string path_regex = path;
-    for(const auto& param_name : param_names) {
-        size_t param_start_pos = path_regex.find("{" + param_name + "}");
-        if(param_start_pos == lxcd::string::npos) {
-            break; // Invalid path: parameter not found
+    for (size_t i = 0; i < path_parts.size(); ++i) {
+
+
+        if (path_parts[i].empty() && request_parts[i].empty()) {
+            continue;
+        }else{
+            return false;
         }
-        path_regex.replace(param_start_pos, param_name.length() + 2, "([^/]+)");
-    }
-    path_regex = "^" + path_regex + "$";
 
-    // Match request against path regular expression
-    bool match = false;
-    if(request.size() >= path.size()) {
-        lxcd::string request_prefix = request.substr(0, path.size());
-        if(request_prefix == path) {
-            lxcd::string request_suffix = request.substr(path.size());
-            lxcd::vector<lxcd::string> request_params;
-            size_t request_pos = 0;
-            for(const auto& param_name : param_names) {
-                size_t param_end_pos = request_suffix.find('/');
-                if(param_end_pos == lxcd::string::npos) {
-                    request_params.push_back(request_suffix);
-                    break;
-                }
-                request_params.push_back(request_suffix.substr(0, param_end_pos));
-                request_suffix = request_suffix.substr(param_end_pos + 1);
-            }
-            if(request_params.size() == param_names.size()) {
-                // Extract parameter values into map
-                for(size_t i = 0; i < param_names.size(); ++i) {
-                    params[param_names[i]] = request_params[i];
-                }
-                match = true;
-            }
+        if (path_parts[i][0] == '{' && path_parts[i][path_parts[i].size() - 1] == '}') {
+            printf("if (path_parts[i][0] == \n");
+            params[path_parts[i].substr(1, path_parts[i].size() - 2)] = request_parts[i];
+        } else if (path_parts[i] != request_parts[i]) {
+            printf("else if (path_parts[i] != request_parts[i]\n");
+            return false;
         }
     }
-    return match;
+
+    return true;
 }
 
 lxcd::string RestApiListener::replace_double_slashes(const lxcd::string& str) {

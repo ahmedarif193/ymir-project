@@ -7,10 +7,15 @@
 #include "lxc-container.h"
 #include "lxcqueue.h"
 
+#include "deployment_unit_helper.h"
+
 int supported_API_versions(const lxcd::map<lxcd::string, lxcd::string>& params, const lxcd::string& request_body, lxcd::string &reply_body) {
     // Create a new JSON object
+    fprintf(stderr, "supported_API_versions %llu\n",params.size());
+
     json_object* root = json_object_new_object();
     json_object* metadata = json_object_new_array();
+
     json_object_array_add(metadata, json_object_new_string("/1.0"));
     json_object_object_add(root, "metadata", metadata);
     json_object_object_add(root, "status", json_object_new_string("Success"));
@@ -25,13 +30,25 @@ int supported_API_versions(const lxcd::map<lxcd::string, lxcd::string>& params, 
 
 int handle_echo(const lxcd::map<lxcd::string, lxcd::string>& params
                 , const lxcd::string &request_body, lxcd::string &reply_body) {
+    fprintf(stderr, "handle_echo %llu %s\n",params.size(),params["value1"].c_str());
     json_object* root = json_object_new_object();
+    json_object* metadata = json_object_new_array();
+
+    json_object_array_add(metadata, json_object_new_string("/1.0"));
+    json_object_object_add(root, "metadata", metadata);
+    json_object_object_add(root, "status", json_object_new_string("Success"));
+    json_object_object_add(root, "status_code", json_object_new_int(200));
+    json_object_object_add(root, "type", json_object_new_string("sync"));
+
+    reply_body = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
+
+    json_object_put(root);
     return MHD_HTTP_OK;
 }
 
 int get_Server_environment(const lxcd::map<lxcd::string, lxcd::string>& params,
                            const lxcd::string &request_body, lxcd::string &reply_body) {
-
+    fprintf(stderr, "handle_echo %llu %s\n",params.size(),params["value1"].c_str());
     // Create a json-c object
     json_object* root = json_object_new_object();
     json_object* metadata = json_object_new_object();
@@ -91,7 +108,9 @@ int get_Server_environment(const lxcd::map<lxcd::string, lxcd::string>& params,
     json_object_object_add(lxc_features, "server_pid", json_object_new_int(getpid()));
     json_object_object_add(lxc_features, "server_version", json_object_new_string("1.0"));
     json_object_object_add(environment, "storage", json_object_new_string("dir | overlay"));
+
     reply_body = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
+    json_object_put(root);
     return MHD_HTTP_OK;
 }
 
@@ -112,6 +131,8 @@ int execenv_create(const lxcd::map<lxcd::string, lxcd::string>& params,
         json_object_object_add(root, "status", json_object_new_string("Failed to parse JSON file."));
         json_object_object_add(root, "status_code", json_object_new_int(500));
         reply_body = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
+
+        json_object_put(root);
         return MHD_HTTP_NO_CONTENT;
     }
 
@@ -128,6 +149,8 @@ int execenv_create(const lxcd::map<lxcd::string, lxcd::string>& params,
     json_object_object_add(root, "status", json_object_new_string("Success"));
     json_object_object_add(root, "status_code", json_object_new_int(200));
     reply_body = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
+
+    json_object_put(root);
     return MHD_HTTP_OK;
 }
 
@@ -142,6 +165,7 @@ int execenv_ls(const lxcd::map<lxcd::string, lxcd::string>& params, const lxcd::
     rc = list_all_containers(NULL, &names, &cret);
     if(rc == -1) {
         reply_body = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
+
         return MHD_HTTP_OK;
     }
 
@@ -168,8 +192,11 @@ int execenv_ls(const lxcd::map<lxcd::string, lxcd::string>& params, const lxcd::
 
     reply_body = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
     printf("Type: %s\n", reply_body.c_str());
+
+    json_object_put(root);
     return MHD_HTTP_OK;
 }
+
 int execenv_rm(const lxcd::map<lxcd::string, lxcd::string>& params, const lxcd::string &request_body, lxcd::string &reply_body) {
     json_object* root = json_object_new_object();
 
@@ -188,6 +215,8 @@ int execenv_rm(const lxcd::map<lxcd::string, lxcd::string>& params, const lxcd::
 
     json_object_put(rootrequest);
     reply_body = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
+
+    json_object_put(root);
     return MHD_HTTP_OK;
 }
 
@@ -202,19 +231,44 @@ int execenv_update(const lxcd::map<lxcd::string, lxcd::string>& params
     json_object_object_add(root, "metadata", metadata);
 
     reply_body = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
+
+    json_object_put(root);
     return MHD_HTTP_OK;
 }
 
 int deployementunit_create(const lxcd::map<lxcd::string, lxcd::string>& params
                            , const lxcd::string &request_body, lxcd::string &reply_body) {
-    json_object* root = json_object_new_object();
 
-    json_object* metadata = json_object_new_object();
-    json_object_array_add(metadata, json_object_new_string("etag"));
-    json_object_array_add(metadata, json_object_new_string("patch"));
-    json_object_object_add(root, "metadata", metadata);
+    LxcdInfo info;
+    if (parse_lxcd_info(request_body, info)) {
+        printf("uuid: %s \n", info.uuid.c_str());
+        printf("executionEnvRef: %s \n", info.executionEnvRef.c_str());
+        printf("url: %s \n", info.url.c_str());
+        printf("user: %s \n", info.user.c_str());
+        printf("password: %s \n", info.password.c_str());
+        reply_body =" parsing";
 
-    reply_body = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
+    } else {
+        reply_body =" Failed to parse JSON";
+
+        perror("Failed to parse JSON");
+        return MHD_HTTP_CONFLICT;
+    }
+    DeploymentUnitHelper helper;
+    auto installedDu = helper.addDeploymentUnit(info.executionEnvRef,info.url,info.uuid);
+    if(installedDu.value){
+        printf("du installed with uuid: %s \n", installedDu.key->value->uuid.c_str());
+    }else{
+        reply_body =" Failed to install du JSON";
+
+        perror("Failed to install du JSON");
+        return MHD_HTTP_CONFLICT;
+    }
+
+
+    reply_body =" done";
+
+    //    json_object_put(root);
     return MHD_HTTP_OK;
 }
 
@@ -228,19 +282,16 @@ int deployementunit_delete(const lxcd::map<lxcd::string, lxcd::string>& params
     json_object_object_add(root, "metadata", metadata);
 
     reply_body = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
+
+    //    json_object_put(root);
     return MHD_HTTP_OK;
 }
 
 int deployementunit_ls(const lxcd::map<lxcd::string, lxcd::string>& params
                        , const lxcd::string &request_body, lxcd::string &reply_body) {
-    json_object* root = json_object_new_object();
 
-    json_object* metadata = json_object_new_object();
-    json_object_array_add(metadata, json_object_new_string("etag"));
-    json_object_array_add(metadata, json_object_new_string("patch"));
-    json_object_object_add(root, "metadata", metadata);
-
-    reply_body = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
+    DeploymentUnitHelper helper;
+    reply_body = helper.listDeploymentUnits();
     return MHD_HTTP_OK;
 }
 
@@ -254,6 +305,10 @@ int executionunit_create(const lxcd::map<lxcd::string, lxcd::string>& params
     json_object_object_add(root, "metadata", metadata);
 
     reply_body = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
+
+    json_object_put(root);
+
+
     return MHD_HTTP_OK;
 }
 int executionunit_ls(const lxcd::map<lxcd::string, lxcd::string>& params
@@ -266,6 +321,8 @@ int executionunit_ls(const lxcd::map<lxcd::string, lxcd::string>& params
     json_object_object_add(root, "metadata", metadata);
 
     reply_body = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
+
+    json_object_put(root);
     return MHD_HTTP_OK;
 }
 int executionunit_delete(const lxcd::map<lxcd::string, lxcd::string>& params
@@ -278,6 +335,8 @@ int executionunit_delete(const lxcd::map<lxcd::string, lxcd::string>& params
     json_object_object_add(root, "metadata", metadata);
 
     reply_body = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
+
+    json_object_put(root);
     return MHD_HTTP_OK;
 }
 
@@ -299,11 +358,11 @@ int main() {
     rest_api.register_handler("/2.0/deployementunit", "GET", deployementunit_ls);
     rest_api.register_handler("/2.0/deployementunit", "DELETE", deployementunit_delete);
 
-    rest_api.register_handler("/2.0/executionunit", "POST", executionunit_create);
-    rest_api.register_handler("/2.0/executionunit", "GET", executionunit_ls);
-    rest_api.register_handler("/2.0/executionunit", "DELETE", executionunit_delete);
+    //    rest_api.register_handler("/2.0/executionunit", "POST", executionunit_create);
+    //    rest_api.register_handler("/2.0/executionunit", "GET", executionunit_ls);
+    //    rest_api.register_handler("/2.0/executionunit", "DELETE", executionunit_delete);
 
-    rest_api.register_handler("/echo/{value1}", "GET", handle_echo);
+    //    rest_api.register_handler("/echo/{value1}", "GET", handle_echo);
 
     // Start the listener
     rest_api.start();
@@ -311,7 +370,6 @@ int main() {
 
     // Wait for user input to stop the listener
     printf("Press Enter to stop the REST API...\n");
-    //std::cin.get();
     while(1) {
     }
     // Stop the listener

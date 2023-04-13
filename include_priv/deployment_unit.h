@@ -41,6 +41,7 @@ lxcd::string vendor;
 lxcd::string type;
 lxcd::string name;
 lxcd::string rootfsPath;
+lxcd::time_t installationDate;
 int version;
 bool mounted;
 
@@ -48,8 +49,6 @@ bool mounted;
 // IPK package names
 lxcd::vector<lxcd::string> ipkPackages;
 
-//metadata
-lxcd::time_t installationDate;
 };
 
 lxcd::string getLxcPath();

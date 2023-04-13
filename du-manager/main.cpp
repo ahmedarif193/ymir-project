@@ -63,8 +63,8 @@ int main(int argc, char* argv[]) {
             if(uuidStr.empty()) {
                 uuidStr = lxcd::UUIDGenerator::generate();
             }
-
-            if(!helper.addDeploymentUnit(container, path, uuidStr)) {
+            auto ret = helper.addDeploymentUnit(container, path, uuidStr);
+            if(!ret.value) {
                 printf("Error: Failed to install the DeploymentUnit.\n");
                 return 1;
             }

@@ -12,7 +12,7 @@
 
 #include "common-task.h"
 #include "utils/string.h"
-
+#include "utils/linux.h"
 #define LXC_DEFAULT_FOLDER "/var/lib/lxc/"
 
 // Function to execute a shell command and return its output
@@ -47,25 +47,7 @@ void setContainer(lxc_container* newContainer);
 void setAction(Method newAction);
 
 private:
-lxcd::string exec(lxcd::string cmd, int &retcode) {
-    printf("execute the cmd %s", cmd.c_str());
-    lxcd::string result = "";
-    char buffer[128];
-    FILE* pipe = popen(cmd.c_str(), "r");
-    if(!pipe) {
-        throw lxcd::runtimeErrorException("popen() failed!");
-    }
-    try {
-        while(fgets(buffer, sizeof buffer, pipe) != NULL) {
-            result += buffer;
-        }
-    } catch(...) {
-        pclose(pipe);
-        throw;
-    }
-    retcode = WEXITSTATUS(pclose(pipe));
-    return result;
-}
+
 bool use_overlay;
 Method m_action;
 lxcd::string m_name;
