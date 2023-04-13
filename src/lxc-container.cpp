@@ -63,8 +63,8 @@ int LxcContainer::create() {
             return -1;
         }
         int fd;
-        const lxcd::string lxc_default_folder = "/var/lib/lxc/";
-        lxcd::string container_path = lxc_default_folder + container->name;
+        auto lxcPath = getLxcPath();
+        lxcd::string container_path = lxcPath + container->name;
         lxcd::string container_overlay_img = container_path + "/overlay.img";
         lxcd::string container_overlay_dir = container_path + "/overlay";
         lxcd::string container_delta_dir = container_overlay_dir + "/delta";
@@ -202,8 +202,10 @@ int LxcContainer::destroy() {
         return -1;
     }
     int ret = 0;
-    lxcd::string overlay_path = LXC_DEFAULT_FOLDER + lxcd::string(container->name) + "/overlay";
+    auto lxcPath = getLxcPath();
+    lxcd::string overlay_path = lxcPath + lxcd::string(container->name) + "/overlay";
     // Unmount the file system
+    //todo use utils/linux.h
     ret = umount(overlay_path.c_str());
     if(ret == -1) {
         perror("umount failed");

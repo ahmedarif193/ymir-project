@@ -12,10 +12,7 @@
 
 #include "common-task.h"
 #include "utils/string.h"
-#include "utils/linux.h"
-#define LXC_DEFAULT_FOLDER "/var/lib/lxc/"
-
-// Function to execute a shell command and return its output
+#include "deployment_unit_helper.h"
 
 
 class LxcContainer : public Task {

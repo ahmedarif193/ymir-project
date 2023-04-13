@@ -7,8 +7,6 @@
 #include "lxc-container.h"
 #include "lxcqueue.h"
 
-#include "deployment_unit_helper.h"
-
 int supported_API_versions(const lxcd::map<lxcd::string, lxcd::string>& params, const lxcd::string& request_body, lxcd::string &reply_body) {
     // Create a new JSON object
     fprintf(stderr, "supported_API_versions %llu\n",params.size());
