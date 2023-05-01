@@ -6,20 +6,20 @@
 #include <cstdio>
 
 bool parse_lxcd_info(const lxcd::string &json_str, LxcdInfo &info) {
-    json_object *root_obj = json_tokener_parse(json_str.c_str());
+    json_object* root_obj = json_tokener_parse(json_str.c_str());
 
-    if (!root_obj) {
-        fprintf(stderr, "Error parsing JSON string\n");;
+    if(!root_obj) {
+        fprintf(stderr, "Error parsing JSON string\n");
         return false;
     }
 
-    json_object *uuid_obj, *executionEnvRef_obj, *url_obj, *user_obj, *password_obj;
+    json_object* uuid_obj, * executionEnvRef_obj, * url_obj, * user_obj, * password_obj;
 
-    if (json_object_object_get_ex(root_obj, "uuid", &uuid_obj) &&
-            json_object_object_get_ex(root_obj, "executionEnvRef", &executionEnvRef_obj) &&
-            json_object_object_get_ex(root_obj, "url", &url_obj) &&
-            json_object_object_get_ex(root_obj, "user", &user_obj) &&
-            json_object_object_get_ex(root_obj, "password", &password_obj)) {
+    if(json_object_object_get_ex(root_obj, "uuid", &uuid_obj) &&
+       json_object_object_get_ex(root_obj, "executionEnvRef", &executionEnvRef_obj) &&
+       json_object_object_get_ex(root_obj, "url", &url_obj) &&
+       json_object_object_get_ex(root_obj, "user", &user_obj) &&
+       json_object_object_get_ex(root_obj, "password", &password_obj)) {
 
         info.uuid = json_object_get_string(uuid_obj);
         info.executionEnvRef = json_object_get_string(executionEnvRef_obj);
@@ -31,7 +31,7 @@ bool parse_lxcd_info(const lxcd::string &json_str, LxcdInfo &info) {
         return true;
     }
 
-    fprintf(stderr, "Error retrieving JSON values\n");;
+    fprintf(stderr, "Error retrieving JSON values\n");
     json_object_put(root_obj);
     return false;
 }
@@ -86,8 +86,8 @@ struct lxc_container* DeploymentUnitHelper::getContainer(const lxcd::string& c) 
     return container;
 }
 
-lxcd::pair<lxcd::map<lxcd::string, lxcd::SharedPtr<DeploymentUnit>>::Iterator, bool> DeploymentUnitHelper::addDeploymentUnit(const lxcd::string& executionEnvRef, const lxcd::string& tarballPath, const lxcd::string& uuid) {
-    lxcd::pair<lxcd::map<lxcd::string, lxcd::SharedPtr<DeploymentUnit>>::Iterator, bool> ret;
+lxcd::pair<lxcd::map<lxcd::string, lxcd::SharedPtr<DeploymentUnit> >::Iterator, bool> DeploymentUnitHelper::addDeploymentUnit(const lxcd::string& executionEnvRef, const lxcd::string& tarballPath, const lxcd::string& uuid) {
+    lxcd::pair<lxcd::map<lxcd::string, lxcd::SharedPtr<DeploymentUnit> >::Iterator, bool> ret;
     struct lxc_container* container = lxc_container_new(executionEnvRef.c_str(), NULL);
     if(!container) {
         fprintf(stderr, "Failed to initialize the container\n");
@@ -436,5 +436,5 @@ lxcd::string DeploymentUnitHelper::listDeploymentUnits() {
     printf("Installed DeploymentUnits:\n%s\n", jsonString.c_str());
 
     json_object_put(root);
-    return  jsonString;
+    return jsonString;
 }

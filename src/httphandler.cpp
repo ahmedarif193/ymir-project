@@ -5,33 +5,33 @@ RestApiListener::RestApiListener(int port) : port_(port), is_running_(false) {
 }
 
 void RestApiListener::register_handler(const lxcd::string &path, const lxcd::string &http_method, handler_t handler) {
-    printf("%llu --------------------------------- -register_handler- %s %s ---------------------------------\n", handlers_.size(), path.c_str(),http_method.c_str() );
+    printf("%llu --------------------------------- -register_handler- %s %s ---------------------------------\n", handlers_.size(), path.c_str(), http_method.c_str());
 
     bool found = false;
     //auto pathmethos = handlers_[path];
-    for(auto &handlermethod : handlers_){
+    for(auto &handlermethod : handlers_) {
         printf(" |>>>>>>>>>>>>>>>>>>>>>            %s ==? %s \n", handlermethod.key.c_str(), path.c_str());
 
-        if(handlermethod.key == path){
+        if(handlermethod.key == path) {
 
             lxcd::map<lxcd::string, handler_t> &path = handlermethod.value;
-            printf("equal %llu \n",path.size());
-            path.insert({http_method,handler});
-            printf("equal2 %llu \n",path.size());
-            for(auto handler_obg: path){
-                printf("equal2 %s \n",handler_obg.key.c_str());
+            printf("equal %llu \n", path.size());
+            path.insert({http_method, handler});
+            printf("equal2 %llu \n", path.size());
+            for(auto handler_obg: path) {
+                printf("equal2 %s \n", handler_obg.key.c_str());
             }
-            found=true;
+            found = true;
             break;
         }
     }
 
-    if(!found){
+    if(!found) {
         printf("create \n");
         //lxcd::map<lxcd::string, lxcd::map<lxcd::string, handler_t> >
         lxcd::map<lxcd::string, handler_t> newpath;
-        newpath.insert({http_method,handler});
-        auto pairpath = lxcd::pair{path,newpath};
+        newpath.insert({http_method, handler});
+        auto pairpath = lxcd::pair{path, newpath};
         handlers_.insert(pairpath);
     }
 
@@ -152,7 +152,7 @@ int RestApiListener::dispatch_handler(void* cls, MHD_Connection* connection, con
             lxcd::string reply_body;
             auto ret = handler(params, request_body, reply_body);
 
-            if(connection != NULL){
+            if(connection != NULL) {
                 struct MHD_Response* mhd_response = MHD_create_response_from_buffer(reply_body.length(), (void*) reply_body.c_str(), MHD_RESPMEM_MUST_COPY);
                 return MHD_queue_response(connection, ret, mhd_response);
             }
@@ -164,7 +164,7 @@ int RestApiListener::dispatch_handler(void* cls, MHD_Connection* connection, con
 }
 
 bool RestApiListener::is_match_match_regex(const lxcd::string& path, const lxcd::string& request, lxcd::map<lxcd::string, lxcd::string>& params) {
-    if (are_paths_equal(path, request)) {
+    if(are_paths_equal(path, request)) {
         return true;
     }
     printf("key for test %s %s \n", path.c_str(), request.c_str());
@@ -173,24 +173,24 @@ bool RestApiListener::is_match_match_regex(const lxcd::string& path, const lxcd:
     //    path_parts.remove_empty();
     //    request_parts.remove_empty();
 
-    if (path_parts.size() != request_parts.size()) {
+    if(path_parts.size() != request_parts.size()) {
         return false;
     }
     printf("key for test %llu %llu \n", path_parts.size(), request_parts.size());
 
-    for (size_t i = 0; i < path_parts.size(); ++i) {
+    for(size_t i = 0; i < path_parts.size(); ++i) {
 
 
-        if (path_parts[i].empty() && request_parts[i].empty()) {
+        if(path_parts[i].empty() && request_parts[i].empty()) {
             continue;
-        }else{
+        } else {
             return false;
         }
 
-        if (path_parts[i][0] == '{' && path_parts[i][path_parts[i].size() - 1] == '}') {
+        if((path_parts[i][0] == '{') && (path_parts[i][path_parts[i].size() - 1] == '}')) {
             printf("if (path_parts[i][0] == \n");
             params[path_parts[i].substr(1, path_parts[i].size() - 2)] = request_parts[i];
-        } else if (path_parts[i] != request_parts[i]) {
+        } else if(path_parts[i] != request_parts[i]) {
             printf("else if (path_parts[i] != request_parts[i]\n");
             return false;
         }

@@ -9,7 +9,7 @@
 
 int supported_API_versions(const lxcd::map<lxcd::string, lxcd::string>& params, const lxcd::string& request_body, lxcd::string &reply_body) {
     // Create a new JSON object
-    fprintf(stderr, "supported_API_versions %llu\n",params.size());
+    fprintf(stderr, "supported_API_versions %llu\n", params.size());
 
     json_object* root = json_object_new_object();
     json_object* metadata = json_object_new_array();
@@ -28,7 +28,7 @@ int supported_API_versions(const lxcd::map<lxcd::string, lxcd::string>& params, 
 
 int handle_echo(const lxcd::map<lxcd::string, lxcd::string>& params
                 , const lxcd::string &request_body, lxcd::string &reply_body) {
-    fprintf(stderr, "handle_echo %llu %s\n",params.size(),params["value1"].c_str());
+    fprintf(stderr, "handle_echo %llu %s\n", params.size(), params["value1"].c_str());
     json_object* root = json_object_new_object();
     json_object* metadata = json_object_new_array();
 
@@ -46,7 +46,7 @@ int handle_echo(const lxcd::map<lxcd::string, lxcd::string>& params
 
 int get_Server_environment(const lxcd::map<lxcd::string, lxcd::string>& params,
                            const lxcd::string &request_body, lxcd::string &reply_body) {
-    fprintf(stderr, "handle_echo %llu %s\n",params.size(),params["value1"].c_str());
+    fprintf(stderr, "handle_echo %llu %s\n", params.size(), params["value1"].c_str());
     // Create a json-c object
     json_object* root = json_object_new_object();
     json_object* metadata = json_object_new_object();
@@ -238,33 +238,33 @@ int deployementunit_create(const lxcd::map<lxcd::string, lxcd::string>& params
                            , const lxcd::string &request_body, lxcd::string &reply_body) {
 
     LxcdInfo info;
-    if (parse_lxcd_info(request_body, info)) {
+    if(parse_lxcd_info(request_body, info)) {
         printf("uuid: %s \n", info.uuid.c_str());
         printf("executionEnvRef: %s \n", info.executionEnvRef.c_str());
         printf("url: %s \n", info.url.c_str());
         printf("user: %s \n", info.user.c_str());
         printf("password: %s \n", info.password.c_str());
-        reply_body =" parsing";
+        reply_body = " parsing";
 
     } else {
-        reply_body =" Failed to parse JSON";
+        reply_body = " Failed to parse JSON";
 
         perror("Failed to parse JSON");
         return MHD_HTTP_CONFLICT;
     }
     DeploymentUnitHelper helper;
-    auto installedDu = helper.addDeploymentUnit(info.executionEnvRef,info.url,info.uuid);
-    if(installedDu.value){
+    auto installedDu = helper.addDeploymentUnit(info.executionEnvRef, info.url, info.uuid);
+    if(installedDu.value) {
         printf("du installed with uuid: %s \n", installedDu.key->value->uuid.c_str());
-    }else{
-        reply_body =" Failed to install du JSON";
+    } else {
+        reply_body = " Failed to install du JSON";
 
         perror("Failed to install du JSON");
         return MHD_HTTP_CONFLICT;
     }
 
 
-    reply_body =" done";
+    reply_body = " done";
 
     //    json_object_put(root);
     return MHD_HTTP_OK;

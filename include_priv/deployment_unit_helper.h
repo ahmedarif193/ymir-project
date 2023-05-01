@@ -5,7 +5,7 @@ class DeploymentUnitHelper {
 public:
 DeploymentUnitHelper();
 lxcd::SharedPtr<DeploymentUnit> getDeploymentUnit(const lxcd::string& uuid);
-lxcd::pair<lxcd::map<lxcd::string, lxcd::SharedPtr<DeploymentUnit>>::Iterator, bool> addDeploymentUnit(const lxcd::string &container, const lxcd::string& tarballPath, const lxcd::string &uuid);
+lxcd::pair<lxcd::map<lxcd::string, lxcd::SharedPtr<DeploymentUnit> >::Iterator, bool> addDeploymentUnit(const lxcd::string &container, const lxcd::string& tarballPath, const lxcd::string &uuid);
 bool removeDeploymentUnit(const lxcd::string& uuid);
 bool updateFullRootPath(struct lxc_container* container);
 bool restartContainer(struct lxc_container* container);

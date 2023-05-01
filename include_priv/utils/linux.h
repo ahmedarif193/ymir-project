@@ -15,46 +15,46 @@ typedef unsigned long time_t;
 
 class RuntimeError {
 public:
-    // Constructor that takes a const char pointer as error message
-    RuntimeError(const char* errMsg) {
-        int len = 0;
-        while(errMsg[len] != '\0') {
-            len++;
-        }
-        len++;     // For null character
-
-        message = new char[len];
-        for(int i = 0; i < len; i++) {
-            message[i] = errMsg[i];
-        }
+// Constructor that takes a const char pointer as error message
+RuntimeError(const char* errMsg) {
+    int len = 0;
+    while(errMsg[len] != '\0') {
+        len++;
     }
+    len++;         // For null character
 
-    // Copy constructor
-    RuntimeError(const RuntimeError& other) {
-        int len = 0;
-        while(other.message[len] != '\0') {
-            len++;
-        }
-        len++;     // For null character
-
-        message = new char[len];
-        for(int i = 0; i < len; i++) {
-            message[i] = other.message[i];
-        }
+    message = new char[len];
+    for(int i = 0; i < len; i++) {
+        message[i] = errMsg[i];
     }
+}
 
-    // Destructor
-    ~RuntimeError() {
-        delete[] message;
+// Copy constructor
+RuntimeError(const RuntimeError& other) {
+    int len = 0;
+    while(other.message[len] != '\0') {
+        len++;
     }
+    len++;         // For null character
 
-    // Accessor for the error message
-    const char* what() const {
-        return message;
+    message = new char[len];
+    for(int i = 0; i < len; i++) {
+        message[i] = other.message[i];
     }
+}
+
+// Destructor
+~RuntimeError() {
+    delete[] message;
+}
+
+// Accessor for the error message
+const char* what() const {
+    return message;
+}
 
 private:
-    char* message;
+char* message;
 };
 
 inline lxcd::string exec(lxcd::string cmd, int &retcode) {
@@ -86,7 +86,7 @@ struct mount {
     mount() = default;
 
     mount(const string& device, const string& mountPoint,
-          const string& fsType, const string& options)
+         const string& fsType, const string& options)
         : device(device), mountPoint(mountPoint), fsType(fsType), options(options) {
     }
 };
@@ -170,15 +170,15 @@ inline void umountSquashfs(const string& mountPoint) {
 }
 class Process {
 public:
-    Process(const string& cmd) : cmd_(cmd) {
-    }
+Process(const string& cmd) : cmd_(cmd) {
+}
 
-    int run() {
-        return system(cmd_.c_str());
-    }
+int run() {
+    return system(cmd_.c_str());
+}
 
 private:
-    string cmd_;
+string cmd_;
 };
 // class Filesystem {
 // public:
