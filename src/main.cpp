@@ -9,7 +9,7 @@
 
 int supported_API_versions(const lxcd::map<lxcd::string, lxcd::string>& params, const lxcd::string& request_body, lxcd::string &reply_body) {
     // Create a new JSON object
-    fprintf(stderr, "supported_API_versions %llu\n", params.size());
+    fprintf(stderr, "supported_API_versions %lu\n", params.size());
 
     json_object* root = json_object_new_object();
     json_object* metadata = json_object_new_array();
@@ -28,7 +28,7 @@ int supported_API_versions(const lxcd::map<lxcd::string, lxcd::string>& params, 
 
 int handle_echo(const lxcd::map<lxcd::string, lxcd::string>& params
                 , const lxcd::string &request_body, lxcd::string &reply_body) {
-    fprintf(stderr, "handle_echo %llu %s\n", params.size(), params["value1"].c_str());
+    fprintf(stderr, "handle_echo %lu %s\n", params.size(), params["value1"].c_str());
     json_object* root = json_object_new_object();
     json_object* metadata = json_object_new_array();
 
@@ -46,7 +46,7 @@ int handle_echo(const lxcd::map<lxcd::string, lxcd::string>& params
 
 int get_Server_environment(const lxcd::map<lxcd::string, lxcd::string>& params,
                            const lxcd::string &request_body, lxcd::string &reply_body) {
-    fprintf(stderr, "handle_echo %llu %s\n", params.size(), params["value1"].c_str());
+    fprintf(stderr, "handle_echo %lu %s\n", params.size(), params["value1"].c_str());
     // Create a json-c object
     json_object* root = json_object_new_object();
     json_object* metadata = json_object_new_object();

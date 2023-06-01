@@ -57,7 +57,7 @@ bool create_pipe_socket();
 bool remove_pipe_socket();
 
 private:
-static int dispatch_handler(void* cls, struct MHD_Connection* connection, const char* url, const char* method, const char* version, const char* upload_data, size_t* upload_data_size, void** ptr);
+static MHD_Result dispatch_handler(void* cls, struct MHD_Connection* connection, const char* url, const char* method, const char* version, const char* upload_data, size_t* upload_data_size, void** ptr);
 bool is_match_match_regex(const lxcd::string& path, const lxcd::string& request, lxcd::map<lxcd::string, lxcd::string>& params);
 
 int port_;

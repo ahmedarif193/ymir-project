@@ -5,7 +5,7 @@ RestApiListener::RestApiListener(int port) : port_(port), is_running_(false) {
 }
 
 void RestApiListener::register_handler(const lxcd::string &path, const lxcd::string &http_method, handler_t handler) {
-    printf("%llu --------------------------------- -register_handler- %s %s ---------------------------------\n", handlers_.size(), path.c_str(), http_method.c_str());
+    printf("%lu --------------------------------- -register_handler- %s %s ---------------------------------\n", handlers_.size(), path.c_str(), http_method.c_str());
 
     bool found = false;
     //auto pathmethos = handlers_[path];
@@ -15,9 +15,9 @@ void RestApiListener::register_handler(const lxcd::string &path, const lxcd::str
         if(handlermethod.key == path) {
 
             lxcd::map<lxcd::string, handler_t> &path = handlermethod.value;
-            printf("equal %llu \n", path.size());
+            printf("equal %lu \n", path.size());
             path.insert({http_method, handler});
-            printf("equal2 %llu \n", path.size());
+            printf("equal2 %lu \n", path.size());
             for(auto handler_obg: path) {
                 printf("equal2 %s \n", handler_obg.key.c_str());
             }
@@ -40,7 +40,7 @@ void RestApiListener::register_handler(const lxcd::string &path, const lxcd::str
     //        lxcd::string k = path_handlers_it->key;
     //        printf(" >>>>>>>>>>>>>>>>>>>>>            %s == %s \n", k.c_str(), path.c_str());
     //        for(const auto &method : path_handlers_it->value) {
-    //            printf("      method:%s      second.size:%llu    \n", method.key.c_str(),  path_handlers_it->value.size());
+    //            printf("      method:%s      second.size:%lu    \n", method.key.c_str(),  path_handlers_it->value.size());
     //        }
     //    }
 
@@ -84,7 +84,7 @@ bool RestApiListener::remove_pipe_socket() {
     return true;
 }
 
-int RestApiListener::dispatch_handler(void* cls, MHD_Connection* connection, const char* url, const char* method, const char* version, const char* upload_data, size_t* upload_data_size, void** con_cls) {
+MHD_Result RestApiListener::dispatch_handler(void* cls, MHD_Connection* connection, const char* url, const char* method, const char* version, const char* upload_data, size_t* upload_data_size, void** con_cls) {
     lxcd::string murl = url;
     lxcd::string mversion = version;
 
@@ -141,10 +141,10 @@ int RestApiListener::dispatch_handler(void* cls, MHD_Connection* connection, con
         return MHD_NO;
     }
 
-    printf("key for test %s %llu\n", http_method.c_str(), path_handlers_it->value.size());
+    printf("key for test %s %lu\n", http_method.c_str(), path_handlers_it->value.size());
     //TODO : fix map's find function
     for(const auto &method : path_handlers_it->value) {
-        printf("search  %s == %s %llu \n", method.key.c_str(), http_method.c_str(), path_handlers_it->value.size());
+        printf("search  %s == %s %lu \n", method.key.c_str(), http_method.c_str(), path_handlers_it->value.size());
 
         if(method.key == http_method) {
             printf("found  key %s\n", method.key.c_str());
@@ -176,7 +176,7 @@ bool RestApiListener::is_match_match_regex(const lxcd::string& path, const lxcd:
     if(path_parts.size() != request_parts.size()) {
         return false;
     }
-    printf("key for test %llu %llu \n", path_parts.size(), request_parts.size());
+    printf("key for test %lu %lu \n", path_parts.size(), request_parts.size());
 
     for(size_t i = 0; i < path_parts.size(); ++i) {
 
