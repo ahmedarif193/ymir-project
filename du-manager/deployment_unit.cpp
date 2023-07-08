@@ -18,7 +18,7 @@ size_t writeCallback(void* contents, size_t size, size_t nmemb, void* userp) {
 lxcd::string getLxcPath() {
     const char* lxcPath = lxc_get_global_config_item("lxc.lxcpath");
     if(lxcPath) {
-        return lxcd::string(lxcPath);
+        return lxcd::string(lxcPath) +"/";
     } else {
         fprintf(stderr, "Error: Unable to get lxc.lxcpath\n");
         return "";

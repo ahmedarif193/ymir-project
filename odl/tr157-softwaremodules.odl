@@ -1,0 +1,38 @@
+%config {
+    name = "tr157-softwaremodules";
+    storage-type = "odl";
+    storage-path = "${rw_data_path}/${name}";
+
+    import-dirs = [
+    	".",
+    	"${prefix}${plugin-dir}/${name}",
+    	"${prefix}${plugin-dir}/modules",
+    	"${prefix}/usr/lib/amx/${name}",
+    	"${prefix}/usr/local/lib/amx/modules"
+    ];
+
+    // persistent storage location
+    import-dbg = false;
+    odl = {
+        load-dm-events = true,
+        dm-save = true,
+        dm-save-on-changed = true,
+        dm-save-delay = 1000,
+        dm-defaults = "defaults.d/",
+        directory = "${storage-path}/odl"
+    };
+    ubus = {
+        watch-ubus-events = true
+    };
+
+    module-server-dir = "/usr/lib/amx/${name}/modules";
+
+    definition_file = "tr157-softwaremodules_definition.odl";
+}
+
+import "mod-dmext.so";
+
+#include "mod_sahtrace.odl";
+#include "mod_pcm_svc.odl";
+
+include "${definition_file}";

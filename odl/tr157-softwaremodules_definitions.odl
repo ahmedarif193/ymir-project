@@ -1,0 +1,148 @@
+%define {
+
+    /**
+     * Top level object for dynamically managed software applications.
+     * @version V2.0
+     */
+    %persistent object SoftwareModules {
+        /**
+         * ExecEnvNumberOfEntries
+         * @version V2.0
+         */
+        %read-only uint32 ExecEnvNumberOfEntries;
+
+        /**
+         * The Execution Environments that are available on the device, along with their properties and configurable settings.
+         * @version V2.0
+         */
+        %persistent object ExecEnv[] {
+            counted with ExecEnvNumberOfEntries;
+
+            /**
+             * Enables or disables the execution environment.
+             * @version V2.0
+             */
+            %persistent bool Enable;
+
+            /**
+             * Status of the execution environment.
+             * @version V2.0
+             */
+            %read-only string Status;
+
+            /**
+             * Reset flag of the execution environment.
+             * @version V2.0
+             */
+            %persistent bool Reset;
+
+            /**
+             * A non-volatile unique key used to reference this instance.
+             * Alias provides a mechanism for a Controller to label this instance for future reference.
+             * @version V2.0
+             */
+            %unique %key %persistent string Alias;
+
+            /**
+             * The textual name of the environment as assigned by the CPE.
+             * @version V2.0
+             */
+            %read-only string Name {
+                on action validate call check_maximum_length 32;
+            }
+
+            /**
+             * Indicates the complete type and specification version of this object.
+             * @version V2.0
+             */
+            %read-only string Type {
+                on action validate call check_maximum_length 64;
+            }
+
+            /**
+             * InitialRunLevel
+             * @version V2.0
+             */
+            %persistent uint32 InitialRunLevel;
+
+            /**
+             * RequestedRunLevel
+             * @version V2.0
+             */
+            %persistent int32 RequestedRunLevel;
+
+            /**
+             * CurrentRunLevel
+             * @version V2.0
+             */
+            %read-only int32 CurrentRunLevel;
+
+            /**
+             * InitialExecutionUnitRunLevel
+             * @version V2.0
+             */
+            %persistent int32 InitialExecutionUnitRunLevel;
+
+            /**
+             * The vendor that produced this object.
+             * @version V2.0
+             */
+            %read-only string Vendor {
+                on action validate call check_maximum_length 128;
+            }
+
+            /**
+             * The Version of this object as specified by the Vendor that implemented this object, not the version of the specification.
+             * @version V2.0
+             */
+            %read-only string Version {
+                on action validate call check_maximum_length 32;
+            }
+
+            /**
+             * ParentExecEnv
+             * @version V2.0
+             */
+            %read-only string ParentExecEnv;
+
+            /**
+             * AllocatedDiskSpace
+             * @version V2.0
+             */
+            %read-only int32 AllocatedDiskSpace;
+
+            /**
+             * AvailableDiskSpace
+             * @version V2.0
+             */
+            %read-only int32 AvailableDiskSpace;
+
+            /**
+             * AllocatedMemory
+             * @version V2.0
+             */
+            %read-only int32 AllocatedMemory;
+
+            /**
+             * AvailableMemory
+             * @version V2.0
+             */
+            %read-only int32 AvailableMemory;
+
+            /**
+             * ActiveExecutionUnits
+             * @version V2.0
+             */
+            %read-only string[] ActiveExecutionUnits;
+
+            /**
+             * ProcessorRefList
+             * @version V2.0
+             */
+            %read-only string[] ProcessorRefList;
+        }
+    }
+}
+
+include "tr157-softwaremodules_deployementunits.odl";
+include "tr157-softwaremodules_executionunits.odl";

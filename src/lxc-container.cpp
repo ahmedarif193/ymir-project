@@ -68,7 +68,7 @@ int LxcContainer::create() {
         lxcd::string container_overlay_img = container_path + "/overlay.img";
         lxcd::string container_overlay_dir = container_path + "/overlay";
         lxcd::string container_delta_dir = container_overlay_dir + "/delta";
-
+        fprintf(stderr, "%s ,,,,, %s\n", container_overlay_img.c_str(), container_path.c_str());
         // create a file with the desired size
         fd = open(container_overlay_img.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if(fd == -1) {
@@ -83,6 +83,7 @@ int LxcContainer::create() {
             perror("close");
             exit(EXIT_FAILURE);
         }
+        fprintf(stderr, "0.\n");
         // format the file as an ext4 file system
         char command[100];
         sprintf(command, "mkfs.ext4 -F %s", container_overlay_img.c_str());
@@ -95,7 +96,7 @@ int LxcContainer::create() {
             perror("Failed to open loop control device");
             return 1;
         }
-
+        fprintf(stderr, "1.\n");
         // Get a free loop device number
         int loop_number = ioctl(loop_ctl_fd, LOOP_CTL_GET_FREE);
         if(loop_number < 0) {
@@ -103,7 +104,7 @@ int LxcContainer::create() {
             close(loop_ctl_fd);
             return 1;
         }
-
+        fprintf(stderr, "1.5\n");
         // Create the loop device file path
         char loop_device[64];
         snprintf(loop_device, sizeof(loop_device), "/dev/loop%d", loop_number);
@@ -115,7 +116,7 @@ int LxcContainer::create() {
             close(loop_ctl_fd);
             return 1;
         }
-
+        fprintf(stderr, "2.\n");
         // Set the backing file for the loop device
         int image_fd = open(container_overlay_img.c_str(), O_RDWR);
         if(image_fd < 0) {
@@ -124,7 +125,7 @@ int LxcContainer::create() {
             close(loop_ctl_fd);
             return 1;
         }
-
+        fprintf(stderr, "3\n");
         if(ioctl(loop_fd, LOOP_SET_FD, image_fd) < 0) {
             perror("Failed to set loop device backing file");
             close(image_fd);
