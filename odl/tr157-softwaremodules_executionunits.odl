@@ -1,213 +1,171 @@
 %define {
     select SoftwareModules {
-    /**
-        * ExecutionUnitNumberOfEntries
-        * @version V2.0
+
+        /**
+        * Execution Unit inventory table. Contains status information and configurable parameters for each Execution Unit.
+        * Each Deployment Unit that is installed can have zero or more Execution Units.
+        * @version 2.0
         */
-    %read-only uint32 ExecutionUnitNumberOfEntries;
+        %persistent object ExecutionUnit[] {
 
-    /**
-     * Execution Unit inventory table. Contains status information and configurable parameters for each Execution Unit.
-     * Each Deployment Unit that is installed can have zero or more Execution Units.
-     * @version 2.0
-     */
-    %persistent object ExecutionUnit[] {
+            /**
+            * The number of entries in the Execution Unit table.
+            * @version 2.0
+            */
+            counted with ExecutionUnitNumberOfEntries;
 
-        /**
-         * The number of entries in the Execution Unit table.
-         * @version 2.0
-         */
-        counted with ExecutionUnitNumberOfEntries;
+            /**
+            * Execution Unit Identifier chosen by the ExecEnv during installation of the associated DeploymentUnit.
+            * The format of this value is Execution Environment specific, but it MUST be unique across ExecEnv instances.
+            * Thus, it is recommended that this be a combination of the ExecEnv.{i}.Name and an Execution Environment local unique value.
+            * @version 2.0
+            */
+            %read-only string EUID {
+                on action validate call check_maximum_length 64;
+            }
 
-        /**
-         * Execution Unit Identifier chosen by the ExecEnv during installation of the associated DeploymentUnit.
-         * The format of this value is Execution Environment specific, but it MUST be unique across ExecEnv instances.
-         * Thus, it is recommended that this be a combination of the ExecEnv.{i}.Name and an Execution Environment local unique value.
-         * @version 2.0
-         */
-        %readOnly string EUID {
-            on action validate call check_maximum_length 64;
-        }
+            /**
+            * The alias of the Execution Unit.
+            * @version 2.0
+            */
+            %persistent %unique %key string Alias;
 
-        /**
-         * The alias of the Execution Unit.
-         * @version 2.0
-         */
-        %readWrite string Alias {
-            %activeNotify canDeny;
-        }
+            /**
+            * The name of this Execution Unit as it pertains to its associated DeploymentUnit.
+            * SHOULD be unique across all Execution Unit instances contained within its associated DeploymentUnit.
+            * @version 2.0
+            */
+            %read-only string Name {
+                on action validate call check_maximum_length 32;
+            }
 
-        /**
-         * The name of this Execution Unit as it pertains to its associated DeploymentUnit.
-         * SHOULD be unique across all Execution Unit instances contained within its associated DeploymentUnit.
-         * @version 2.0
-         */
-        %readOnly string Name {
-            on action validate call check_maximum_length 32;
-        }
+            /**
+            * The name of this Execution Unit as provided by the ExecEnv.
+            * SHOULD be unique across all Execution Unit instances contained within a specific ExecEnv.
+            * @version 2.0
+            */
+            %read-only string ExecEnvLabel {
+                on action validate call check_maximum_length 64;
+            }
 
-        /**
-         * The name of this Execution Unit as provided by the ExecEnv.
-         * SHOULD be unique across all Execution Unit instances contained within a specific ExecEnv.
-         * @version 2.0
-         */
-        %readOnly string ExecEnvLabel {
-            on action validate call check_maximum_length 64;
-        }
+            /**
+            * Indicates the status of this Execution Unit.
+            * @version 2.0
+            */
+            %read-only string Status {
+                on action validate call check_enum ["Idle", "Starting", "Active", "Stopping"];
+                default "Stopping";
+            }
 
-        /**
-         * Indicates the status of this Execution Unit.
-         * @version 2.0
-         */
-        %readOnly string Status {
-            %activeNotify forceDefaultEnabled;
-            %enum ["Idle", "Starting", "Active", "Stopping"];
-        }
+            /**
+            * Indicates the state transition that the ACS is requesting for this Execution Unit.
+            * @version 2.0
+            */
+            %persistent string RequestedState {
+                on action validate call check_enum ["Idle", "Active"];
+                default "Idle";
+            }
 
-        /**
-         * Indicates the state transition that the ACS is requesting for this Execution Unit.
-         * @version 2.0
-         */
-        %readWrite string RequestedState {
-            %enum ["Idle", "Active"];
-        }
+            /**
+            * If while running or transitioning between states this Execution Unit identifies a fault, this parameter embodies the problem.
+            * @version 2.0
+            */
+            %read-only string ExecutionFaultCode {
+                on action validate call check_enum ["NoFault", "FailureOnStart", "FailureOnAutoStart", "FailureOnStop", "FailureWhileActive", "DependencyFailure", "UnStartable"];
+                default "NoFault";
+            }
 
-        /**
-         * If while running or transitioning between states this Execution Unit identifies a fault, this parameter embodies the problem.
-         * @version 2.0
-         */
-        %readOnly string ExecutionFaultCode {
-            %enum ["NoFault", "FailureOnStart", "FailureOnAutoStart", "FailureOnStop", "FailureWhileActive", "DependencyFailure", "UnStartable"];
-        }
+            /**
+            * If while running or transitioning between states this Execution Unit identifies a fault, this parameter provides a more detailed explanation of the problem.
+            * @version 2.0
+            */
+            %read-only string ExecutionFaultMessage {
+                on action validate call check_maximum_length 256;
+            }
 
-        /**
-         * If while running or transitioning between states this Execution Unit identifies a fault, this parameter provides a more detailed explanation of the problem.
-         * @version 2.0
-         */
-        %readOnly string ExecutionFaultMessage {
-            on action validate call check_maximum_length 256;
-        }
+            /**
+            * If true and the RunLevel verification is also met, then this Execution Unit will be automatically started by the device after its ExecEnv is either rebooted or restarted.
+            * If false, this Execution Unit will not be started until explicitly commanded to do so by either the ACS or another Execution Unit.
+            * @version 2.0
+            */
+            %persistent bool AutoStart;
 
-        /**
-         * If true and the RunLevel verification is also met, then this Execution Unit will be automatically started by the device after its ExecEnv is either rebooted or restarted.
-         * If false, this Execution Unit will not be started until explicitly commanded to do so by either the ACS or another Execution Unit.
-         * @version 2.0
-         */
-        %readWrite boolean AutoStart;
+            /**
+            * Determines when this Execution Unit will be started.
+            * @version 2.0
+            */
+            %persistent uint32 RunLevel;
 
-        /**
-         * Determines when this Execution Unit will be started.
-         * @version 2.0
-         */
-        %readWrite unsignedInt RunLevel {
-            %range maxInclusive 65535;
-        }
+            /**
+            * Vendor of this Execution Unit.
+            * @version 2.0
+            */
+            %read-only string Vendor {
+                on action validate call check_maximum_length 128;
+            }
 
-        /**
-         * Vendor of this Execution Unit.
-         * @version 2.0
-         */
-        %readOnly string Vendor {
-            on action validate call check_maximum_length 128;
-        }
+            /**
+            * Version of the Execution Unit. The format of this value is Execution Environment specific.
+            * @version 2.0
+            */
+            %read-only string Version {
+                on action validate call check_maximum_length 32;
+            }
 
-        /**
-         * Version of the Execution Unit. The format of this value is Execution Environment specific.
-         * @version 2.0
-         */
-        %readOnly string Version {
-            on action validate call check_maximum_length 32;
-        }
+            /**
+            * Textual description of this Execution Unit. The format of this value is Execution Environment specific.
+            * @version 2.0
+            */
+            %read-only string Description {
+                on action validate call check_maximum_length 256;
+            }
 
-        /**
-         * Textual description of this Execution Unit. The format of this value is Execution Environment specific.
-         * @version 2.0
-         */
-        %readOnly string Description {
-            on action validate call check_maximum_length 256;
-        }
+            /**
+            * The amount of disk space currently being used by this Execution Unit.
+            * @version 2.0
+            */
+            %read-only uint32 DiskSpaceInUse;
 
-        /**
-         * The amount of disk space currently being used by this Execution Unit.
-         * @version 2.0
-         */
-        %readOnly int DiskSpaceInUse {
-            %activeNotify canDeny;
-            %range minInclusive -1;
-            %units kilobytes;
-        }
+            /**
+            * The amount of physical RAM currently being used by this Execution Unit.
+            * @version 2.0
+            */
+            %read-only uint32 MemoryInUse;
 
-        /**
-         * The amount of physical RAM currently being used by this Execution Unit.
-         * @version 2.0
-         */
-        %readOnly int MemoryInUse {
-            %activeNotify canDeny;
-            %range minInclusive -1;
-            %units kilobytes;
-        }
+            /**
+            * Represents the instances of multi-instanced objects that are directly controlled by this Execution Unit.
+            * @version 2.0
+            */
+            %read-only string References;
 
-        /**
-         * Represents the instances of multi-instanced objects that are directly controlled by this Execution Unit.
-         * @version 2.0
-         */
-        %readOnly list string References {
-            %pathRef strong row;
-        }
+            /**
+            * Represents the system processes that are active in the system because of this Execution Unit.
+            * @version 2.0
+            */
+            %read-only string AssociatedProcessList;
+            /**
+            * Represents the vendor log files that have come into existence because of this Execution Unit.
+            * @version 2.0
+            */
+            %read-only string VendorLogList;
 
-        /**
-         * Represents the system processes that are active in the system because of this Execution Unit.
-         * @version 2.0
-         */
-        %readOnly list string AssociatedProcessList {
-            %pathRef strong ".DeviceInfo.ProcessStatus.Process." row;
-        }
+            /**
+            * Represents the vendor config files that have come into existence because of this Execution Unit.
+            * @version 2.0
+            */
+            %read-only string VendorConfigList;
 
-        /**
-         * Represents the vendor log files that have come into existence because of this Execution Unit.
-         * @version 2.0
-         */
-        %readOnly list string VendorLogList {
-            %pathRef strong ".DeviceInfo.VendorLogFile." row;
-        }
+            /**
+            * Represents the CWMP-DT schema instances that have been introduced to this device because of the existence of this Execution Unit.
+            * @version 2.0
+            */
+            %read-only string SupportedDataModelList;
 
-        /**
-         * Represents the vendor config files that have come into existence because of this Execution Unit.
-         * @version 2.0
-         */
-        %readOnly list string VendorConfigList {
-            %pathRef strong ".DeviceInfo.VendorConfigFile." row;
-        }
-
-        /**
-         * Represents the CWMP-DT schema instances that have been introduced to this device because of the existence of this Execution Unit.
-         * @version 2.0
-         */
-        %readOnly list string SupportedDataModelList {
-            %pathRef strong ".DeviceInfo.SupportedDataModel." row;
-        }
-
-        /**
-         * Represents the ExecEnv that this Execution Unit is associated with.
-         * @version 2.0
-         */
-        %readOnly string ExecutionEnvRef {
-            %pathRef strong "#.ExecEnv." row;
-        }
-    }
-
-    /**
-     * Vendor extensions specific to this Execution Unit.
-     * @version 2.0
-     */
-    %persistent object Device.SoftwareModules.ExecutionUnit.{i}.Extensions. {
-        /**
-         * This object proposes a general location for vendor extensions specific to this Execution Unit.
-         * @version 2.0
-         */
-        %readOnly object Extensions {
-            %minEntries 1;
-            %maxEntries 1;
+            /**
+            * Represents the ExecEnv that this Execution Unit is associated with.
+            * @version 2.0
+            */
+            %read-only string ExecutionEnvRef;
         }
     }
 }

@@ -337,8 +337,43 @@ int executionunit_delete(const lxcd::map<lxcd::string, lxcd::string>& params
     json_object_put(root);
     return MHD_HTTP_OK;
 }
+#include <amxrt/amxrt.h>
+int main(int argc, char* argv[]) {
+    //amxrt
+    int retval = 0;
+    int index = 0;
+    amxc_var_t* syssigs = NULL;
+    amxc_var_t* config = NULL;
+    amxd_dm_t* dm = NULL;
+    amxo_parser_t* parser = NULL;
 
-int main() {
+    amxrt_new();
+
+    config = amxrt_get_config();
+    dm = amxrt_get_dm();
+    parser = amxrt_get_parser();
+    
+    retval = amxrt_config_init(argc, argv, &index, NULL);
+    retval = amxrt_load_odl_files(argc, argv, index);
+    // add the auto save - needs configuration in config section
+    amxo_parser_add_entry_point(parser, amxrt_dm_save_load_main);
+    // load all backends
+    // connect to all sockets (if any)
+    // create listen sockets (if any)
+    // apply process settings (daemonize, set nice level, create pid file, open syslog)
+    retval = amxrt_connect();
+
+    // enable linux signals
+    syssigs = GET_ARG(config, "system-signals");
+    if(syssigs != NULL) {
+        amxrt_enable_syssigs(syssigs);
+    }
+
+    // create event loop
+    retval = amxrt_el_create();
+    // send app:start ambiorix signal when data model is registered
+    retval = amxrt_register_or_wait();
+
     // Create a RestApiListener instance on port 8080
     RestApiListener rest_api(8080);
 
@@ -368,10 +403,11 @@ int main() {
 
     // Wait for user input to stop the listener
     printf("Press Enter to stop the REST API...\n");
-    while(1) {
-    }
+    // start the event loop
+    amxrt_el_start(); // will block until amxrt_el_stop is called
     // Stop the listener
     rest_api.stop();
-
+    amxrt_stop();
+    amxrt_delete();
     return 0;
 }

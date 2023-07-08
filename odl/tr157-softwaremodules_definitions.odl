@@ -6,12 +6,6 @@
      */
     %persistent object SoftwareModules {
         /**
-         * ExecEnvNumberOfEntries
-         * @version V2.0
-         */
-        %read-only uint32 ExecEnvNumberOfEntries;
-
-        /**
          * The Execution Environments that are available on the device, along with their properties and configurable settings.
          * @version V2.0
          */
@@ -133,13 +127,13 @@
              * ActiveExecutionUnits
              * @version V2.0
              */
-            %read-only string[] ActiveExecutionUnits;
+            %read-only string ActiveExecutionUnits;
 
             /**
              * ProcessorRefList
              * @version V2.0
              */
-            %read-only string[] ProcessorRefList;
+            %read-only string ProcessorRefList;
         }
     }
 }

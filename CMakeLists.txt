@@ -19,6 +19,6 @@ add_executable(lxcd ${SOURCES})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lgcc_s -lc -pthread")
 
 target_include_directories(lxcd PRIVATE lxc ${HTTP_INCLUDE_DIRS} ${LXC_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/include_priv)
-target_link_libraries(lxcd PRIVATE PkgConfig::HTTP lxc PkgConfig::CURL json-c)
+target_link_libraries(lxcd PRIVATE PkgConfig::HTTP lxc PkgConfig::CURL json-c amxrt amxc amxo)
 
 install(TARGETS lxcd DESTINATION bin)

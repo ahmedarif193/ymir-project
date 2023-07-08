@@ -10,9 +10,14 @@
     	"${prefix}/usr/lib/amx/${name}",
     	"${prefix}/usr/local/lib/amx/modules"
     ];
-
+    include-dirs = [
+        ".",
+        "${prefix}${cfg-dir}/${name}",
+        "${prefix}${cfg-dir}/modules",
+        "/usr/share/tr157-softwaremodules/odl"
+    ];
     // persistent storage location
-    import-dbg = false;
+    import-dbg = true;
     odl = {
         load-dm-events = true,
         dm-save = true,
@@ -27,7 +32,7 @@
 
     module-server-dir = "/usr/lib/amx/${name}/modules";
 
-    definition_file = "tr157-softwaremodules_definition.odl";
+    definition_file = "tr157-softwaremodules_definitions.odl";
 }
 
 import "mod-dmext.so";
