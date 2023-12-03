@@ -30,14 +30,12 @@
         watch-ubus-events = true
     };
 
-    module-server-dir = "/usr/lib/amx/${name}/modules";
+//    module-server-dir = "/usr/lib/amx/${name}/modules";
 
     definition_file = "tr157-softwaremodules_definitions.odl";
 }
 
-import "mod-dmext.so";
-
-#include "mod_sahtrace.odl";
-#include "mod_pcm_svc.odl";
+//#include "mod_sahtrace.odl";
+//#include "mod_pcm_svc.odl";
 
 include "${definition_file}";

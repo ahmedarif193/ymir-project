@@ -5,6 +5,10 @@
      * @version V2.0
      */
     %persistent object SoftwareModules {
+        void addExecEnv(
+            %mandatory string ee_name,
+            %mandatory string ee_template
+        );
         /**
          * The Execution Environments that are available on the device, along with their properties and configurable settings.
          * @version V2.0
@@ -22,8 +26,9 @@
              * Status of the execution environment.
              * @version V2.0
              */
-            %read-only string Status;
-
+            %read-only string Status = "Disabled" {
+                on action read call action_read_ee_status;
+            }
             /**
              * Reset flag of the execution environment.
              * @version V2.0
@@ -136,6 +141,17 @@
             %read-only string ProcessorRefList;
         }
     }
+}
+
+%populate {
+    on event "dm:object-added" call exec_env_added
+        filter 'path matches "SoftwareModules.ExecEnv.[0-9]+\\."';
+
+    on event "dm:object-changed" call exec_env_changed
+        filter 'path matches "SoftwareModules.ExecEnv.[0-9]+\\."';
+
+    on event "dm:object-removed" call exec_env_uninstalled
+        filter 'path matches "SoftwareModules.ExecEnv.[0-9]+\\."';
 }
 
 include "tr157-softwaremodules_deployementunits.odl";
