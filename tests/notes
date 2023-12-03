@@ -21,20 +21,27 @@ instances[]
   ]
 }
 //test ls 
-curl -X GET http://localhost:8080/2.0/execenv
+curl -X GET http://192.168.45.1:8080/2.0/execenv
 
 //test create and enable
-curl -X POST http://localhost:8080/2.0/execenv \
+curl -X POST http://192.168.45.1:8080/2.0/execenv \
    -H "Content-Type: multipart/form-data" \
-   -d '{ "name": "Container-4", "type": "busybox", "enable": true }'
+   -d '{ "name": "Container-4", "type": "busyboxv2", "enable": true }'
 
 //test remove
-curl -X DELETE http://localhost:8080/2.0/execenv \
+curl -X DELETE http://192.168.45.1:8080/2.0/execenv \
    -H "Content-Type: multipart/form-data" \
-   -d '{ "name": "Container-4" }'
+   -d '{ "name": "Container-41" }'
 
 name = Container-1  
 type = busybox
 enable b = true
 
 
+openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048
+openssl rsa -in private_key.pem -pubout > public_key.pem
+
+openssl rsautl -encrypt -inkey public_key.pem -pubin -in tarball.tar.gz -out tarball.tar.gz.enc
+openssl rsautl -decrypt -inkey private_key.pem -in tarball.tar.gz.enc -out tarball.tar.gz
+
+pip install pycryptodome

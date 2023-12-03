@@ -58,7 +58,7 @@ int LxcContainer::create() {
 
     int retcode = 0;
     if(this->use_overlay) {
-        if(!container->createl(container, "busybox", "overlayfs", nullptr, LXC_CREATE_QUIET, nullptr)) {
+        if(!container->createl(container, m_template, "overlayfs", nullptr, LXC_CREATE_QUIET, nullptr)) {
             fprintf(stderr, "Failed to create container.\n");
             return -1;
         }
@@ -157,7 +157,7 @@ int LxcContainer::create() {
         printf("Mounted %s to %s\n", container_overlay_img.c_str(), container_overlay_dir.c_str());
 
     } else {
-        if(!container->createl(container, "busybox", nullptr, nullptr, LXC_CREATE_QUIET, nullptr)) {
+        if(!container->createl(container, m_template, nullptr, nullptr, LXC_CREATE_QUIET, nullptr)) {
             fprintf(stderr, "Failed to create container.\n");
             return -1;
         }

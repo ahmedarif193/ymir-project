@@ -1,7 +1,19 @@
 {
-    "Name": "nameExample",
+    "Name": "template_test",
     "Type": "squashfs",
     "Description": "Example DeploymentUnit",
     "Vendor": "YourVendor",
-    "Version": 3
+    "Version": 3,
+    "Service": [
+        {
+            "Name": "ServiceName1",
+            "Autostart": true,
+            "pidfile":""
+        },
+        {
+            "Name": "ServiceName2",
+            "Autostart": false,
+            "pidfile":""
+        }
+    ]
 }
