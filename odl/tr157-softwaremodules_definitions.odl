@@ -20,20 +20,21 @@
              * Enables or disables the execution environment.
              * @version V2.0
              */
-            %persistent bool Enable;
+            %persistent bool Enable = 0;
 
             /**
              * Status of the execution environment.
              * @version V2.0
              */
-            %read-only string Status = "Disabled" {
-                on action read call action_read_ee_status;
-            }
+            %read-only string Status;
+            
             /**
              * Reset flag of the execution environment.
              * @version V2.0
              */
-            %persistent bool Reset;
+            bool Reset{
+                on action write call action_read_ee_Reset;
+            }
 
             /**
              * A non-volatile unique key used to reference this instance.
@@ -46,15 +47,13 @@
              * The textual name of the environment as assigned by the CPE.
              * @version V2.0
              */
-            %read-only string Name {
-                on action validate call check_maximum_length 32;
-            }
+            %persistent string Name;
 
             /**
              * Indicates the complete type and specification version of this object.
              * @version V2.0
              */
-            %read-only string Type {
+            %persistent string Type = "busyboxv2" {
                 on action validate call check_maximum_length 64;
             }
 
@@ -74,19 +73,20 @@
              * CurrentRunLevel
              * @version V2.0
              */
-            %read-only int32 CurrentRunLevel;
-
+            %read-only int32 CurrentRunLevel = 1 {
+                on action read call action_read_ee_CurrentRunLevel;
+            }
             /**
              * InitialExecutionUnitRunLevel
              * @version V2.0
              */
-            %persistent int32 InitialExecutionUnitRunLevel;
+            %persistent int32 InitialExecutionUnitRunLevel = 1;
 
             /**
              * The vendor that produced this object.
              * @version V2.0
              */
-            %read-only string Vendor {
+            %persistent string Vendor = "Vondor_name" {
                 on action validate call check_maximum_length 128;
             }
 
@@ -94,7 +94,7 @@
              * The Version of this object as specified by the Vendor that implemented this object, not the version of the specification.
              * @version V2.0
              */
-            %read-only string Version {
+            %persistent string Version = "1.0" {
                 on action validate call check_maximum_length 32;
             }
 
@@ -102,37 +102,44 @@
              * ParentExecEnv
              * @version V2.0
              */
-            %read-only string ParentExecEnv;
+            %persistent string ParentExecEnv;
 
             /**
              * AllocatedDiskSpace
              * @version V2.0
              */
-            %read-only int32 AllocatedDiskSpace;
+            %persistent int32 AllocatedDiskSpace;
 
             /**
              * AvailableDiskSpace
              * @version V2.0
              */
-            %read-only int32 AvailableDiskSpace;
+            %read-only int32 AvailableDiskSpace{
+                on action read call action_read_ee_AvailableDiskSpace;
+            }
+
 
             /**
              * AllocatedMemory
              * @version V2.0
              */
-            %read-only int32 AllocatedMemory;
+            %persistent int32 AllocatedMemory;
 
             /**
              * AvailableMemory
              * @version V2.0
              */
-            %read-only int32 AvailableMemory;
+            %read-only int32 AvailableMemory{
+                on action read call action_read_ee_AvailableMemory;
+            }
 
             /**
              * ActiveExecutionUnits
              * @version V2.0
              */
-            %read-only string ActiveExecutionUnits;
+            %read-only string ActiveExecutionUnits {
+                on action read call action_read_ee_ActiveExecutionUnits;
+            }
 
             /**
              * ProcessorRefList
@@ -144,14 +151,14 @@
 }
 
 %populate {
-    on event "dm:object-added" call exec_env_added
-        filter 'path matches "SoftwareModules.ExecEnv.[0-9]+\\."';
+    on event "dm:instance-added" call exec_env_added                                
+        filter 'object == "SoftwareModules.ExecEnv."';
 
     on event "dm:object-changed" call exec_env_changed
-        filter 'path matches "SoftwareModules.ExecEnv.[0-9]+\\."';
+        filter 'path matches "SoftwareModules.ExecEnv."';
 
-    on event "dm:object-removed" call exec_env_uninstalled
-        filter 'path matches "SoftwareModules.ExecEnv.[0-9]+\\."';
+    on event "dm:instance-removed" call exec_env_uninstalled
+        filter 'object == "SoftwareModules.ExecEnv."';
 }
 
 include "tr157-softwaremodules_deployementunits.odl";

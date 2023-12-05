@@ -111,9 +111,9 @@ double stod(const string& str);
 
 int stoi(const string& str);
 
-string to_string(int value);
+static string to_string(int value);
 
-string to_string(double value);
+static string to_string(double value);
 
 inline bool isdigit(char c) {
     return c >= '0' && c <= '9';

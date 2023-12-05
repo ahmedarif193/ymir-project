@@ -26,7 +26,6 @@ int main(int argc, char* argv[]) {
     std::unique_ptr<amxc_var_t> config(amxrt_get_config());
     std::unique_ptr<amxd_dm_t> dm(amxrt_get_dm());
     std::unique_ptr<amxo_parser_t> parser(amxrt_get_parser());
-
     retval = amxrt_config_init(argc, argv, &index, NULL);
     if (retval != 0) {
         std::cerr << "Configuration initialization failed\n";
@@ -35,7 +34,12 @@ int main(int argc, char* argv[]) {
 
     // Define the callbacks list
     const std::vector<sReadActionsCallback> actions_list = {
-        {"action_read_ee_status", action_read_ee_status}
+        {"action_read_ee_status", odl_action_read_ee_status},
+        {"action_read_ee_Reset", odl_action_read_ee_Reset},
+        {"action_read_ee_CurrentRunLevel", odl_action_read_ee_CurrentRunLevel},
+        {"action_read_ee_AvailableDiskSpace", odl_action_read_ee_AvailableDiskSpace},
+        {"action_read_ee_AvailableMemory", odl_action_read_ee_AvailableMemory},
+        {"action_read_ee_ActiveExecutionUnits", odl_action_read_ee_ActiveExecutionUnits}
     };
     const std::vector<sEventsCallback> events_list = {
         {"exec_env_added", odl_exec_env_added},
@@ -64,6 +68,33 @@ int main(int argc, char* argv[]) {
     add_callbacks(actions_list, amxo_resolver_ftab_add, parser);
     add_callbacks(events_list, amxo_resolver_ftab_add, parser);
     add_callbacks(functions_list, amxo_resolver_ftab_add, parser);
+
+    // for (const auto &action : actions_list) {
+    //     auto ret = amxo_resolver_ftab_add(parser.get(), action.name.c_str(),
+    //                                       reinterpret_cast<amxo_fn_ptr_t>(action.callback));
+    //     if (ret != 0) {
+    //         std::cout << "Failed to add " << action.name;
+    //         continue;
+    //     }
+    //     std::cout << "Added " << action.name << " to the functions table.";
+    // }
+    // for (const auto &event : events_list) {
+    //     auto ret = amxo_resolver_ftab_add(parser.get(), event.name.c_str(),
+    //                                       reinterpret_cast<amxo_fn_ptr_t>(event.callback));
+    //     if (ret != 0) {
+    //         std::cout << "Failed to add " << event.name;
+    //         continue;
+    //     }
+    //     std::cout << "Added " << event.name << " to the functions table.";
+    // }
+    // for (const auto &func : functions_list) {
+    //     auto ret = amxo_resolver_ftab_add(parser.get(), func.name.c_str(), AMXO_FUNC(func.callback));
+    //     if (ret != 0) {
+    //         std::cout << "Failed to add " << func.name;
+    //         continue;
+    //     }
+    //     std::cout << "Added " << func.name << " to the functions table.";
+    // }
 
     // Load ODL files
     retval = amxrt_load_odl_files(argc, argv, index);
@@ -101,7 +132,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "Register or wait failed\n";
         return retval;
     }
-
+    amxo_parser_parse_string(parser.get(), "?include '${odl.directory}/${name}.odl':'${odl.dm-defaults}';", amxd_dm_get_root(dm.get()));
     // Start event loop
     amxrt_el_start();
 

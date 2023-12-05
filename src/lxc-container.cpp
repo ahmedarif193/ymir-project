@@ -1,6 +1,12 @@
 #include "lxc-container.h"
 
-#define EXITIFFAIL(A) {int ret= A; if(ret) return ret;}
+#define EXITIFFAIL(A) do { \
+    int ret = (A); \
+    if(ret) { \
+        fprintf(stderr, "Failed at %s with error code %d\n", #A, ret); \
+        return ret; \
+    } \
+} while(0)
 
 LxcContainer::LxcContainer(const lxcd::string name, const char* m_template, const Method action) {
 
@@ -30,6 +36,7 @@ int LxcContainer::run() {
     int ret = 0;
     if(m_action == Method::ENABLE) {
         EXITIFFAIL(create());
+        EXITIFFAIL(prepare());
         EXITIFFAIL(start());
     } else if(m_action == Method::DISABLE) {
         EXITIFFAIL(stop());
@@ -52,12 +59,15 @@ int LxcContainer::run() {
 }
 
 int LxcContainer::create() {
-    //    const char *containername = "ext2222222";
-    //    container = lxc_container_new(containername, NULL);
     //specs.fstype=strdup("overlayfs");
-
     int retcode = 0;
+    // Check if the container already exists
+    if (container->is_defined(container)) {
+        fprintf(stdout, "Container already exists.\n");
+        return retcode;
+    }
     if(this->use_overlay) {
+        fprintf(stdout, "Using overlayfs\n");
         if(!container->createl(container, m_template, "overlayfs", nullptr, LXC_CREATE_QUIET, nullptr)) {
             fprintf(stderr, "Failed to create container.\n");
             return -1;
@@ -91,6 +101,28 @@ int LxcContainer::create() {
 
         printf("Created ext4 image file: %s\n", container_overlay_img.c_str());
 
+    } else {
+        if(!container->createl(container, m_template, nullptr, nullptr, LXC_CREATE_QUIET, nullptr)) {
+            fprintf(stderr, "Failed to create container.\n");
+            return -1;
+        }
+    }
+    return retcode;
+}
+
+int LxcContainer::prepare(){
+    if(this->use_overlay) {
+        auto lxcPath = getLxcPath();
+        lxcd::string container_path = lxcPath + container->name;
+        lxcd::string container_overlay_img = container_path + "/overlay.img";
+        lxcd::string container_overlay_dir = container_path + "/overlay";
+        lxcd::string container_delta_dir = container_overlay_dir + "/delta";
+
+        lxcd::string mountpoint_check_cmd = "mountpoint -q " + container_overlay_dir;
+        if (system(mountpoint_check_cmd.c_str()) == 0) {
+            printf("%s is already a mount point\n", container_overlay_dir.c_str());
+            return 0; // Or continue, depending on your logic
+        }
         int loop_ctl_fd = open("/dev/loop-control", O_RDWR);
         if(loop_ctl_fd < 0) {
             perror("Failed to open loop control device");
@@ -150,17 +182,7 @@ int LxcContainer::create() {
         close(loop_ctl_fd);
 
         int result = mkdir(container_delta_dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-        if(result < 0) {
-            perror("mkdir");
-            return 1;
-        }
         printf("Mounted %s to %s\n", container_overlay_img.c_str(), container_overlay_dir.c_str());
-
-    } else {
-        if(!container->createl(container, m_template, nullptr, nullptr, LXC_CREATE_QUIET, nullptr)) {
-            fprintf(stderr, "Failed to create container.\n");
-            return -1;
-        }
     }
     return 0;
 }
@@ -183,13 +205,12 @@ int LxcContainer::stop() {
         fprintf(stderr, "container no found !\n");
         return -1;
     }
-
-    if(!container->shutdown(container, 30)) {
-        if(!container->stop(container)) {
-            fprintf(stderr, "Failed to stop the container\n");
-            return -1;
-        }
-    }
+    //TODO fix using lxc api
+    lxcd::string container_cmd = lxcd::string("lxc-stop -k -n ") + container->name;
+    system(container_cmd.c_str());
+    //if(!container->shutdown(container, 0)) {
+    //    return container->stop(container) ? EXIT_SUCCESS : EXIT_FAILURE;
+    //}
     return 0;
 }
 
@@ -213,10 +234,12 @@ int LxcContainer::destroy() {
         exit(EXIT_FAILURE);
     }
     printf("Unmounted %s\n", overlay_path.c_str());
-    if(!container->destroy(container)) {
-        fprintf(stderr, "Failed to remove the container\n");
-        return -1;
-    }
+    lxcd::string container_cmd = lxcd::string("lxc-destroy -f -n ") + container->name;
+    system(container_cmd.c_str());
+    // if(!container->destroy(container)) {
+    //     fprintf(stderr, "Failed to remove the container\n");
+    //     return -1;
+    // }
     return 0;
 }
 

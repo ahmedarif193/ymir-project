@@ -1,7 +1,30 @@
 %config {
-    name = "tr157-softwaremodules";
+    name = "lxcd";
     storage-type = "odl";
-    storage-path = "${rw_data_path}/${name}";
+    storage-path = "/opt/lxcd/data/";
+
+    // odl parser config options
+    import-dbg = true;
+    dm-eventing-enabled = true;
+
+    populate-behavior = {
+        duplicate-instance = "update"
+    };
+
+    storage-type = "odl";
+    %global odl = {
+        dm-load = false,
+        load-dm-events = true,
+        dm-save = false,
+        dm-save-on-changed = true,
+        dm-save-delay = 1000,
+        dm-defaults = "defaults.d/",
+        directory = "${storage-path}/odl"
+    };
+
+    privileges = {
+        keep-all = true
+    };
 
     import-dirs = [
     	".",
@@ -10,32 +33,21 @@
     	"${prefix}/usr/lib/amx/${name}",
     	"${prefix}/usr/local/lib/amx/modules"
     ];
+
     include-dirs = [
         ".",
         "${prefix}${cfg-dir}/${name}",
         "${prefix}${cfg-dir}/modules",
-        "/usr/share/tr157-softwaremodules/odl"
+        "/opt/lxcd/odl",
+        "${storage-path}/odl"
     ];
-    // persistent storage location
-    import-dbg = true;
-    odl = {
-        load-dm-events = true,
-        dm-save = true,
-        dm-save-on-changed = true,
-        dm-save-delay = 1000,
-        dm-defaults = "defaults.d/",
-        directory = "${storage-path}/odl"
-    };
+
     ubus = {
         watch-ubus-events = true
     };
 
-//    module-server-dir = "/usr/lib/amx/${name}/modules";
-
     definition_file = "tr157-softwaremodules_definitions.odl";
 }
 
-//#include "mod_sahtrace.odl";
-//#include "mod_pcm_svc.odl";
-
 include "${definition_file}";
+//?include '${odl.directory}/${name}.odl':'${odl.dm-defaults}';

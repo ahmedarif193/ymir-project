@@ -133,12 +133,12 @@
 }
 
 %populate {
-    on event "dm:object-added" call deployment_unit_added
-        filter 'path matches "SoftwareModules.DeploymentUnit.[0-9]+\\."';
+    on event "dm:instance-added" call deployment_unit_added
+        filter 'object == "SoftwareModules.DeploymentUnit."';
 
     on event "dm:object-changed" call deployment_unit_changed
-        filter 'path matches "SoftwareModules.DeploymentUnit.[0-9]+\\."';
+        filter 'object == "SoftwareModules.DeploymentUnit."';
 
-    on event "dm:object-removed" call deployment_unit_uninstalled
-        filter 'path matches "SoftwareModules.DeploymentUnit.[0-9]+\\."';
+    on event "dm:instance-removed" call deployment_unit_uninstalled
+        filter 'object == "SoftwareModules.DeploymentUnit."';
 }

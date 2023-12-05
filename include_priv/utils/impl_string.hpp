@@ -324,14 +324,14 @@ inline int stoi(const lxcd::string &str) {
     return sign * res;
 }
 
-inline lxcd::string to_string(int value) {
-    char buffer[20];
+lxcd::string to_string(int value) {
+    char buffer[64];
     sprintf(buffer, "%d", value);
     return string(buffer);
 }
 
-inline lxcd::string to_string(double value) {
-    char buffer[20];
+lxcd::string to_string(double value) {
+    char buffer[64];
     sprintf(buffer, "%.8g", value);
     return string(buffer);
 }
