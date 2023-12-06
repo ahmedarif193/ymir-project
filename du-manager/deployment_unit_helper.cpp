@@ -1,7 +1,7 @@
 #include "deployment_unit_helper.h"
 #include "utils/linux.h"
 
-#define CACHE_PATH "/run/tr157.cache"
+#define CACHE_PATH "/srv/lxc/tr157.cache"
 
 #include <cstdio>
 

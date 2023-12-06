@@ -4,7 +4,7 @@
 			instance add(1, 'cpe-ExecEnv-1', 'Alias' = "cpe-ExecEnv-1") {
 				parameter 'AllocatedDiskSpace' = 0;
 				parameter 'Enable' = true;
-				parameter 'Name' = "Container-1";
+				parameter 'Name' = "E-Cube-Container";
 				parameter 'InitialRunLevel' = 0;
 				parameter 'Type' = "busyboxv2";
 				parameter 'InitialExecutionUnitRunLevel' = 1;

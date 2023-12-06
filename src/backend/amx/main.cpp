@@ -132,7 +132,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "Register or wait failed\n";
         return retval;
     }
-    amxo_parser_parse_string(parser.get(), "?include '${odl.directory}/${name}.odl':'${odl.dm-defaults}';", amxd_dm_get_root(dm.get()));
+    //amxo_parser_parse_string(parser.get(), "?include '${odl.directory}/${name}.odl':'${odl.dm-defaults}';", amxd_dm_get_root(dm.get()));
     // Start event loop
     amxrt_el_start();
 

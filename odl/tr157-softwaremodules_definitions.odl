@@ -15,12 +15,19 @@
          */
         %persistent object ExecEnv[] {
             counted with ExecEnvNumberOfEntries;
+            on event "dm:instance-added" call exec_env_added                                
+                filter 'object == "SoftwareModules.ExecEnv."';
 
+            on event "dm:object-changed" call exec_env_changed
+                filter 'path matches "SoftwareModules.ExecEnv."';
+
+            on event "dm:instance-removed" call exec_env_uninstalled
+                filter 'object == "SoftwareModules.ExecEnv."';
             /**
              * Enables or disables the execution environment.
              * @version V2.0
              */
-            %persistent bool Enable = 0;
+            %persistent bool Enable = true;
 
             /**
              * Status of the execution environment.
@@ -148,17 +155,6 @@
             %read-only string ProcessorRefList;
         }
     }
-}
-
-%populate {
-    on event "dm:instance-added" call exec_env_added                                
-        filter 'object == "SoftwareModules.ExecEnv."';
-
-    on event "dm:object-changed" call exec_env_changed
-        filter 'path matches "SoftwareModules.ExecEnv."';
-
-    on event "dm:instance-removed" call exec_env_uninstalled
-        filter 'object == "SoftwareModules.ExecEnv."';
 }
 
 include "tr157-softwaremodules_deployementunits.odl";

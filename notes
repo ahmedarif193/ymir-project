@@ -29,3 +29,7 @@ mount -t tmpfs -o size=10% tmpfs   /srv/lxc/lxctest/overlay/delta
 sudo mount -t ext4 -o loop /srv/lxc/lxctest/overlay.img  /srv/lxc/lxctest/overlay/
 
 /srv/lxc/lxctest/overlay/
+
+
+TODO : 
+-fix the need to set Enable to 1 to be able to 

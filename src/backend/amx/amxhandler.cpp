@@ -37,75 +37,93 @@ static void helper_exec_env_set_name(amxd_object_t* obj, const char* name_str) {
 
 
 //if defined, but Enable = 0 just create the instance,
-void odl_exec_env_added(const char *const sig_name, const amxc_var_t *const data, void *const priv){
+void odl_exec_env_added(const char *const sig_name, const amxc_var_t *const data, void *const priv) {
+    std::cout << "Entered function: odl_exec_env_added" << std::endl;
+
+    // Retrieve the exec_env object
     amxd_object_t *ee_obj = amxd_dm_signal_get_object(amxrt_get_dm(), data);
     if (!ee_obj) {
-        printf("Failed to get object exec_env\n");
+        std::cout << "Failed to get object exec_env" << std::endl;
         return;
     }
 
+    // Extract parameters from the exec_env object
     int index = GET_UINT32(data, "index");
     const char* name_str = amxd_object_get_cstring_t(ee_obj, "Name", nullptr);
     bool enable_bool = amxd_object_get_bool(ee_obj, "Enable", NULL);
     auto template_str = amxd_object_get_cstring_t(ee_obj, "Type", nullptr);
+
+    // Format name if needed
     char formatted_name[256];
     if (strlen(name_str) > 0) {
         snprintf(formatted_name, sizeof(formatted_name), "%s", name_str);
     } else {
         snprintf(formatted_name, sizeof(formatted_name), "Container-%d", index);
     }
-    printf("Name: %s\n", formatted_name);
-    printf("odl_exec_env_added Name len -: %ld\n", strlen(name_str));
-    
-    std::cout << "amxd_object_get_bool exec_env value " << enable_bool<< std::endl;
+
+    // Log details
+    printf("Exec Env Added: Name: %s, Enable: %d, Template: %s\n", formatted_name, enable_bool, template_str);
+
+    // Setup and run container
     LxcContainer container(formatted_name);
-    if(enable_bool){
+    container.setTemplate(template_str);
+    if (enable_bool) {
         container.setAction(Method::ENABLE);
     }
-    container.setTemplate(template_str);
     int retcode = container.run();
-    // helper_exec_env_set_status(ee_obj, );
-    // helper_exec_env_set_name(ee_obj, formatted_name);
+
+    // Update object properties
     amxd_object_set_cstring_t(ee_obj, "Status", "Up");
     amxd_object_set_cstring_t(ee_obj, "Name", formatted_name);
 }
 
-void odl_exec_env_changed(const char *const sig_name, const amxc_var_t *const data, void *const priv){
+void odl_exec_env_changed(const char *const sig_name, const amxc_var_t *const data, void *const priv) {
     std::cout << "Entered function: odl_exec_env_changed" << std::endl;
+
+    // Retrieve the exec_env object
     amxd_object_t *ee_obj = amxd_dm_signal_get_object(amxrt_get_dm(), data);
     if (!ee_obj) {
         std::cout << "Failed to get object exec_env" << std::endl;
         return;
     }
+
+    // Extract parameters from the exec_env object
     auto name_str = amxd_object_get_cstring_t(ee_obj, "Name", nullptr);
+    bool enable_bool = amxd_object_get_bool(ee_obj, "Enable", 0);
     auto template_str = amxd_object_get_cstring_t(ee_obj, "Type", nullptr);
 
-    bool enable_bool = amxd_object_get_bool(ee_obj, "Enable", 0);
-    std::cout << "amxd_object_get_bool exec_env value " << enable_bool<< std::endl;
+    // Log details
+    std::cout << "Exec Env Changed: Name: " << name_str << ", Enable: " << enable_bool << ", Template: " << template_str << std::endl;
+
+    // Setup and run container
     LxcContainer container(name_str);
-    if(enable_bool){
-        container.setAction(Method::ENABLE);
-    }else{
-        container.setAction(Method::DISABLE);
-    }
     container.setTemplate(template_str);
+    container.setAction(enable_bool ? Method::ENABLE : Method::DISABLE);
     container.run();
 }
 
-void odl_exec_env_uninstalled(const char *const sig_name, const amxc_var_t *const data, void *const priv){
+void odl_exec_env_uninstalled(const char *const sig_name, const amxc_var_t *const data, void *const priv) {
     std::cout << "Entered function: odl_exec_env_uninstalled" << std::endl;
 
+    // Retrieve the exec_env object
     amxd_object_t *ee_obj = amxd_dm_signal_get_object(amxrt_get_dm(), data);
     if (!ee_obj) {
         std::cout << "Failed to get object exec_env" << std::endl;
         return;
     }
+
+    // Extract the name parameter from the exec_env object
     auto name_str = amxd_object_get_cstring_t(ee_obj, "Name", nullptr);
 
+    // Log details
+    std::cout << "Uninstalling Exec Env: Name: " << name_str << std::endl;
+
+    // Setup and run container with DESTROY action
     LxcContainer container(name_str);
     container.setAction(Method::DESTROY);
     container.run();
 }
+
 
 void odl_deployment_unit_added(const char *const sig_name, const amxc_var_t *const data, void *const priv){
     std::cout << "Entered function: odl_deployment_unit_added" << std::endl;

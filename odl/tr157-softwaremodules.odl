@@ -1,53 +1,50 @@
+#!/usr/bin/amxrt
+
 %config {
     name = "lxcd";
-    storage-type = "odl";
-    storage-path = "/opt/lxcd/data/";
-
-    // odl parser config options
+    lxcd = {
+        mod-dir = "${prefix}${plugin-dir}/${name}/modules",
+        external-mod-dir = "${prefix}${plugin-dir}/modules"
+    };
+    silent = false;
     import-dbg = true;
     dm-eventing-enabled = true;
-
-    populate-behavior = {
-        duplicate-instance = "update"
-    };
-
+    storage-path = "/opt/${name}/share";
     storage-type = "odl";
-    %global odl = {
-        dm-load = false,
-        load-dm-events = true,
-        dm-save = false,
+    odl = {
+        dm-load = true,
+        dm-save = true,
         dm-save-on-changed = true,
         dm-save-delay = 1000,
-        dm-defaults = "defaults.d/",
+        dm-defaults = "defaults.d",
         directory = "${storage-path}/odl"
     };
-
-    privileges = {
-        keep-all = true
-    };
-
-    import-dirs = [
-    	".",
-    	"${prefix}${plugin-dir}/${name}",
-    	"${prefix}${plugin-dir}/modules",
-    	"${prefix}/usr/lib/amx/${name}",
-    	"${prefix}/usr/local/lib/amx/modules"
-    ];
-
+    cfg-dir = "/etc/amx";
     include-dirs = [
         ".",
-        "${prefix}${cfg-dir}/${name}",
-        "${prefix}${cfg-dir}/modules",
-        "/opt/lxcd/odl",
-        "${storage-path}/odl"
+        "${cfg-dir}/${name}",
+        "${cfg-dir}/modules",
+        "/opt/lxcd/odl"
     ];
-
-    ubus = {
-        watch-ubus-events = true
-    };
-
+    import-dirs = [
+        ".",
+        "${prefix}${plugin-dir}/${name}",
+        "${prefix}${plugin-dir}/modules",
+        "${prefix}/usr/lib/amx/${name}",
+        "${prefix}/usr/lib/amx/modules"
+    ];
+    //main files
     definition_file = "tr157-softwaremodules_definitions.odl";
+
+    //persistent storage
+    pcm_svc_config = {
+        "Objects" = "@CONTROLLER_ROOT_DM_Header@"
+    };
 }
 
+#include "mod_pcm_svc.odl";
+#import "mod-dmext.so";
+
 include "${definition_file}";
+
 //?include '${odl.directory}/${name}.odl':'${odl.dm-defaults}';
