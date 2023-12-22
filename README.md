@@ -54,4 +54,4 @@ Ymir is the perfect tool for developers and system administrators seeking a powe
 
 ### Roadmap:
 
-Ymir already employs multithreading for managing container processes. We're planning to extend this multithreading approach to other tasks, further boosting Ymir's performance and responsiveness in managing LXC containers. Stay tuned for these exciting developments.
+Ymir already employs multithreading for managing container processes. We're planning to extend this multithreading approach to other tasks, further boosting Ymir's performance and responsiveness in managing LXC containers by adding automated unit tests in gitlab, Stay tuned for these exciting developments.
