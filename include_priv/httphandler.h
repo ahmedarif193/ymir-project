@@ -27,22 +27,22 @@ typedef std::function<int (const lxcd::map<lxcd::string, lxcd::string>,
 
 class RestApiListener {
 enum TYPE {
-    GET=0,
-    POST=1,
-    UPDATE=2,
-    DELETE=3,
+	GET=0,
+	POST=1,
+	UPDATE=2,
+	DELETE=3,
 };
 
 public:
 RestApiListener(int port);
 ~RestApiListener() {
-    remove_pipe_socket();
+	remove_pipe_socket();
 }
 void listenUnix(const lxcd::string &pipe_name) {
-    pipe_name_ = pipe_name;
-    create_pipe_socket();
-    pthread_create(&listener_thread_, NULL, &RestApiListener::listen_thread_func, this);
-    pthread_detach(listener_thread_);
+	pipe_name_ = pipe_name;
+	create_pipe_socket();
+	pthread_create(&listener_thread_, NULL, &RestApiListener::listen_thread_func, this);
+	pthread_detach(listener_thread_);
 }
 
 void register_handler(const lxcd::string &path, const lxcd::string &http_method, handler_t handler);

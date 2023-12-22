@@ -97,7 +97,7 @@ def make_tarball(metadata, squashfs_path, ipk_path, tarball_path, metadata_file)
     # Handle based on the type in metadata
     if metadata.get("Type") == "squashfs":
         # Run mksquashfs to create the SquashFS file
-        squashfs_command = f"mksquashfs {squashfs_path} {temp_dir}/rootfs.squashfs"
+        squashfs_command = f"mksquashfs {squashfs_path} {temp_dir}/rootfs.squashfs -comp xz"
         subprocess.run(squashfs_command, shell=True, check=True)
     elif metadata.get("Type") == "ipk":
         # Find all ipk files and copy them to the temporary directory

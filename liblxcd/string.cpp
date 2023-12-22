@@ -1,29 +1,30 @@
+#include "utils/string.h"
 
-inline lxcd::string::string() : data_(new char[1]), size_(0) {
+lxcd::string::string() : data_(new char[1]), size_(0) {
     data_[0] = '\0';
 }
 
-inline lxcd::string::string(const char *str) : data_(new char[strlen(str) + 1]), size_(strlen(str)) {
+lxcd::string::string(const char *str) : data_(new char[strlen(str) + 1]), size_(strlen(str)) {
     strcpy(data_, str);
 }
 
-inline lxcd::string::string(const lxcd::string &other) : data_(new char[other.size_ + 1]), size_(other.size_) {
+lxcd::string::string(const lxcd::string &other) : data_(new char[other.size_ + 1]), size_(other.size_) {
     strcpy(data_, other.data_);
 }
 
-inline lxcd::string::~string() {
+lxcd::string::~string() {
     delete[] data_;
 }
 
-inline char *lxcd::string::begin() { return data_; }
+char *lxcd::string::begin() { return data_; }
 
-inline const char *lxcd::string::begin() const { return data_; }
+const char *lxcd::string::begin() const { return data_; }
 
-inline char *lxcd::string::end() { return data_ + size_; }
+char *lxcd::string::end() { return data_ + size_; }
 
-inline const char *lxcd::string::end() const { return data_ + size_; }
+const char *lxcd::string::end() const { return data_ + size_; }
 
-inline lxcd::string &lxcd::string::operator=(const lxcd::string &other) {
+lxcd::string &lxcd::string::operator=(const lxcd::string &other) {
     if (this != &other) {
         delete[] data_;
         data_ = new char[other.size_ + 1];
@@ -35,7 +36,7 @@ inline lxcd::string &lxcd::string::operator=(const lxcd::string &other) {
     return *this;
 }
 
-inline lxcd::string &lxcd::string::operator=(lxcd::string &&other) noexcept {
+lxcd::string &lxcd::string::operator=(lxcd::string &&other) noexcept {
     if (this != &other) {
         delete[] data_;
         data_ = other.data_;
@@ -46,7 +47,7 @@ inline lxcd::string &lxcd::string::operator=(lxcd::string &&other) noexcept {
     return *this;
 }
 
-inline lxcd::string &lxcd::string::operator=(const char *str) {
+lxcd::string &lxcd::string::operator=(const char *str) {
     size_t len = strlen(str);
     if (size_ < len) {
         char* newData = new char[len + 1];
@@ -58,39 +59,41 @@ inline lxcd::string &lxcd::string::operator=(const char *str) {
     return *this;
 }
 
-inline char &lxcd::string::operator[](lxcd::size_t index) {
+char &lxcd::string::operator[](lxcd::size_t index) {
     return data_[index];
 }
 
-inline const char &lxcd::string::operator[](lxcd::size_t index) const {
+const char &lxcd::string::operator[](lxcd::size_t index) const {
     return data_[index];
 }
 
-inline lxcd::size_t lxcd::string::size() const {
+lxcd::size_t lxcd::string::size() const {
     return size_;
 }
 
-inline const char *lxcd::string::c_str() const {
+const char *lxcd::string::c_str() const {
     return data_;
 }
 
-inline lxcd::string::operator const char *() const {
+lxcd::string::operator const char *() const {
     return data_;
 }
 
-inline bool lxcd::string::operator==(const char *other) const {
+bool lxcd::string::operator==(const char *other) const {
     return strcmp(data_, other) == 0;
 }
 
-inline bool lxcd::string::operator==(const lxcd::string &other) const {
+bool lxcd::string::operator==(const lxcd::string &other) const {
     return (size_ == other.size_) && (strcmp(data_, other.data_) == 0);
 }
 
-inline bool lxcd::string::operator!=(const lxcd::string &other) const {
+bool lxcd::string::operator!=(const lxcd::string &other) const {
     return !(*this == other);
 }
-
-inline lxcd::string lxcd::string::operator+(const lxcd::string &other) const {
+bool lxcd::string::operator<(const lxcd::string &other) const {
+    return strcmp(data_, other.data_) < 0;
+}
+lxcd::string lxcd::string::operator+(const lxcd::string &other) const {
     string result;
     result.size_ = size_ + other.size_;
     delete[] result.data_;
@@ -100,7 +103,7 @@ inline lxcd::string lxcd::string::operator+(const lxcd::string &other) const {
     return result;
 }
 
-inline lxcd::string &lxcd::string::operator+=(const lxcd::string &other) {
+lxcd::string &lxcd::string::operator+=(const lxcd::string &other) {
     size_t newSize = size_ + other.size_;
     char* newData = new char[newSize + 1];
     strcpy(newData, data_);
@@ -111,7 +114,7 @@ inline lxcd::string &lxcd::string::operator+=(const lxcd::string &other) {
     return *this;
 }
 
-inline lxcd::string &lxcd::string::operator+=(const char *other) {
+lxcd::string &lxcd::string::operator+=(const char *other) {
     size_t len = strlen(other);
     reserve(size_ + len);
     strcat(data_, other);
@@ -119,12 +122,12 @@ inline lxcd::string &lxcd::string::operator+=(const char *other) {
     return *this;
 }
 
-inline lxcd::string &lxcd::string::operator+=(const char other) {
+lxcd::string &lxcd::string::operator+=(const char other) {
     const char temp[2] = { other, '\0' };
     return (*this += temp);
 }
 
-inline lxcd::vector<lxcd::string> lxcd::string::split(char delimiter) const {
+lxcd::vector<lxcd::string> lxcd::string::split(char delimiter) const {
     lxcd::vector<string> tokens;
     size_t start = 0;
     for (size_t i = 0; i <= size_; ++i) {
@@ -136,7 +139,7 @@ inline lxcd::vector<lxcd::string> lxcd::string::split(char delimiter) const {
     return tokens;
 }
 
-inline lxcd::string &lxcd::string::erase(lxcd::size_t pos, lxcd::size_t count) {
+lxcd::string &lxcd::string::erase(lxcd::size_t pos, lxcd::size_t count) {
     if (pos >= size_) {
         return *this;
     }
@@ -150,14 +153,14 @@ inline lxcd::string &lxcd::string::erase(lxcd::size_t pos, lxcd::size_t count) {
     return *this;
 }
 
-inline lxcd::size_t lxcd::string::find(const lxcd::string &substr, lxcd::size_t pos) const {
+lxcd::size_t lxcd::string::find(const lxcd::string &substr, lxcd::size_t pos) const {
     const char* result = strstr(data_ + pos, substr.data_);
     if (result == nullptr) {
         return npos;
     }
     return result - data_;
 }
-inline lxcd::size_t lxcd::string::find(const char subchar, lxcd::size_t pos) const {
+lxcd::size_t lxcd::string::find(const char subchar, lxcd::size_t pos) const {
     const char* result = strchr(data_ + pos, subchar);
     if (result == nullptr) {
         return npos;
@@ -165,23 +168,23 @@ inline lxcd::size_t lxcd::string::find(const char subchar, lxcd::size_t pos) con
     return result - data_;
 }
 
-inline bool lxcd::string::contains(const char *str) const {
+bool lxcd::string::contains(const char *str) const {
     return find(str) != npos;
 }
 
-inline bool lxcd::string::contains(const lxcd::string &str) const {
+bool lxcd::string::contains(const lxcd::string &str) const {
     return find(str) != npos;
 }
 
-inline bool lxcd::string::empty() const {
+bool lxcd::string::empty() const {
     return size_ == 0;
 }
 
-inline lxcd::size_t lxcd::string::length() const {
+lxcd::size_t lxcd::string::length() const {
     return size_;
 }
 
-inline lxcd::size_t lxcd::string::rfind(const char *str, lxcd::size_t pos) const {
+lxcd::size_t lxcd::string::rfind(const char *str, lxcd::size_t pos) const {
     if (pos > size_) {
         pos = size_;
     }
@@ -197,7 +200,7 @@ inline lxcd::size_t lxcd::string::rfind(const char *str, lxcd::size_t pos) const
     return npos;
 }
 
-inline lxcd::string lxcd::string::substr(lxcd::size_t pos, lxcd::size_t len) const {
+lxcd::string lxcd::string::substr(lxcd::size_t pos, lxcd::size_t len) const {
     if (pos > size_) {
         pos = size_;
     }
@@ -207,7 +210,7 @@ inline lxcd::string lxcd::string::substr(lxcd::size_t pos, lxcd::size_t len) con
     return string(&data_[pos], len);
 }
 
-inline lxcd::string &lxcd::string::append(const char *str, lxcd::size_t len) {
+lxcd::string &lxcd::string::append(const char *str, lxcd::size_t len) {
     size_t new_size = size_ + len;
     char* new_data = new char[new_size + 1];
     strcpy(new_data, data_);
@@ -218,7 +221,7 @@ inline lxcd::string &lxcd::string::append(const char *str, lxcd::size_t len) {
     return *this;
 }
 
-inline lxcd::string &lxcd::string::append(const lxcd::string &other) {
+lxcd::string &lxcd::string::append(const lxcd::string &other) {
     size_t new_size = size_ + other.size_;
     char* new_data = new char[new_size + 1];
     strcpy(new_data, data_);
@@ -229,11 +232,11 @@ inline lxcd::string &lxcd::string::append(const lxcd::string &other) {
     return *this;
 }
 
-inline lxcd::string &lxcd::string::append(const char *str) {
+lxcd::string &lxcd::string::append(const char *str) {
     return append(string(str));
 }
 
-inline void lxcd::string::insert(lxcd::size_t pos, const lxcd::string &str) {
+void lxcd::string::insert(lxcd::size_t pos, const lxcd::string &str) {
     size_t new_size = size_ + str.size_;
     char* new_data = new char[new_size + 1];
     memcpy(new_data, data_, pos);
@@ -245,11 +248,11 @@ inline void lxcd::string::insert(lxcd::size_t pos, const lxcd::string &str) {
     size_ = new_size;
 }
 
-inline void lxcd::string::insert(lxcd::size_t pos, const char *str) {
+void lxcd::string::insert(lxcd::size_t pos, const char *str) {
     insert(pos, string(str));
 }
 
-inline void lxcd::string::resize(lxcd::size_t n) {
+void lxcd::string::resize(lxcd::size_t n) {
     if (n <= size_) {
         data_[n] = '\0';
     } else {
@@ -262,14 +265,14 @@ inline void lxcd::string::resize(lxcd::size_t n) {
     }
 }
 
-inline void lxcd::string::reserve(lxcd::size_t n) { resize(n);}
+void lxcd::string::reserve(lxcd::size_t n) { resize(n);}
 
-inline lxcd::string::string(const char *str, lxcd::size_t size) : data_(new char[size + 1]), size_(size) {
+lxcd::string::string(const char *str, lxcd::size_t size) : data_(new char[size + 1]), size_(size) {
     strncpy(data_, str, size);
     data_[size] = '\0';
 }
 
-inline double stod(const lxcd::string &str) {
+double lxcd::string::stod(const lxcd::string &str) {
     double result = 0.0;
     double factor = 1.0;
     bool negative = false;
@@ -300,7 +303,7 @@ inline double stod(const lxcd::string &str) {
     return result * factor;
 }
 
-inline int stoi(const lxcd::string &str) {
+int lxcd::string::stoi(const lxcd::string &str) {
     int res = 0;
     int sign = 1;
     size_t i = 0;
@@ -315,7 +318,7 @@ inline int stoi(const lxcd::string &str) {
 
     // Parse digits
     for (; i < str.size(); ++i) {
-        if (!isdigit(str[i])) {
+        if (!lxcd::string::isdigit(str[i])) {
             break;
         }
         res = res * 10 + (str[i] - '0');
@@ -324,20 +327,22 @@ inline int stoi(const lxcd::string &str) {
     return sign * res;
 }
 
-lxcd::string to_string(int value) {
+lxcd::string lxcd::string::to_string(int value) {
     char buffer[64];
     sprintf(buffer, "%d", value);
-    return string(buffer);
+    return lxcd::string(buffer);
 }
 
-lxcd::string to_string(double value) {
+lxcd::string lxcd::string::to_string(double value) {
     char buffer[64];
     sprintf(buffer, "%.8g", value);
-    return string(buffer);
+    return lxcd::string(buffer);
 }
-inline lxcd::string& lxcd::string::replace(lxcd::size_t pos, lxcd::size_t count, const char* str) {
+
+lxcd::string& lxcd::string::replace(lxcd::size_t pos, lxcd::size_t count, const char* str) {
     if (pos > size_) {
-        throw OutOfRangeException("pos out of range");
+        //TODO change this to return : throw OutOfRangeException("pos out of range");
+        return *this;
     }
     if (pos + count > size_) {
         count = size_ - pos;

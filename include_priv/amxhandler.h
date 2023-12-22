@@ -1,80 +1,47 @@
 #ifndef AMBIORIX_HANDLER
 #define AMBIORIX_HANDLER
 
-#include <iostream>
-#include <string>
+#include "common-amx.h"
 
-#include <amxc/amxc.h>
-#include <amxp/amxp.h>
+//Events deployment_unit_manage
+void ExecutionUnitManage(const char *const sig_name, const amxc_var_t *const data, void *const priv);
+void deploymentUnitManage(const char *const sig_name, const amxc_var_t *const data, void *const priv);
+void ExecEnvManage(const char *const sig_name, const amxc_var_t *const data, void *const priv);
 
-#include <amxc/amxc.h>
-#include <amxd/amxd_action.h>
-#include <amxd/amxd_dm.h>
-#include <amxd/amxd_object.h>
-#include <amxd/amxd_object_event.h>
-#include <amxd/amxd_transaction.h>
+void odlPrintEvent(const char *const sig_name, const amxc_var_t *const data, void *const priv);
 
-#include <amxb/amxb.h>
-#include <amxb/amxb_register.h>
+void odlExecEnvChanged(const char *const sig_name, const amxc_var_t *const data, void *const priv);
+void odlExecEnvUninstalled(const char *const sig_name, const amxc_var_t *const data, void *const priv);
 
-#include <amxo/amxo.h>
-#include <amxo/amxo_save.h>
+void odlDeploymentUnitChanged(const char *const sig_name, const amxc_var_t *const data, void *const priv);
+void odlDeploymentUnitUninstalled(const char *const sig_name, const amxc_var_t *const data, void *const priv);
 
-using actions_callback = amxd_status_t (*)(amxd_object_t *object, amxd_param_t *param,
-                                           amxd_action_t reason, const amxc_var_t *const args,
-                                           amxc_var_t *const retval, void *priv);
+void odlExecutionUnitChanged(const char *const sig_name, const amxc_var_t *const data, void *const priv);
 
-using events_callback = void (*)(const char *const sig_name, const amxc_var_t *const data,
-                                 void *const priv);
-
-using ambiorix_func_ptr = amxd_status_t (*)(amxd_object_t *object, amxd_function_t *func,
-                                            amxc_var_t *args, amxc_var_t *ret);
-
-typedef struct sReadActionsCallback {
-    std::string name;
-    actions_callback callback;
-} sReadActionsCallback;
-
-typedef struct sEventsCallback {
-    std::string name;
-    events_callback callback;
-} sEventsCallback;
-
-typedef struct sRPCFunctions { //the path should be the name, the name should be ID
-    std::string path_id;
-    std::string name;
-    ambiorix_func_ptr callback;
-} sRPCFunctions;
-
-//Events
-void odl_exec_env_added(const char *const sig_name, const amxc_var_t *const data, void *const priv);
-void odl_exec_env_changed(const char *const sig_name, const amxc_var_t *const data, void *const priv);
-void odl_exec_env_uninstalled(const char *const sig_name, const amxc_var_t *const data, void *const priv);
-void odl_deployment_unit_added(const char *const sig_name, const amxc_var_t *const data, void *const priv);
-void odl_deployment_unit_changed(const char *const sig_name, const amxc_var_t *const data, void *const priv);
-void odl_deployment_unit_uninstalled(const char *const sig_name, const amxc_var_t *const data, void *const priv);
 //RPCs
-amxd_status_t odl_function_exec_env_add(amxd_object_t *object, amxd_function_t *func, amxc_var_t *args, amxc_var_t *ret);
+amxd_status_t odlFunctionExecEnvAdd(amxd_object_t *object, amxd_function_t *func, amxc_var_t *args, amxc_var_t *ret);
+amxd_status_t odlFunctionDeploymentUnitAdd(amxd_object_t *object, amxd_function_t *func, amxc_var_t *args, amxc_var_t *ret);
 //RO params
-amxd_status_t odl_action_read_ee_status(amxd_object_t *object, amxd_param_t *param,
-                                            amxd_action_t reason, const amxc_var_t *const args,
-                                            amxc_var_t *const retval, void *priv);
-amxd_status_t odl_action_read_ee_Reset(amxd_object_t *object, amxd_param_t *param,
-                                            amxd_action_t reason, const amxc_var_t *const args,
-                                            amxc_var_t *const retval, void *priv);
-amxd_status_t odl_action_read_ee_CurrentRunLevel(amxd_object_t *object, amxd_param_t *param,
-                                            amxd_action_t reason, const amxc_var_t *const args,
-                                            amxc_var_t *const retval, void *priv);
+amxd_status_t odlActionReadEeStatus(amxd_object_t *object, amxd_param_t *param,
+                                    amxd_action_t reason, const amxc_var_t *const args,
+                                    amxc_var_t *const retval, void *priv);
+amxd_status_t odlActionReadEeReset(amxd_object_t *object, amxd_param_t *param,
+                                   amxd_action_t reason, const amxc_var_t *const args,
+                                   amxc_var_t *const retval, void *priv);
+amxd_status_t odlActionReadEeCurrentrunlevel(amxd_object_t *object, amxd_param_t *param,
+                                             amxd_action_t reason, const amxc_var_t *const args,
+                                             amxc_var_t *const retval, void *priv);
 
-amxd_status_t odl_action_read_ee_AvailableDiskSpace(amxd_object_t *object, amxd_param_t *param,
-                                            amxd_action_t reason, const amxc_var_t *const args,
-                                            amxc_var_t *const retval, void *priv);
+amxd_status_t odlActionReadEeAvailablediskspace(amxd_object_t *object, amxd_param_t *param,
+                                                amxd_action_t reason, const amxc_var_t *const args,
+                                                amxc_var_t *const retval, void *priv);
 
-amxd_status_t odl_action_read_ee_AvailableMemory(amxd_object_t *object, amxd_param_t *param,
-                                            amxd_action_t reason, const amxc_var_t *const args,
-                                            amxc_var_t *const retval, void *priv);
+amxd_status_t odlActionReadEeAvailablememory(amxd_object_t *object, amxd_param_t *param,
+                                             amxd_action_t reason, const amxc_var_t *const args,
+                                             amxc_var_t *const retval, void *priv);
 
-amxd_status_t odl_action_read_ee_ActiveExecutionUnits(amxd_object_t *object, amxd_param_t *param,
-                                            amxd_action_t reason, const amxc_var_t *const args,
-                                            amxc_var_t *const retval, void *priv);
+amxd_status_t odlActionReadEeActiveexecutionunits(amxd_object_t *object, amxd_param_t *param,
+                                                  amxd_action_t reason, const amxc_var_t *const args,
+                                                  amxc_var_t *const retval, void *priv);
+
 #endif

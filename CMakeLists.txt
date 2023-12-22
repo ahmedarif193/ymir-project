@@ -2,35 +2,53 @@ cmake_minimum_required(VERSION 3.10)
 
 project(lxcd)
 
+# Find required packages
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(HTTP REQUIRED IMPORTED_TARGET libmicrohttpd)
-pkg_check_modules(CURL REQUIRED IMPORTED_TARGET libcurl)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-set(USE_AMXRT True)
+# Options
+option(USE_AMXRT "Use AMX Runtime" ON)
+
+# Add subdirectories
+add_subdirectory(liblxcd)
 add_subdirectory(du-manager)
-#add_subdirectory(liblxcd)
-set(CMAKE_BUILD_TYPE Debug)
 
-list(APPEND SOURCES "src/common-task.cpp")
-list(APPEND SOURCES "src/lxc-container.cpp")
-list(APPEND SOURCES "src/lxcqueue.cpp")
-list(APPEND SOURCES "du-manager/deployment_unit_helper.cpp")
-list(APPEND SOURCES "du-manager/deployment_unit.cpp")
+# Ensure dependencies are correctly managed
+add_dependencies(tr181-du-manager liblxcd)
 
+# Source files management
+set(AMX_SOURCES
+    "src/backend/amx/amxhandler.cpp"
+    "src/backend/amx/main.cpp"
+)
+set(UHTTPD_SOURCES
+    "src/backend/uhttpd/httphandler.cpp"
+    "src/backend/uhttpd/main.cpp"
+)
+
+# Conditionally append sources
 if(USE_AMXRT)
-    list(APPEND SOURCES "src/backend/amx/amxhandler.cpp")
-    list(APPEND SOURCES "src/backend/amx/main.cpp")
+# add_subdirectory(lxcd-supervisor)
+    set(LXCD_SOURCES ${AMX_SOURCES})
 else()
-    list(APPEND SOURCES "src/backend/uhttpd/httphandler.cpp")
-    list(APPEND SOURCES "src/backend/uhttpd/main.cpp")
+    set(LXCD_SOURCES ${UHTTPD_SOURCES})
 endif()
 
-add_executable(lxcd ${SOURCES})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lgcc_s -lc -pthread")
+# Add executable
+add_executable(lxcd ${LXCD_SOURCES})
+target_compile_features(lxcd PRIVATE cxx_std_17)
 
-target_include_directories(lxcd PRIVATE lxc ${HTTP_INCLUDE_DIRS} ${LXC_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/include_priv)
-target_link_libraries(lxcd PRIVATE PkgConfig::HTTP lxc PkgConfig::CURL json-c amxrt amxc amxo amxd)
+# Set compile options
+target_compile_options(lxcd PRIVATE -fno-rtti -fno-exceptions -nostdlib++ -lgcc_s -g -lc -pthread)
 
+# Include directories and link libraries
+target_include_directories(lxcd PRIVATE
+    lxc
+    ${HTTP_INCLUDE_DIRS}
+    ${LXC_INCLUDE_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include_priv
+)
+target_link_libraries(lxcd PRIVATE PkgConfig::HTTP lxc liblxcd ubox amxrt amxc amxo amxd)
+
+# Install rules
 install(TARGETS lxcd DESTINATION bin)

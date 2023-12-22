@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Check if a container name was provided
+if [ -z "$1" ]; then
+    echo "Usage: $0 <container-name>"
+    exit 1
+fi
+
+# The name of the container to search for, taken from the first argument
+CONTAINER_NAME="$1"
+
+# Search /proc/mounts for the container and extract the device name
+DEVICE=$(grep "$CONTAINER_NAME" /proc/mounts | awk '{print $1}')
+
+# Check if a device was found
+if [ -z "$DEVICE" ]; then
+    echo "Container '$CONTAINER_NAME' not found."
+    exit 2
+fi
+
+# Unmount the device
+echo "Unmounting $DEVICE..."
+umount "$DEVICE"
+
+# Check if the unmount operation was successful
+if [ $? -eq 0 ]; then
+    echo "Unmounted $DEVICE successfully."
+else
+    echo "Failed to unmount $DEVICE."
+    exit 3
+fi

@@ -2,7 +2,8 @@
 #define LXCDSTRING_H
 #include "vector.h"
 
-#include <cstring>
+#include <stdio.h>
+#include <string.h>
 
 namespace lxcd {
 
@@ -41,6 +42,8 @@ bool operator==(const char* other) const;
 bool operator==(const string& other) const;
 
 bool operator!=(const string& other) const;
+
+bool operator<(const string &other) const;
 
 string operator+(const string& other) const;
 
@@ -92,6 +95,21 @@ void resize(size_t n);
 void reserve(size_t n);
 
 static const size_t npos = static_cast<size_t>(-1);
+
+
+
+static double stod(const string& str);
+
+static int stoi(const string& str);
+
+static string to_string(int value);
+
+static string to_string(double value);
+
+static bool isdigit(char c) {
+	return c >= '0' && c <= '9';
+}
+
 private:
 char* data_;
 size_t size_;
@@ -100,53 +118,12 @@ string(const char* str, size_t size);
 };
 
 inline string operator+(const char* lhs, const string& rhs) {
-    return string(lhs) + rhs;
+	return string(lhs) + rhs;
 }
 
 inline string operator+(const string& rhs, const char* lhs) {
-    return rhs + string(lhs);
+	return rhs + string(lhs);
 }
-
-double stod(const string& str);
-
-int stoi(const string& str);
-
-static string to_string(int value);
-
-static string to_string(double value);
-
-inline bool isdigit(char c) {
-    return c >= '0' && c <= '9';
-}
-
-class OutOfRangeException {
-public:
-explicit OutOfRangeException(const string& message) : message_(message) {
-}
-
-virtual const char* what() const noexcept {
-    return message_.c_str();
-}
-
-private:
-string message_;
-};
-
-class runtimeErrorException {
-public:
-explicit runtimeErrorException(const lxcd::string& what_arg) : m_msg(what_arg) {
-}
-explicit runtimeErrorException(const char* what_arg) : m_msg(what_arg) {
-}
-
-virtual const char* what() const noexcept {
-    return m_msg.c_str();
-}
-
-private:
-lxcd::string m_msg;
-};
-#include "impl_string.hpp"
 
 }
 

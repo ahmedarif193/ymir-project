@@ -15,77 +15,6 @@ size_t writeCallback(void* contents, size_t size, size_t nmemb, void* userp) {
     return size * nmemb;
 }
 
-lxcd::string getLxcPath() {
-    const char* lxcPath = lxc_get_global_config_item("lxc.lxcpath");
-    if(lxcPath) {
-        return lxcd::string(lxcPath) +"/";
-    } else {
-        fprintf(stderr, "Error: Unable to get lxc.lxcpath\n");
-        return "";
-    }
-}
-
-bool isContainerUsingOverlayFS(const lxcd::string& containerName) {
-    struct lxc_container* container = lxc_container_new(containerName.c_str(), nullptr);
-    if(!container) {
-        fprintf(stderr, "Error: Unable to create container object\n");
-        return false;
-    }
-
-    if(!container->is_defined(container)) {
-        fprintf(stderr, "Error: Container is not defined\n");
-        lxc_container_put(container);
-        return false;
-    }
-
-    if(!container->load_config(container, nullptr)) {
-        fprintf(stderr, "Error: Unable to load container configuration\n");
-        lxc_container_put(container);
-        return false;
-    }
-
-    char lxcRootfsBackend[MAXPARAMLEN];
-    container->get_config_item(container, "lxc.rootfs.path", lxcRootfsBackend, MAXPARAMLEN);
-    if(strlen(lxcRootfsBackend)) {
-        lxcd::string rootfsBackend(lxcRootfsBackend);
-        if(rootfsBackend.find("overlay") != lxcd::string::npos) {
-            lxc_container_put(container);
-            return true;
-        }
-    }
-
-    lxc_container_put(container);
-    return false;
-}
-
-
-int create_directories(const lxcd::string& path) {
-    lxcd::string tmp = path;
-    size_t len = tmp.length();
-    mode_t mode = 0777;
-    mode_t current_umask = umask(0); // Get current umask
-    umask(current_umask);            // Reset umask to its original value
-
-    if(tmp[len - 1] == '/') {
-        tmp.erase(len - 1);
-    }
-    for(size_t i = 1; i < tmp.length(); ++i) {
-        if(tmp[i] == '/') {
-            tmp[i] = 0;
-            if(mkdir(tmp.c_str(), mode & ~current_umask) != 0) {
-                perror("");
-            }
-            tmp[i] = '/';
-        }
-    }
-    if(mkdir(tmp.c_str(), mode & ~current_umask) != 0) {
-        perror("Failed to create directory");
-        return -1;
-    }
-
-    return 0;
-}
-
 bool copy_file(const lxcd::string& src, const lxcd::string& dst) {
     int src_fd = open(src.c_str(), O_RDONLY);
     if(src_fd == -1) {
@@ -146,9 +75,6 @@ bool DeploymentUnit::prepare(const lxcd::string& tarballPath, const lxcd::string
     //CHECK IF STD still exist
     installationDate = time(NULL);
 
-    // Store the installation date
-    installationDate = time(NULL);
-
     // Check if the tarballPath is a URL
     lxcd::string downloadedFilePath;
     if((tarballPath.find("http://") == 0) || (tarballPath.find("https://") == 0)) {
@@ -164,7 +90,7 @@ bool DeploymentUnit::prepare(const lxcd::string& tarballPath, const lxcd::string
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &fileContents);
             res = curl_easy_perform(curl);
             if(res != CURLE_OK) {
-                fprintf(stderr, "Failed to download the tarball from URL: %s\n", tarballPath.c_str());
+                printf("Failed to download the tarball from URL: %s\n", tarballPath.c_str());
                 curl_easy_cleanup(curl);
                 return false;
             }
@@ -198,7 +124,7 @@ bool DeploymentUnit::prepare(const lxcd::string& tarballPath, const lxcd::string
     lxcd::Process process(command);
     int result = process.run();
     if(result != 0) {
-        fprintf(stderr, "Failed to extract tarball\n");
+        printf("Failed to extract tarball\n");
         return false;
     }
 
@@ -206,7 +132,7 @@ bool DeploymentUnit::prepare(const lxcd::string& tarballPath, const lxcd::string
     // Read the metadata.json file
     FILE* metadataFile = fopen((tempDir + "/metadata.json").c_str(), "r");
     if(!metadataFile) {
-        fprintf(stderr, "Failed to open metadata.json\n");
+        printf("metadata.json is nto present\n");
         return false;
     }
     fseek(metadataFile, 0, SEEK_END);
@@ -215,13 +141,13 @@ bool DeploymentUnit::prepare(const lxcd::string& tarballPath, const lxcd::string
 
     char* metadataBuffer = (char*) malloc(fileSize + 1);
     if(!metadataBuffer) {
-        fprintf(stderr, "Failed to allocate memory for metadata buffer\n");
+        printf("Failed to allocate memory for metadata buffer\n");
         fclose(metadataFile);
         return false;
     }
 
     if(fread(metadataBuffer, 1, fileSize, metadataFile) != fileSize) {
-        fprintf(stderr, "Failed to read metadata.json\n");
+        printf("Failed to read metadata.json\n");
         free(metadataBuffer);
         fclose(metadataFile);
         return false;
@@ -230,7 +156,7 @@ bool DeploymentUnit::prepare(const lxcd::string& tarballPath, const lxcd::string
 
     json_object* metadata = json_tokener_parse(metadataBuffer);
     if(!metadata) {
-        fprintf(stderr, "Failed to parse metadata.json\n");
+        printf("Failed to parse metadata.json\n");
         free(metadataBuffer);
         fclose(metadataFile);
         return false;
@@ -239,42 +165,57 @@ bool DeploymentUnit::prepare(const lxcd::string& tarballPath, const lxcd::string
     free(metadataBuffer);
     fclose(metadataFile);
 
-    lxcd::string lxcPath = getLxcPath();
+    lxcd::string lxcPath = LXCD_PATH;
     if(lxcPath.empty()) {
         printf("fatal : LXC path not found.\n");
         return false;
     }
 
+
+    this->rootfsPath = "/opt/lxcd/deploymentunits/" + uuid;
+
+    // Load Services
     this->executionEnvRef = executionEnvRef;
-    this->description = json_object_get_string(json_object_object_get(metadata, "Description"));
-    this->vendor = json_object_get_string(json_object_object_get(metadata, "Vendor"));
-    this->version = json_object_get_int(json_object_object_get(metadata, "Version"));
-    this->type = json_object_get_string(json_object_object_get(metadata, "Type"));
-    this->name = json_object_get_string(json_object_object_get(metadata, "Name"));
+    this->description = JsonHelper::GetString(metadata, "Description");
+    this->vendor = JsonHelper::GetString(metadata, "Vendor");
+    this->version = JsonHelper::GetInt(metadata, "Version");
+    this->type = JsonHelper::GetString(metadata, "Type");
+    this->name = JsonHelper::GetString(metadata, "Name");
 
 
-    this->rootfsPath = lxcPath + "/" + this->executionEnvRef + "/deploymentunits/" + uuid;
+    printf("\n\n-----------------DU global informations : -------\n\n");
+    printf("container's name : %s\n", this->executionEnvRef.c_str());
+    printf("description : %s\n", this->description.c_str());
+    printf("vendor : %s\n", this->vendor.c_str());
+    printf("type : %s\n", this->type.c_str());
+    printf("tarball name : %s\n", this->name.c_str());
+    printf("Assigned UUID : %s\n", uuid.c_str());
+    printf("\n\n-------------------------------------------------\n\n");
 
-    printf("-----------------DU global informations : -------\n");
-    printf("executionEnvRef %s\n", this->executionEnvRef.c_str());
-    printf("description %s\n", this->description.c_str());
-    printf("vendor %s\n", this->vendor.c_str());
-    printf("type %s\n", this->type.c_str());
-    printf("name %s\n", this->name.c_str());
-    printf("-------------------------------------------------\n");
+    // Load Services
+    struct json_object* services = JsonHelper::GetJsonArray(metadata, "Service");
+    if(services){
+        int serviceArrayLength = json_object_array_length(services);
+        for(int j = 0; j < serviceArrayLength; j++) {
+            struct json_object* serviceData = json_object_array_get_idx(services, j);
+            DeploymentUnit::eu serviceUnit;
+            serviceUnit.name = JsonHelper::GetString(serviceData, "Name");
+            serviceUnit.exec = JsonHelper::GetString(serviceData, "Exec");
+            printf("PREPARE serviceUnit.exec %s\n", serviceUnit.exec.c_str());
 
+            serviceUnit.pidfile = JsonHelper::GetString(serviceData, "Pidfile");
+            serviceUnit.autostart = JsonHelper::GetBoolean(serviceData, "Autostart");
+            this->executionunits.push_back(serviceUnit);
+        }
+    }
     return true;
 
 }
 bool DeploymentUnit::install() {
 
-    // Check the installation type
-
     create_directories(rootfsPath);
 
     if(this->type == "squashfs") {
-
-        // Copy the SquashFS rootfs file to the destination
         copy_file(tempDir + "/rootfs.squashfs", rootfsPath + ".squashfs");
     } else if(this->type == "ipk") {
 
@@ -283,7 +224,7 @@ bool DeploymentUnit::install() {
 
         dir = opendir(tempDir.c_str());
         if(dir == nullptr) {
-            fprintf(stderr, "Failed to open directory: %s\n", tempDir.c_str());
+            printf("Failed to open directory: %s\n", tempDir.c_str());
         } else {
             // Store the names of installed IPK packages
             ipkPackages.clear();
@@ -298,7 +239,7 @@ bool DeploymentUnit::install() {
                     lxcd::Process process(command);
                     int result = process.run();
                     if(result != 0) {
-                        fprintf(stderr, "Failed to install IPK: %s\n", filePath.c_str());
+                        printf("Failed to install IPK: %s\n", filePath.c_str());
                         return false;
                     }
                     lxcd::size_t extPos = fileName.rfind(".ipk");
@@ -316,12 +257,13 @@ bool DeploymentUnit::install() {
 
     return true;
 }
-bool DeploymentUnit::remove() {
-    remove_directory(this->rootfsPath);
-
+bool DeploymentUnit::duRemove() {
+    printf("removing du Filesystem ... %s\n", this->rootfsPath.c_str());
     if(this->type == "squashfs") {
-        // Remove the squashfs file mount folder
-        //remove_directory(this->rootfsPath);
+        lxcd::string squashfs = this->rootfsPath + ".squashfs";
+        lxcd::umountSquashfs(this->rootfsPath);
+        remove_directory(this->rootfsPath);
+        remove(squashfs.c_str());
     }
 
     // TODO : Remove any other related files or directories

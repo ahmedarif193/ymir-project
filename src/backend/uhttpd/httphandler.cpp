@@ -1,5 +1,4 @@
 ﻿#include "httphandler.h"
-#include <iostream>
 
 RestApiListener::RestApiListener(int port) : port_(port), is_running_(false) {
 }
@@ -56,7 +55,7 @@ void RestApiListener::start() {
         is_running_ = true;
         printf("REST API listening on port %d.\n", port_);
     } else {
-        fprintf(stderr, "Failed to start REST API\n");
+        printf("Failed to start REST API\n");
     }
 }
 
@@ -94,8 +93,6 @@ MHD_Result RestApiListener::dispatch_handler(void* cls, MHD_Connection* connecti
     static char* buffer = new char[500];
     int ret;
     printf("dispatch_handler dummy %dcount %d upload_data_size %lu murl %s mmethod %s mversion %s\n", dummy, count++, *upload_data_size, murl.c_str(), method, mversion.c_str());
-    //    std::cout <<dummy<< count++<<"dispatch_handler" <<*upload_data_size<<murl<<mmethod<<mversion << std::endl;
-
     if(&dummy != *con_cls) {
         *con_cls = &dummy;
         return MHD_YES;
@@ -125,10 +122,8 @@ MHD_Result RestApiListener::dispatch_handler(void* cls, MHD_Connection* connecti
         lxcd::string k = path_handlers_it->key;
         printf("k =  path_handlers_it->key %s == %s \n", k.c_str(), path.c_str());
         if(rest_api_listener->is_match_match_regex(k, path, params)) {
-            printf("k =  ---------- found\n");
-
             for(const auto& kv : params) {
-                std::cout << kv.key << " = " << kv.value << std::endl;
+                printf("%s =%s\n", kv.key.c_str(), kv.value.c_str());
             }
             found = true;
             break;

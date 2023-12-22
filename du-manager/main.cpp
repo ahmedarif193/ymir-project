@@ -1,7 +1,15 @@
 #include <stdio.h>
 #include <getopt.h>
 #include "utils/uuid.h"
+#include "utils/sharedptr.h"
 #include "deployment_unit_helper.h"
+
+//#include <execinfo.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
+#include "lxc-container.h"
 
 void printUsage() {
     printf("Usage: du-manager --ls|--install|--remove [options]\n");
@@ -11,16 +19,35 @@ void printUsage() {
     printf("  --remove -u <uuid>                Remove a DeploymentUnit by UUID\n");
 }
 
-int main(int argc, char* argv[]) {
+// void signal_handler(int sig) {
+//     void *array[1024];
+//     size_t size;
+//     char **strings;
+//     size_t i;
 
+//     // Get void*'s for all entries on the stack
+//     size = backtrace(array, 1024);
+
+//     // Print out all the frames to stderr
+//     fprintf(stderr, "Error: signal %d:\n", sig);
+//     strings = backtrace_symbols(array, size);
+
+//     for (i = 0; i < size; i++) {
+//         fprintf(stderr, "%s\n", strings[i]);
+//     }
+
+//     free(strings);
+//     exit(1);
+// }
+
+int main(int argc, char* argv[]) {
     int c;
     int option_index = 0;
     static struct option long_options[] = {
-        {"ls", no_argument, 0, 'l'},
-        {"install", required_argument, 0, 'i'},
-        {"remove", required_argument, 0, 'r'},
-        {0, 0, 0, 0}
-    };
+    {"ls", no_argument, 0, 'l'},
+    {"install", required_argument, 0, 'i'},
+    {"remove", required_argument, 0, 'r'},
+    {0, 0, 0, 0}};
 
     if(argc < 2) {
         printUsage();
@@ -33,7 +60,7 @@ int main(int argc, char* argv[]) {
     while((c = getopt_long(argc, argv, "e:d:u:", long_options, &option_index)) != -1) {
         switch(c) {
         case 'l': {
-            helper.listDeploymentUnits();
+            helper.ls();
             return 0;
         }
         case 'i': {
@@ -63,9 +90,9 @@ int main(int argc, char* argv[]) {
             if(uuidStr.empty()) {
                 uuidStr = lxcd::UUIDGenerator::generate();
             }
-            auto ret = helper.addDeploymentUnit(container, path, uuidStr);
-            if(!ret.value) {
-                printf("Error: Failed to install the DeploymentUnit.\n");
+            lxcd::SharedPtr<DeploymentUnit> ret = helper.addDeploymentUnit(container, path, uuidStr);
+            if(ret->name.empty()) {
+                printf("Failed to install the DeploymentUnit : %s in the container : %s, installation aborted.\n", path, container);
                 return 1;
             }
             return 0;
@@ -81,7 +108,7 @@ int main(int argc, char* argv[]) {
             if(helper.removeDeploymentUnit(uuidToRemove)) {
                 printf("Successfully removed DeploymentUnit with UUID: %s\n", uuidToRemove);
             } else {
-                printf("Error: Failed to remove the DeploymentUnit with UUID: %s\n", uuidToRemove);
+                printf("Error: No DeploymentUnit was removed with UUID: %s\n", uuidToRemove);
                 return 1;
             }
             return 0;
@@ -93,6 +120,5 @@ int main(int argc, char* argv[]) {
         }
         }
     }
-
     return 0;
 }

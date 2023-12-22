@@ -8,8 +8,6 @@ class Task {
 public:
 Task(callback_t cb = nullptr, void* data = nullptr);
 
-virtual ~Task();
-
 virtual int run() = 0;
 
 void invokeCallback(int retCode);

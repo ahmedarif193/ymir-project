@@ -33,3 +33,49 @@ sudo mount -t ext4 -o loop /srv/lxc/lxctest/overlay.img  /srv/lxc/lxctest/overla
 
 TODO : 
 -fix the need to set Enable to 1 to be able to 
+
+ubus-cli Device.IP.Interface.3.IPv4Address.1.IPAddress="192.168.45.1"
+ubus-cli Device.DHCPv4.Server.Pool.1.IPRouters="192.168.45.1"
+ubus-cli Device.DHCPv4.Server.Pool.1.MaxAddress="192.168.45.254"
+ubus-cli Device.DHCPv4.Server.Pool.1.MinAddress="192.168.45.2"
+ubus-cli Device.DHCPv4.Server.Pool.1.DNSServers="192.168.45.1"
+
+sudo sysctl -w net.ipv6.conf.[interface].disable_ipv6=1
+
+sysctl -w  net.ipv6.conf.all.disable_ipv6 = 1
+net.ipv6.conf.[interface].accept_ra = 0
+
+
+SoftwareModules.addDeploymentUnit(ee_name=E-Cube-Container,du_url="/root/tarball-Fantom-bcm27xx.tar.gz")
+
+SoftwareModules.addDeploymentUnit(ee_name=E-Cube-Container,du_url="/root/tarball-INCube-bcm27xx.tar.gz")
+SoftwareModules.addExecEnv(name=Container1, type=busyboxv2, storage=30)
+SoftwareModules.addExecEnv(name=Container-ubuntu, type=download:ubuntu;bionic;arm64, storage=1000)
+ ubus-cli "SoftwareModules.addDeploymentUnit(ee_name=E-Cube-Container,du_url=/root/tarball-INCube-bcm27xx.tar.gz)"
+SoftwareModules.DeploymentUnit.1._del()
+
+SoftwareModules.addDeploymentUnit(ee_name=E-Cube-Container,du_url="/tmp/tarball-DUtest-bcm27xx.tar.gz")
+SoftwareModules.addDeploymentUnit(ee_name=E-Cube-Container,du_url="/tmp/tarball-Openjdk-incube-bcm27xx.tar.gz")
+
+bin/tarball-DUtest-bcm27xx.tar.gz
+
+
+
+find /etc -type f -exec touch {} \;
+
+
+{
+    "Name": "Ubuntu-bionic",
+    "Type": "squashfs",
+    "Description": "compatible Ubuntu-bionic rootfs(should be installed first)",
+    "Vendor": "contact@ahmed-arif.com",
+    "Version": 1,
+    "Service": [
+        {
+            "Name": "ServiceName1",
+            "Exec": "java -Xmx512M -cp /lib/java/sys.jar -Dfan.home=/ fanx.tools.Fan finStackHost",
+            "Autostart": true,
+            "Pidfile":"/var/run/ServiceName1.pid"
+        }
+    ]
+}

@@ -1,32 +1,28 @@
-#include "deployment_unit.h"
+#ifndef DUNIT_HELPER_H
+#define DUNIT_HELPER_H
 #include "utils/map.h"
+#include "utils/sharedptr.h"
+#include "deployment_unit.h"
+
+class DeploymentUnit;
 
 class DeploymentUnitHelper {
 public:
 DeploymentUnitHelper();
-lxcd::SharedPtr<DeploymentUnit> getDeploymentUnit(const lxcd::string& uuid);
-lxcd::pair<lxcd::map<lxcd::string, lxcd::SharedPtr<DeploymentUnit> >::Iterator, bool> addDeploymentUnit(const lxcd::string &container, const lxcd::string& tarballPath, const lxcd::string &uuid);
+lxcd::SharedPtr<DeploymentUnit> getDeploymentUnit(const lxcd::string& name);
+lxcd::SharedPtr<DeploymentUnit> addDeploymentUnit(const lxcd::string &container, const lxcd::string& tarballPath, const lxcd::string &uuid);
 bool removeDeploymentUnit(const lxcd::string& uuid);
 bool updateFullRootPath(struct lxc_container* container);
 bool restartContainer(struct lxc_container* container);
-
+bool mount(struct lxc_container* container);
+void freeContainer(struct lxc_container* container);
 struct lxc_container* getContainer(const lxcd::string& c);
 
-lxcd::string listDeploymentUnits();
+void ls();
 
 private:
 lxcd::map<lxcd::string, lxcd::SharedPtr<DeploymentUnit> > deploymentUnits;
 bool loadCache();
 bool saveCache();
 };
-
-
-struct LxcdInfo {
-    lxcd::string uuid;
-    lxcd::string executionEnvRef;
-    lxcd::string url;
-    lxcd::string user;
-    lxcd::string password;
-};
-
-bool parse_lxcd_info(const lxcd::string &json_str, LxcdInfo &info);
+#endif

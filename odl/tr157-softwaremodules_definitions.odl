@@ -6,35 +6,25 @@
      */
     %persistent object SoftwareModules {
         void addExecEnv(
-            %mandatory string ee_name,
-            %mandatory string ee_template
+            %mandatory string name,
+            %mandatory string type,
+            %mandatory int32 storage
         );
         /**
          * The Execution Environments that are available on the device, along with their properties and configurable settings.
-         * @version V2.0
+         * @version V2.0 
          */
         %persistent object ExecEnv[] {
+            event "lxcd:execenv-managed";
+
             counted with ExecEnvNumberOfEntries;
-            on event "dm:instance-added" call exec_env_added                                
-                filter 'object == "SoftwareModules.ExecEnv."';
-
-            on event "dm:object-changed" call exec_env_changed
-                filter 'path matches "SoftwareModules.ExecEnv."';
-
-            on event "dm:instance-removed" call exec_env_uninstalled
-                filter 'object == "SoftwareModules.ExecEnv."';
             /**
-             * Enables or disables the execution environment.
+             * A non-volatile unique key used to reference this instance.
+             * Alias provides a mechanism for a Controller to label this instance for future reference.
              * @version V2.0
              */
-            %persistent bool Enable = true;
+            %unique %key %persistent string Alias;
 
-            /**
-             * Status of the execution environment.
-             * @version V2.0
-             */
-            %read-only string Status;
-            
             /**
              * Reset flag of the execution environment.
              * @version V2.0
@@ -44,11 +34,16 @@
             }
 
             /**
-             * A non-volatile unique key used to reference this instance.
-             * Alias provides a mechanism for a Controller to label this instance for future reference.
+             * Enables or disables the execution environment.
              * @version V2.0
              */
-            %unique %key %persistent string Alias;
+            %persistent bool Enable = false;
+
+            /**
+             * Status of the execution environment.
+             * @version V2.0
+             */
+            %read-only string Status = "Disabled";
 
             /**
              * The textual name of the environment as assigned by the CPE.
@@ -115,7 +110,7 @@
              * AllocatedDiskSpace
              * @version V2.0
              */
-            %persistent int32 AllocatedDiskSpace;
+            %persistent int32 AllocatedDiskSpace = 20;
 
             /**
              * AvailableDiskSpace
@@ -155,6 +150,18 @@
             %read-only string ProcessorRefList;
         }
     }
+}
+%populate {
+    on event "app:start" call app_start;
+
+    on event "dm:object-changed" call exec_env_changed
+        filter 'path matches "SoftwareModules.ExecEnv."';
+
+    on event "dm:instance-removed" call exec_env_uninstalled
+        filter 'object == "SoftwareModules.ExecEnv."';
+
+    // Remove this line to disable printing of all events
+    on event "*" call print_event;
 }
 
 include "tr157-softwaremodules_deployementunits.odl";

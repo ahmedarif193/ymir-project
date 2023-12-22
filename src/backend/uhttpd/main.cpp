@@ -5,11 +5,10 @@
 
 #include "httphandler.h"
 #include "lxc-container.h"
-#include "lxcqueue.h"
 
 int supported_API_versions(const lxcd::map<lxcd::string, lxcd::string>& params, const lxcd::string& request_body, lxcd::string &reply_body) {
     // Create a new JSON object
-    fprintf(stderr, "supported_API_versions %lu\n", params.size());
+    printf("supported_API_versions %lu\n", params.size());
 
     json_object* root = json_object_new_object();
     json_object* metadata = json_object_new_array();
@@ -23,30 +22,12 @@ int supported_API_versions(const lxcd::map<lxcd::string, lxcd::string>& params, 
     reply_body = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
     json_object_put(root);
 
-    return MHD_HTTP_OK;
-}
-
-int handle_echo(const lxcd::map<lxcd::string, lxcd::string>& params
-                , const lxcd::string &request_body, lxcd::string &reply_body) {
-    fprintf(stderr, "handle_echo %lu %s\n", params.size(), params["value1"].c_str());
-    json_object* root = json_object_new_object();
-    json_object* metadata = json_object_new_array();
-
-    json_object_array_add(metadata, json_object_new_string("/1.0"));
-    json_object_object_add(root, "metadata", metadata);
-    json_object_object_add(root, "status", json_object_new_string("Success"));
-    json_object_object_add(root, "status_code", json_object_new_int(200));
-    json_object_object_add(root, "type", json_object_new_string("sync"));
-
-    reply_body = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
-
-    json_object_put(root);
     return MHD_HTTP_OK;
 }
 
 int get_Server_environment(const lxcd::map<lxcd::string, lxcd::string>& params,
                            const lxcd::string &request_body, lxcd::string &reply_body) {
-    fprintf(stderr, "handle_echo %lu %s\n", params.size(), params["value1"].c_str());
+    printf("handle_echo %lu %s\n", params.size(), params["value1"].c_str());
     // Create a json-c object
     json_object* root = json_object_new_object();
     json_object* metadata = json_object_new_object();
@@ -63,7 +44,7 @@ int get_Server_environment(const lxcd::map<lxcd::string, lxcd::string>& params,
     // Get system information using Linux syscalls
     struct utsname sys_info;
     if(uname(&sys_info) == -1) {
-        fprintf(stderr, "Failed to get system information\n");
+        printf("Failed to get system information\n");
         return 1;
     }
     json_object* config = json_object_new_object();
@@ -125,7 +106,7 @@ int execenv_create(const lxcd::map<lxcd::string, lxcd::string>& params,
     json_object_object_add(root, "type", json_object_new_string("sync"));
 
     if(rootrequest == NULL) {
-        fprintf(stderr, "Failed to parse JSON file.\n");
+        printf("Failed to parse JSON file.\n");
         json_object_object_add(root, "status", json_object_new_string("Failed to parse JSON file."));
         json_object_object_add(root, "status_code", json_object_new_int(500));
         reply_body = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
@@ -289,7 +270,7 @@ int deployementunit_ls(const lxcd::map<lxcd::string, lxcd::string>& params
                        , const lxcd::string &request_body, lxcd::string &reply_body) {
 
     DeploymentUnitHelper helper;
-    reply_body = helper.listDeploymentUnits();
+    reply_body = helper.printAll();
     return MHD_HTTP_OK;
 }
 

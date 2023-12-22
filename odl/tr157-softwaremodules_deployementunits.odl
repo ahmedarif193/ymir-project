@@ -1,11 +1,16 @@
 %define {
     select SoftwareModules {
+    void addDeploymentUnit(
+        %mandatory string ee_name,
+        %mandatory string du_url
+    );
     /**
      * Deployment Unit inventory table. Contains status information about each Deployment Unit.
      * A new instance of this table gets created during the installation of a Software Module.
      * @version 2.0
      */
         %persistent object DeploymentUnit[] {
+            event "lxcd:deploymentunit-managed";
             
             /**
             * The number of entries in the Deployment Unit table.
@@ -19,7 +24,7 @@
             * This value MUST NOT be altered when the object is updated.
             * @version 2.0
             */
-            %read-only string UUID {
+            %persistent %read-only string UUID {
                 on action validate call check_maximum_length 36;
             }
 
@@ -28,7 +33,7 @@
             * The format of this value is Execution Environment specific.
             * @version 2.0
             */
-            %read-only string DUID {
+            %persistent %read-only string DUID {
                 on action validate call check_maximum_length 64;
             }
 
@@ -51,7 +56,7 @@
             * Indicates the status of the Deployment Unit.
             * @version 2.0
             */
-            %read-only string Status {
+            %persistent %read-only string Status {
                 on action validate call check_enum ["Installing", "Installed", "Updating", "Uninstalling", "Uninstalled"];
                 default "Uninstalled";
             }
@@ -60,7 +65,7 @@
             * Indicates whether or not the Deployment Unit has resolved all of its dependencies.
             * @version 2.0
             */
-            %read-only bool Resolved;
+            %persistent %read-only bool Resolved;
 
             /**
             * Contains the URL used by the most recent ChangeDUState RPC to either Install or Update the Deployment Unit.
@@ -121,21 +126,21 @@
             * Represents the ExecutionUnit instances that are associated with this Deployment Unit instance.
             * @version 2.0
             */
-            %read-only string ExecutionUnitList;
+            %persistent %read-only string ExecutionUnitList;
 
             /**
             * Represents the ExecEnv instance where this Deployment Unit instance is installed.
             * @version 2.0
             */
-            %read-only string ExecutionEnvRef;
+            %persistent %read-only string ExecutionEnvRef;
         }
     }
 }
 
 %populate {
-    on event "dm:instance-added" call deployment_unit_added
-        filter 'object == "SoftwareModules.DeploymentUnit."';
-
+    on event "lxcd:execenv-managed" call deployment_unit_manage;
+    on event "lxcd:deploymentunit-managed" call execution_unit_manage;
+    
     on event "dm:object-changed" call deployment_unit_changed
         filter 'object == "SoftwareModules.DeploymentUnit."';
 

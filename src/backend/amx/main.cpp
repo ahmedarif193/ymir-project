@@ -1,10 +1,8 @@
 #include "amxhandler.h"
 #include <amxrt/amxrt.h>
-#include <vector>
-#include <iostream>
-#include <memory>
 
-// Custom wrapper for amxrt resources.
+#include "utils/vector.h"
+#include "utils/sharedptr.h"
 class AmxrtResource {
 public:
     AmxrtResource() {
@@ -22,84 +20,56 @@ int main(int argc, char* argv[]) {
     int retval = 0;
     int index = 0;
 
-    std::unique_ptr<amxc_var_t> syssigs;
-    std::unique_ptr<amxc_var_t> config(amxrt_get_config());
-    std::unique_ptr<amxd_dm_t> dm(amxrt_get_dm());
-    std::unique_ptr<amxo_parser_t> parser(amxrt_get_parser());
+    lxcd::SharedPtr<amxc_var_t> config(amxrt_get_config());
+    lxcd::SharedPtr<amxd_dm_t> dm(amxrt_get_dm());
+    lxcd::SharedPtr<amxo_parser_t> parser(amxrt_get_parser());
     retval = amxrt_config_init(argc, argv, &index, NULL);
     if (retval != 0) {
-        std::cerr << "Configuration initialization failed\n";
+        printf("Configuration initialization failed\n");
         return retval;
     }
 
-    // Define the callbacks list
-    const std::vector<sReadActionsCallback> actions_list = {
-        {"action_read_ee_status", odl_action_read_ee_status},
-        {"action_read_ee_Reset", odl_action_read_ee_Reset},
-        {"action_read_ee_CurrentRunLevel", odl_action_read_ee_CurrentRunLevel},
-        {"action_read_ee_AvailableDiskSpace", odl_action_read_ee_AvailableDiskSpace},
-        {"action_read_ee_AvailableMemory", odl_action_read_ee_AvailableMemory},
-        {"action_read_ee_ActiveExecutionUnits", odl_action_read_ee_ActiveExecutionUnits}
-    };
-    const std::vector<sEventsCallback> events_list = {
-        {"exec_env_added", odl_exec_env_added},
-        {"exec_env_changed", odl_exec_env_changed},
-        {"exec_env_uninstalled", odl_exec_env_uninstalled},
-        {"deployment_unit_added", odl_deployment_unit_added},
-        {"deployment_unit_changed", odl_deployment_unit_changed},
-        {"deployment_unit_uninstalled", odl_deployment_unit_uninstalled}
-    };
-    const std::vector<sRPCFunctions> functions_list = {
-        {"odl_function_exec_env_add", "SoftwareModules.addExecEnv", odl_function_exec_env_add}
-    };
+    lxcd::vector<sReadActionsCallback> actions_list;
+    actions_list.push_back({"action_read_ee_status", odlActionReadEeStatus});
+    actions_list.push_back({"action_read_ee_Reset", odlActionReadEeReset});
+    actions_list.push_back({"action_read_ee_CurrentRunLevel", odlActionReadEeCurrentrunlevel});
+    actions_list.push_back({"action_read_ee_AvailableDiskSpace", odlActionReadEeAvailablediskspace});
+    actions_list.push_back({"action_read_ee_AvailableMemory", odlActionReadEeAvailablememory});
+    actions_list.push_back({"action_read_ee_ActiveExecutionUnits", odlActionReadEeActiveexecutionunits});
+
+    lxcd::vector<sEventsCallback> events_list;
+    events_list.push_back({"execution_unit_manage", ExecutionUnitManage});
+    events_list.push_back({"deployment_unit_manage", deploymentUnitManage});
+    events_list.push_back({"app_start", ExecEnvManage});
+    events_list.push_back({"print_event", odlPrintEvent});
+    events_list.push_back({"exec_env_changed", odlExecEnvChanged});
+    events_list.push_back({"exec_env_uninstalled", odlExecEnvUninstalled});
+    events_list.push_back({"deployment_unit_changed", odlDeploymentUnitChanged});
+    events_list.push_back({"deployment_unit_uninstalled", odlDeploymentUnitUninstalled});
+    events_list.push_back({"exec_unit_changed", odlExecutionUnitChanged});
+
+    lxcd::vector<sRPCFunctions> functions_list;
+    functions_list.push_back({"odl_function_exec_env_add", "SoftwareModules.addExecEnv", odlFunctionExecEnvAdd});
+    functions_list.push_back({"odl_function_deployment_unit_add", "SoftwareModules.addDeploymentUnit", odlFunctionDeploymentUnitAdd});
 
     auto add_callbacks = [&retval](const auto& list, auto adder, auto& parser) {
         for (const auto& item : list) {
             retval = adder(parser.get(), item.name.c_str(), reinterpret_cast<amxo_fn_ptr_t>(item.callback));
             if (retval != 0) {
-                std::cerr << "Error: Unable to add callback for '" << item.name << "'. Function returned: " << retval << "\n";
+                printf("Error: Unable to add callback for '%s'. Function returned: %d\n", item.name.c_str(), retval);
                 return;
             }
-            std::cout << "Success: Callback for '" << item.name << "' has been successfully added to the function table.\n";
+            printf("Success: Callback for '%s' has been successfully added to the function table.\n", item.name.c_str());
         }
     };
 
-    // Add callbacks
     add_callbacks(actions_list, amxo_resolver_ftab_add, parser);
     add_callbacks(events_list, amxo_resolver_ftab_add, parser);
     add_callbacks(functions_list, amxo_resolver_ftab_add, parser);
 
-    // for (const auto &action : actions_list) {
-    //     auto ret = amxo_resolver_ftab_add(parser.get(), action.name.c_str(),
-    //                                       reinterpret_cast<amxo_fn_ptr_t>(action.callback));
-    //     if (ret != 0) {
-    //         std::cout << "Failed to add " << action.name;
-    //         continue;
-    //     }
-    //     std::cout << "Added " << action.name << " to the functions table.";
-    // }
-    // for (const auto &event : events_list) {
-    //     auto ret = amxo_resolver_ftab_add(parser.get(), event.name.c_str(),
-    //                                       reinterpret_cast<amxo_fn_ptr_t>(event.callback));
-    //     if (ret != 0) {
-    //         std::cout << "Failed to add " << event.name;
-    //         continue;
-    //     }
-    //     std::cout << "Added " << event.name << " to the functions table.";
-    // }
-    // for (const auto &func : functions_list) {
-    //     auto ret = amxo_resolver_ftab_add(parser.get(), func.name.c_str(), AMXO_FUNC(func.callback));
-    //     if (ret != 0) {
-    //         std::cout << "Failed to add " << func.name;
-    //         continue;
-    //     }
-    //     std::cout << "Added " << func.name << " to the functions table.";
-    // }
-
-    // Load ODL files
     retval = amxrt_load_odl_files(argc, argv, index);
     if (retval != 0) {
-        std::cerr << "Loading ODL files failed\n";
+        printf("Loading ODL files failed\n");
         return retval;
     }
 
@@ -109,31 +79,29 @@ int main(int argc, char* argv[]) {
     // Connect
     retval = amxrt_connect();
     if (retval != 0) {
-        std::cerr << "Connection failed\n";
+        printf("Connection failed\n");
         return retval;
     }
 
     // Enable system signals if available
-    syssigs.reset(GET_ARG(config.get(), "system-signals"));
+    auto syssigs = GET_ARG(config.get(), "system-signals");
     if (syssigs) {
-        amxrt_enable_syssigs(syssigs.get());
+        amxrt_enable_syssigs(syssigs);
     }
 
     // Create event loop
     retval = amxrt_el_create();
     if (retval != 0) {
-        std::cerr << "Event loop creation failed\n";
+        printf("Event loop creation failed\n");
         return retval;
     }
 
     // Register or wait
     retval = amxrt_register_or_wait();
     if (retval != 0) {
-        std::cerr << "Register or wait failed\n";
+        printf("Register or wait failed\n");
         return retval;
     }
-    //amxo_parser_parse_string(parser.get(), "?include '${odl.directory}/${name}.odl':'${odl.dm-defaults}';", amxd_dm_get_root(dm.get()));
-    // Start event loop
     amxrt_el_start();
 
     return retval;

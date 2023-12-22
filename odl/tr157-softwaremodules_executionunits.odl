@@ -7,7 +7,7 @@
         * @version 2.0
         */
         %persistent object ExecutionUnit[] {
-
+            on event "dm:object-changed" call exec_unit_changed filter 'path matches "SoftwareModules.ExecutionUnit."';
             /**
             * The number of entries in the Execution Unit table.
             * @version 2.0
@@ -20,7 +20,7 @@
             * Thus, it is recommended that this be a combination of the ExecEnv.{i}.Name and an Execution Environment local unique value.
             * @version 2.0
             */
-            %read-only string EUID {
+            %persistent %read-only string EUID {
                 on action validate call check_maximum_length 64;
             }
 
@@ -35,7 +35,7 @@
             * SHOULD be unique across all Execution Unit instances contained within its associated DeploymentUnit.
             * @version 2.0
             */
-            %read-only string Name {
+            %persistent %read-only string Name {
                 on action validate call check_maximum_length 32;
             }
 
@@ -44,7 +44,7 @@
             * SHOULD be unique across all Execution Unit instances contained within a specific ExecEnv.
             * @version 2.0
             */
-            %read-only string ExecEnvLabel {
+            %persistent %read-only string ExecEnvLabel {
                 on action validate call check_maximum_length 64;
             }
 
@@ -54,23 +54,29 @@
             */
             %read-only string Status {
                 on action validate call check_enum ["Idle", "Starting", "Active", "Stopping"];
-                default "Stopping";
+                default "Idle";
             }
 
             /**
             * Indicates the state transition that the ACS is requesting for this Execution Unit.
             * @version 2.0
             */
-            %persistent string RequestedState {
+            string RequestedState {
                 on action validate call check_enum ["Idle", "Active"];
                 default "Idle";
             }
+            
+            /**
+            * Indicates the state transition that the ACS is requesting for this Execution Unit.
+            * @version 2.0
+            */
+            %persistent string X_LXCD-COM_exec = "/etc/init.d/cinit start";
 
             /**
             * If while running or transitioning between states this Execution Unit identifies a fault, this parameter embodies the problem.
             * @version 2.0
             */
-            %read-only string ExecutionFaultCode {
+            %persistent %read-only string ExecutionFaultCode {
                 on action validate call check_enum ["NoFault", "FailureOnStart", "FailureOnAutoStart", "FailureOnStop", "FailureWhileActive", "DependencyFailure", "UnStartable"];
                 default "NoFault";
             }
@@ -100,7 +106,7 @@
             * Vendor of this Execution Unit.
             * @version 2.0
             */
-            %read-only string Vendor {
+            %persistent %read-only string Vendor {
                 on action validate call check_maximum_length 128;
             }
 
@@ -108,7 +114,7 @@
             * Version of the Execution Unit. The format of this value is Execution Environment specific.
             * @version 2.0
             */
-            %read-only string Version {
+            %persistent %read-only string Version {
                 on action validate call check_maximum_length 32;
             }
 
@@ -116,7 +122,7 @@
             * Textual description of this Execution Unit. The format of this value is Execution Environment specific.
             * @version 2.0
             */
-            %read-only string Description {
+            %persistent %read-only string Description {
                 on action validate call check_maximum_length 256;
             }
 
@@ -165,7 +171,7 @@
             * Represents the ExecEnv that this Execution Unit is associated with.
             * @version 2.0
             */
-            %read-only string ExecutionEnvRef;
+            %persistent %read-only string ExecutionEnvRef;
         }
     }
 }
