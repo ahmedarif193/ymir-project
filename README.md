@@ -1,7 +1,6 @@
 ![Ymir logo](banner-no-bg.png)
-# Ymir: Advanced Container Management Daemon for OpenWRT
+
 ### Ymir: Advanced Container Management Daemon for OpenWRT
-## Ymir: Advanced Container Management Daemon for OpenWRT
 
 Ymir is an innovative project designed to provide a comprehensive and lightweight daemon, written in C++, for the efficient management of Linux Containers (LXC) on embedded devices. Inspired by the capabilities of LXCD, Ymir elevates container management to a new level, making it fully compliant with TR157 specifications for optimal operation in embedded systems.
 
