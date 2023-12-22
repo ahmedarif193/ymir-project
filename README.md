@@ -26,3 +26,7 @@ Ymir is a closed-source project. The distribution and access to the source code 
 Ideal for Developers and System Administrators:
 
 Ymir is the perfect tool for developers and system administrators seeking a powerful yet lightweight solution to manage LXC containers in embedded devices. It combines flexibility, robustness, and ease of use, making it an essential tool for modern embedded systems.
+
+
+Roadmap:
+Ymir already employs multithreading for managing container processes. We're planning to extend this multithreading approach to other tasks, further boosting Ymir's performance and responsiveness in managing LXC containers. Stay tuned for these exciting developments.
