@@ -10,7 +10,11 @@ Ymir is an innovative project designed to provide a comprehensive and lightweigh
 
 ### Robust Container Resource Management: 
 
-Ymir specializes in managing container resources, ensuring seamless operation and control of LXC containers in resource-constrained environments.
+Ymir specializes in managing containers storage in tmpfs, or overlayfs.
+
+### Multi arch: 
+
+Ymir ca run 32bit armhf containers in aarch64 one, this is usefull if you have binaries that need to run in 32bit envirement and still benefits from being in a full 64bit filesystem.
 
 ### SDK for Deployment Units Creation: 
 
@@ -24,9 +28,13 @@ A single container in Ymir can host multiple SquashFS 3rd party software applica
 
 Ymir ensures robustness by using an overlay file system (OverlayFS) mounted on an ext4 loop file. This approach safeguards against corruption, allowing for easy recovery and factory resets without affecting the core container setup. The reset process only erases the overlay file system's content, leaving the overall solution intact and operational.
 
+### upgrading but keeping changes: 
+
+Ymir can upgrade 3rd party software while backuping any changes made in the container into a dedicated folder for recovery if anything wrong happened with the original filesystem.
+
 ### Interactive Container Interface: 
 
-Similar to LXD, Ymir utilizes a REST API and AMX-bus for container interactions. This allows users to create, start, stop, and manage containers effortlessly. The REST API is accessible via any HTTP-compliant client, enabling remote management and monitoring.
+Ymir utilizes a REST API and AMX-bus for container interactions. This allows users to create, start, stop, and manage containers effortlessly. The REST API is accessible via any HTTP-compliant client, enabling remote management and monitoring.
 
 ### User-Friendly Commands for Quick Operations:
 
@@ -43,7 +51,6 @@ Ymir is a closed-source project. The distribution and access to the source code 
 ### Ideal for Developers and System Administrators:
 
 Ymir is the perfect tool for developers and system administrators seeking a powerful yet lightweight solution to manage LXC containers in embedded devices. It combines flexibility, robustness, and ease of use, making it an essential tool for modern embedded systems.
-
 
 ### Roadmap:
 
